@@ -15,6 +15,7 @@ npm install -g cordova@7.0.0
 cordova platform add android@6.2.3
 ```
 A veces es necesario correr esto dos veces, puede tomar unos cuantos minutos.
+
 3. Compilar el código Typescript
 ```bash
 tsc
