@@ -1,0 +1,626 @@
+[
+  {
+    "outputFileName": "www/js/libs/collections.js",
+    "inputFiles": [
+      "www/js/libs/collections.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/ManejoDeDecimalesServicio.js",
+    "inputFiles": [
+      "www/js/services/ManejoDeDecimalesServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/auxiliar.js",
+    "inputFiles": [
+      "www/js/auxiliar.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/PrecioServicio.js",
+    "inputFiles": [
+      "www/js/services/PrecioServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/DemoServicio.js",
+    "inputFiles": [
+      "www/js/services/DemoServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/globalutils.js",
+    "inputFiles": [
+      "www/js/globalutils.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/BroadcastServicio.js",
+    "inputFiles": [
+      "www/js/services/BroadcastServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/ConversionPaqueteServicio.js",
+    "inputFiles": [
+      "www/js/services/ConversionPaqueteServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/CustomerService.js",
+    "inputFiles": [
+      "www/js/services/CustomerService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/DispositivoServicio.js",
+    "inputFiles": [
+      "www/js/services/DispositivoServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/FinRutaServicio.js",
+    "inputFiles": [
+      "www/js/services/FinRutaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/InventoryService.js",
+    "inputFiles": [
+      "www/js/services/InventoryService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/InvoiceService.js",
+    "inputFiles": [
+      "www/js/services/InvoiceService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/PaymentService.js",
+    "inputFiles": [
+      "www/js/services/PaymentService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/PreVentaServicio.js",
+    "inputFiles": [
+      "www/js/services/PreVentaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/ReglaServicio.js",
+    "inputFiles": [
+      "www/js/services/ReglaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/RouteService.js",
+    "inputFiles": [
+      "www/js/services/RouteService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/SaldoClienteServicio.js",
+    "inputFiles": [
+      "www/js/services/SaldoClienteServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/SecuenciaServico.js",
+    "inputFiles": [
+      "www/js/services/SecuenciaServico.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/SequenceService.js",
+    "inputFiles": [
+      "www/js/services/SequenceService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/SincronizacionServicio.js",
+    "inputFiles": [
+      "www/js/services/SincronizacionServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/TareaServicio.js",
+    "inputFiles": [
+      "www/js/services/TareaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/TiposYEstados.js",
+    "inputFiles": [
+      "www/js/modelo/TiposYEstados.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/CantidadSkuControlador.js",
+    "inputFiles": [
+      "www/js/controllers/CantidadSkuControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/CapturaDeFirmaYFotoControlador.js",
+    "inputFiles": [
+      "www/js/controllers/CapturaDeFirmaYFotoControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/CustomerController.js",
+    "inputFiles": [
+      "www/js/controllers/CustomerController.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/FinRutaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/FinRutaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/ListadoOrdenDeVentaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/ListadoOrdenDeVentaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/PaymentController.js",
+    "inputFiles": [
+      "www/js/controllers/PaymentController.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/PlanDeRutaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/PlanDeRutaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/PreVentaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/PreVentaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/SalesController.js",
+    "inputFiles": [
+      "www/js/controllers/SalesController.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/StartRouteController.js",
+    "inputFiles": [
+      "www/js/controllers/StartRouteController.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/TareaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/TareaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/security.js",
+    "inputFiles": [
+      "www/js/security.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/DeliveryService.js",
+    "inputFiles": [
+      "www/js/DeliveryService.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/ManejoDeDecimales.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/ManejoDeDecimales.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Cliente.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Cliente.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/CuentaCorriente.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/CuentaCorriente.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Tarea.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Tarea.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/OrdenDeVenta.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/OrdenDeVenta.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/OrdenDeVentaDetalle.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/OrdenDeVentaDetalle.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Factura.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Factura.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/FacturaDetalle.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/FacturaDetalle.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Paquete.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Paquete.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Sku.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Sku.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IManejoDeDecimales.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IManejoDeDecimales.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IDraftServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IDraftServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IPaqueteServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IPaqueteServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/TiposYEstados/Estados.js",
+    "inputFiles": [
+      "www/js/modelo/TiposYEstados/Estados.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/TiposYEstados/Tipos.js",
+    "inputFiles": [
+      "www/js/modelo/TiposYEstados/Tipos.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/DraftServicio.js",
+    "inputFiles": [
+      "www/js/services/DraftServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/PaqueteServicio.js",
+    "inputFiles": [
+      "www/js/services/PaqueteServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Operacion.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Operacion.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/DraftControlador.js",
+    "inputFiles": [
+      "www/js/controllers/DraftControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/DenominacionSkuControlador.js",
+    "inputFiles": [
+      "www/js/controllers/DenominacionSkuControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/PaqueteConversion.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/PaqueteConversion.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IClienteServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IClienteServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/ClienteServicio.js",
+    "inputFiles": [
+      "www/js/services/ClienteServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/DocumentoVentaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/DocumentoVentaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/TareaDetalleControlador.js",
+    "inputFiles": [
+      "www/js/controllers/TareaDetalleControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/JavaScriptServicio.js",
+    "inputFiles": [
+      "www/js/services/JavaScriptServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/ITareaServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/ITareaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/OldTareaServicio.js",
+    "inputFiles": [
+      "www/js/services/OldTareaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/ISkuServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/ISkuServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/SkuServicio.js",
+    "inputFiles": [
+      "www/js/services/SkuServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/ListaSkuControlador.js",
+    "inputFiles": [
+      "www/js/controllers/ListaSkuControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/vertical/Publisher.js",
+    "inputFiles": [
+      "www/js/vertical/Publisher.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/vertical/Subscription.js",
+    "inputFiles": [
+      "www/js/vertical/Subscription.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/vertical/Subscriber.js",
+    "inputFiles": [
+      "www/js/vertical/Subscriber.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Regla.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Regla.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/ResumenOrdenDeVentaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/ResumenOrdenDeVentaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/OrdenDeVentaServicio.js",
+    "inputFiles": [
+      "www/js/services/OrdenDeVentaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IOrdenDeVentaServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IOrdenDeVentaServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IPrecioSkuServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IPrecioSkuServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/PrecioSkuServicio.js",
+    "inputFiles": [
+      "www/js/services/PrecioSkuServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/HistoricoDeArticuloServicio.js",
+    "inputFiles": [
+      "www/js/services/HistoricoDeArticuloServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/HistoricoDeArticulo.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/HistoricoDeArticulo.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IHistoricoDeArticuloServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IHistoricoDeArticuloServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/DividirOrdenDeVentaControlador.js",
+    "inputFiles": [
+      "www/js/controllers/DividirOrdenDeVentaControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Razon.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Razon.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/TomaInventarioDetalle.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/TomaInventarioDetalle.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/TomaInventario.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/TomaInventario.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IRazonServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IRazonServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/ITomaDeInventarioServicio.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/ITomaDeInventarioServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/RazonServicio.js",
+    "inputFiles": [
+      "www/js/services/RazonServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/TomaDeInventarioServicio.js",
+    "inputFiles": [
+      "www/js/services/TomaDeInventarioServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/TareaSinGestionControlador.js",
+    "inputFiles": [
+      "www/js/controllers/TareaSinGestionControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/PagoDetalle.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/PagoDetalle.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/PagoEncabezado.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/PagoEncabezado.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IPagoServicio.min.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IPagoServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/PagoServicio.min.js",
+    "inputFiles": [
+      "www/js/services/PagoServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/PagoControlador.min.js",
+    "inputFiles": [
+      "www/js/controllers/PagoControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/VentaPorMultiplo.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/VentaPorMultiplo.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/VentasPorMultiploServicio.min.js",
+    "inputFiles": [
+      "www/js/services/VentasPorMultiploServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IVentasPorMultiploServicio.min.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IVentasPorMultiploServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/BonoPorCombo.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/BonoPorCombo.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/Combo.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/Combo.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/SkuDeBonoPorCombo.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/SkuDeBonoPorCombo.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Entidades/SkuPorCombo.min.js",
+    "inputFiles": [
+      "www/js/modelo/Entidades/SkuPorCombo.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/modelo/Interfaces/IComboServicio.min.js",
+    "inputFiles": [
+      "www/js/modelo/Interfaces/IComboServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/services/ComboServicio.min.js",
+    "inputFiles": [
+      "www/js/services/ComboServicio.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/BonificacionPorComboControlador.min.js",
+    "inputFiles": [
+      "www/js/controllers/BonificacionPorComboControlador.js"
+    ]
+  },
+  {
+    "outputFileName": "www/js/controllers/FirmaControlador.min.js",
+    "inputFiles": [
+      "www/js/controllers/FirmaControlador.js"
+    ]
+  }
+]
