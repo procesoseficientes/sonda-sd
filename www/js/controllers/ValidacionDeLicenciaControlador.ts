@@ -68,8 +68,8 @@ class ValidacionDeLicenciaControlador {
               this.mensajero
             );
 
-           socket = io.connect(data.CommunicationAddress);
-         //socket = io.connect("http://192.168.1.119:8596");
+          socket = io.connect(data.CommunicationAddress);
+          //socket = io.connect("http://localhost:8088/SwiftExpress");
           localStorage.setItem("pUserID", usuario);
           localStorage.setItem("pUserCode", contraseña);
 
