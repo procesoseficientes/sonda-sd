@@ -48,7 +48,7 @@
         SONDA_DB_Session.transaction(
             (tx) => {
                 let listaParaEjecucion: string[] = [];
-                listaParaEjecucion.push("INSERT INTO HISTORY_BY_PROMO([DOC_SERIE], [DOC_NUM], [CODE_ROUTE], [CODE_CUSTOMER], [HISTORY_DATETIME], [PROMO_ID], [PROMO_NAME], [FREQUENCY], [IS_POSTED], [DEVICE_NETWORK_TYPE], [IS_POSTED_OFFLINE], [SALES_ORDER_DOCUMENT_NUMBER], [SALES_ORDER_DOCUMENT_SERIES])");
+                listaParaEjecucion.push("INSERT INTO HISTORY_BY_PROMO([DOC_SERIE], [DOC_NUM], [CODE_ROUTE], [CODE_CUSTOMER], [HISTORY_DATETIME], [PROMO_ID], [PROMO_NAME], [FREQUENCY], [IS_POSTED], [DEVICE_NETWORK_TYPE], [IS_POSTED_OFFLINE])");
                 listaParaEjecucion.push(` VALUES('${promo.docSerie}'`);
                 listaParaEjecucion.push(` , ${promo.docNum}`);
                 listaParaEjecucion.push(` , '${promo.codeRoute}'`);
@@ -60,8 +60,6 @@
                 listaParaEjecucion.push(` , 1`);
                 listaParaEjecucion.push(` , '${tipoDeRedALaQueEstaConectadoElDispositivo}'`);
                 listaParaEjecucion.push(` , ${(gIsOnline === SiNo.Si ? 0 : 1)}`);
-                listaParaEjecucion.push(` , ${promo.salesOrderDocumentNumber}`);
-                listaParaEjecucion.push(` , '${promo.salesOrderDocumentSeries}'`);
                 listaParaEjecucion.push(` )`);
                 tx.executeSql(listaParaEjecucion.join(''));
                 listaParaEjecucion = null;

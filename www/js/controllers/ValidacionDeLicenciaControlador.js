@@ -18,13 +18,13 @@ var ValidacionDeLicenciaControlador = (function () {
         });
     };
     ValidacionDeLicenciaControlador.prototype.validateCredentials = function () {
+        var este = this;
         pUserID = $("#txtUserID").val();
         pPinCode = $("#txtPin").val();
-        localStorage.setItem("APP_IS_READY", "0");
         if (isNaN(pPinCode)) {
             my_dialog("", "", "close");
-            notify("ERROR, Debe ingresar un valor numerico");
-            $("#txtPin").val("");
+            notify('ERROR, Debe ingresar un valor numerico');
+            $("#txtPin").val('');
             $("#txtPin").focus();
         }
         else {
@@ -55,16 +55,18 @@ var ValidacionDeLicenciaControlador = (function () {
                     try {
                         if (gIsOnline === 0) {
                             DeviceIsOnline();
+                            console.log("Se ha recuperado la conexion al servidor... enviando registro de conexion...");
                             socket.emit("IdentifyDeviceInRoute", {
-                                user: localStorage.getItem("pUserID"),
-                                routeId: gCurrentRoute,
-                                deviceId: device.uuid,
-                                message: "Registrando desde la aplicacion nueva " + SondaVersion
+                                "user": localStorage.getItem("pUserID"),
+                                "routeId": gCurrentRoute,
+                                "deviceId": device.uuid,
+                                "message": "Registrando desde la aplicacion nueva " + SondaVersion
                             });
                         }
                         $(".networkclass").text(tipoDeRedALaQueEstaConectadoElDispositivo);
                         $(".networkclass").buttonMarkup({ icon: "cloud" });
                         gIsOnline = 1;
+                        console.log("socket connected");
                         if (!_this.fromDisconet) {
                             globalUtilsServicio_1.delegarSockets(socket);
                             tareaDetalleControlador_1.delegarSockets(socket);
@@ -80,16 +82,19 @@ var ValidacionDeLicenciaControlador = (function () {
                         }
                     }
                     catch (ex) {
-                        notify("error: " + ex.message);
+                        alert("error: " + ex.message);
+                        console.log(ex.message);
                     }
                 });
                 socket.on("disconnect", function () {
                     _this.fromDisconet = true;
+                    console.log("Se ha perdido la conexion al servidor...");
                     $(".networkclass").text("OFF");
                     $(".networkclass").buttonMarkup({ icon: "forbidden" });
                     gIsOnline = 0;
                     if (socket.connected) {
                         DeviceIsOnline();
+                        console.log("Se ha recuperado la conexion al servidor...");
                     }
                     else {
                         if (estaCargandoInicioRuta === 1) {
@@ -100,6 +105,7 @@ var ValidacionDeLicenciaControlador = (function () {
                             $.mobile.changePage("#login_page", {
                                 transition: "flow",
                                 reverse: true,
+                                changeHash: false,
                                 showLoadMsg: false
                             });
                             DesBloquearPantalla();
@@ -111,33 +117,35 @@ var ValidacionDeLicenciaControlador = (function () {
                     }
                 });
                 socket.on("error_message", function (data) {
+                    console.log(data.message);
                     notify(data.message);
                 });
                 if (estaIniciandoSession) {
-                    var to_1 = setTimeout(function () {
+                    setTimeout(function () {
+                        console.log("validatecredentials: " + usuario);
                         socket.emit("validatecredentials", {
-                            loginid: usuario,
-                            pin: contraseña,
-                            uuid: device.uuid,
-                            validationtype: data.ValidationType,
-                            version: SondaVersion
+                            'loginid': usuario,
+                            'pin': contraseña,
+                            'uuid': device.uuid,
+                            'validationtype': data.ValidationType,
+                            'version': SondaVersion
                         });
-                        clearTimeout(to_1);
                     }, 1000);
                 }
             }
             catch (e) {
                 my_dialog("", "", "close");
-                notify(e.message);
+                console.log(e.message);
             }
             return -1;
         }, function (err) {
             my_dialog("", "", "close");
             notify(err.message);
+            console.log(err.message);
         });
     };
     ValidacionDeLicenciaControlador.prototype.limpiarInicioDeRuta = function () {
-        $("#UiImgUsuario").attr("src", "");
+        $("#UiImgUsuario").attr('src', "");
         $("#UiLblLogin").text("...");
         $("#UiLblRuta").text("...");
         $("#UiLblBodegaVenta").text("...");
@@ -151,15 +159,9 @@ var ValidacionDeLicenciaControlador = (function () {
         $("#UiLblFacturaInicio").text("0");
         $("#UiLblFacturaFinal").text("0");
         $("#UiLblFacturaActual").text("0");
-        $("#UiSecuenciaDeDocumentos")
-            .children()
-            .remove("li");
-        $("#UiResumenDeTareas")
-            .children()
-            .remove("li");
-        $("#UiResumenDeCantidad")
-            .children()
-            .remove("li");
+        $('#UiSecuenciaDeDocumentos').children().remove('li');
+        $('#UiResumenDeTareas').children().remove('li');
+        $('#UiResumenDeCantidad').children().remove('li');
         $("#UiAcordionInformacionUsuario").collapsible("option", "collapsed", false);
     };
     return ValidacionDeLicenciaControlador;

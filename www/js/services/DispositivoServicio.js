@@ -118,6 +118,7 @@ function LeerCodigoBarraConCamara(callback) {
             callback("");
         }
     );
+
 }
 
 function RegresarAPaginaAnterior(paginaAnterior) {

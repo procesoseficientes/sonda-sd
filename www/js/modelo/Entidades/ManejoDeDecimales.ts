@@ -3,5 +3,4 @@
     defaultDisplayDecimals: number;
     displayDecimalsRoundConfiguration: string;
     displayDecimalsRoundType: string;
-    currencySymbol: string;
 }

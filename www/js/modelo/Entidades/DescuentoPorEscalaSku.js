@@ -14,7 +14,6 @@ var DescuentoPorEscalaSku = (function () {
         this.promoName = "";
         this.promoType = "";
         this.frequency = "";
-        this.isUnique = false;
     }
     return DescuentoPorEscalaSku;
 }());

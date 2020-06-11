@@ -29,15 +29,5 @@
     multipleSaleQty: number;
     owner: string;
     ownerId: string;
-    discountType: string;
-    discountByFamily: number = 0;
-    discountByGeneralAmount: number = 0;
-    discountByFamilyAndPaymentType: number = 0;
-    typeOfDiscountByFamily: string = "";
-    typeOfDiscountByGeneralAmount: string = "";
-    typeOfDiscountByFamilyAndPaymentType: string = "";
-    codeFamilySku: string = "";
-    basePrice: number = 0;
-    uniqueDiscountByScaleAplied: number = 0;
-    applyDiscountBySpecialPrice: number = 0;
+    discountType: string; 
 }

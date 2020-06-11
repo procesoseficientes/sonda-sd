@@ -205,9 +205,9 @@
                 li += `<li id=${clienteTemp.clientId} class='small-roboto ui-content'>
                         <a href='#'>
                         <p>
-                        <span>${clienteTemp.clientId}</span>
-                        <br><span>${clienteTemp.clientName}</span>
-                        <br><span>${clienteTemp.address}</span>
+                        <span><strong>CLIENTE: </strong>${clienteTemp.clientId}</span>
+                        <br><span><strong>NOMBRE CLIENTE: </strong>${clienteTemp.clientName}</span>
+                        <br><span><strong>DIRECCION: </strong>${clienteTemp.address}</span>
                         </p>
                         </a>
                       </li>`;
@@ -268,7 +268,7 @@
                 , Telefono: cliente.phone
                 , CodigoHH: cliente.clientId
             };
-            gCurrentGPS = cliente.gps;
+
             CrearTarea(clienteTarea, TareaTipo.Preventa, (cliente, tareaId) => {
                 this.tarea.taskId = Number(tareaId);
                 this.tarea.taskType = TareaTipo.Preventa;
@@ -286,6 +286,7 @@
                 $.mobile.changePage("#taskdetail_page", {
                     transition: "flow",
                     reverse: true,
+                    changeHash: false,
                     showLoadMsg: false
                 });
                 DesBloquearPantalla();
@@ -300,6 +301,7 @@
         $.mobile.changePage("#UiPageNewTask", {
             transition: "flow"
             , reverse: true
+            , changeHash: false
             , showLoadMsg: false
         });
     }
@@ -308,6 +310,7 @@
         $.mobile.changePage("#pickupplan_page", {
             transition: "flow"
             , reverse: true
+            , changeHash: false
             , showLoadMsg: false
         });
     }

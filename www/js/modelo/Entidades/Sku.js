@@ -26,7 +26,6 @@ var Sku = (function () {
         this.lastQtySold = 0;
         this.qty = 0;
         this.total = 0;
-        this.totalCD = 0;
         this.available = 0;
         this.codePackUnit = "";
         this.parentCodeSku = "";
@@ -52,22 +51,8 @@ var Sku = (function () {
         this.deleted = false;
         this.discountType = "";
         this.listPromo = [];
-        this.discountByFamily = 0;
-        this.discountByFamilyAndPaymentType = 0;
-        this.typeOfDiscountByFamily = "";
-        this.typeOfDiscountByFamilyAndPaymentType = "";
-        this.isUniqueDiscountScale = false;
-        this.basePrice = 0;
-        this.specialPrice = new PrecioEspecial();
-        this.originalPrice = 0;
-        this.lastCodePackUnitSold = "";
-        this.lastPriceSold = 0;
-        this.lastSaleDate = "";
-        this.canNegotiatePrice = false;
-        this.negotiatedPrice = 0;
-        if (obj === null) {
+        if (obj === null)
             return;
-        }
         this.sku = obj.sku;
         this.codePackUnit = obj.codePackUnit;
         this.skuName = obj.skuName;
@@ -75,11 +60,10 @@ var Sku = (function () {
         this.qty = obj.qty;
         this.parentCodeSku = obj.parentCodeSku;
         this.parentCodePackUnit = obj.parentCodePackUnit;
-        this.skuPrice = obj.skuPrice === undefined ? 0 : obj.skuPrice;
+        this.skuPrice = (obj.skuPrice === undefined ? 0 : obj.skuPrice);
         this.discount = obj.discount;
         this.multipleSaleQty = obj.multipleSaleQty;
-        this.isSaleByMultiple =
-            obj.isSaleByMultiple === undefined ? false : obj.isSaleByMultiple === 1;
+        this.isSaleByMultiple = (obj.isSaleByMultiple === undefined ? false : obj.isSaleByMultiple === 1);
         this.owner = obj.owner;
         this.ownerId = obj.ownerId;
     }

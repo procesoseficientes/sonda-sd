@@ -88,6 +88,7 @@ var ImpresionManifiestoControlador = (function () {
                             $.mobile.changePage("#pageManifestHeader", {
                                 transition: "flow",
                                 reverse: true,
+                                changeHash: false,
                                 showLoadMsg: false
                             });
                         }

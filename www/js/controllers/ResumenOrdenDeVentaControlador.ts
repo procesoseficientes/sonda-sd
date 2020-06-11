@@ -27,7 +27,6 @@
     listaDeSkuParaBonificacionFinal = Array<Sku>();
     usuarioPuedeModificarBonificacionDeCombo: boolean = false;
     isImpresoraZebra = (localStorage.getItem("isPrinterZebra") === "1");
-    totalDeLaOrden: number = 0;
 
     mostrarImagenDeVerificacionDePosteoEnBo: boolean = false;
 
@@ -173,6 +172,7 @@
                 $.mobile.changePage("#taskdetail_page", {
                     transition: "flow",
                     reverse: true,
+                    changeHash: false,
                     showLoadMsg: false
                 });
 
@@ -285,7 +285,6 @@
 
     obtenerOrdeDeVenta(callback: () => void, errCallBack: (resultado: Operacion) => void) {
         try {
-            this.totalDeLaOrden = 0;
             this.tarea = new Tarea();
             this.tarea.taskId = gtaskid;
             this.tarea.taskType = gTaskType;
@@ -298,7 +297,6 @@
                 this.mostarDatosDeOrdenDeVenta(ordenDeVenta);
                 this.listaDeSkuDeVenta = [];
                 this.listaDeSkuParaBonificacion = new Array<Sku>();
-                this.totalDeLaOrden = ordenDeVenta.totalAmountDisplay;
                 for (var i = 0; i < ordenDeVenta.ordenDeVentaDetalle.length; i++) {
                     var detalleOrdenDeVentaDetalle = ordenDeVenta.ordenDeVentaDetalle[i];
                     var sku = new Sku();
@@ -312,16 +310,11 @@
                     sku.discount = detalleOrdenDeVentaDetalle.discount;
                     sku.appliedDiscount = detalleOrdenDeVentaDetalle.discount;
                     sku.discountType = detalleOrdenDeVentaDetalle.discountType;
-                    sku.discountByFamily = detalleOrdenDeVentaDetalle.discountByFamily;
-                    sku.typeOfDiscountByFamily = detalleOrdenDeVentaDetalle.typeOfDiscountByFamily;
-                    sku.discountByFamilyAndPaymentType = detalleOrdenDeVentaDetalle.discountByFamilyAndPaymentType;
-                    sku.typeOfDiscountByFamilyAndPaymentType = detalleOrdenDeVentaDetalle.typeOfDiscountByFamilyAndPaymentType;
                     if ((detalleOrdenDeVentaDetalle.long * 1) !== 0) {
                         sku.dimension = (detalleOrdenDeVentaDetalle.long * 1);
                     } else {
                         sku.dimension = 0;
                     }
-                    sku.totalCD = detalleOrdenDeVentaDetalle.totalAmountDisplay;
                     (sku.isBonus === 0) ? this.listaDeSkuDeVenta.push(sku) : this.listaDeSkuParaBonificacion.push(sku);
                 }
                 callback();
@@ -556,6 +549,7 @@
                     ordenDeVenta.toBill = (controlador.esOrdenDeVentaParaCobrar ? 1 : 0);
                     ordenDeVenta.authorized = autorizada;
                     ordenDeVenta.isPostedValidated = 0;
+                    ordenDeVenta.totalAmountDisplay = this.obtenerTotalDeOrdenDeVenta(this.cliente.appliedDiscount, this.listaDeSkuDeVenta);
 
                     var total = 0;
 
@@ -797,37 +791,18 @@
             for (i = 0; i < this.listaDeSkuDeVenta.length; i++) {
                 sku = this.listaDeSkuDeVenta[i];
 
-                //let totalDescuento = sku.total;
-                let totalDescuento = sku.totalCD;
-                /*switch (sku.discountType) {
+                let totalDescuento = 0;
+                switch (sku.discountType) {
                     case TiposDeDescuento.Porcentaje.toString():
-                        totalDescuento = trunc_number((totalDescuento - ((sku.appliedDiscount * totalDescuento) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
+                        totalDescuento = trunc_number((sku.total - ((sku.appliedDiscount * sku.total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
                         break;
                     case TiposDeDescuento.Monetario.toString():
-                        totalDescuento = trunc_number((totalDescuento - sku.appliedDiscount), this.configuracionDecimales.defaultCalculationsDecimals);
-                        break;                    
+                        totalDescuento = trunc_number((sku.total - sku.appliedDiscount), this.configuracionDecimales.defaultCalculationsDecimals);
+                        break;
+                    default:
+                        totalDescuento = trunc_number(sku.total, this.configuracionDecimales.defaultCalculationsDecimals);
+                        break;
                 }
-
-                //Aplicamos el descuento por monto general y familia
-                switch (sku.typeOfDiscountByFamily) {
-                    case TiposDeDescuento.Porcentaje.toString():
-                        totalDescuento = trunc_number((totalDescuento - ((sku.discountByFamily * totalDescuento) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
-                        break;
-                    case TiposDeDescuento.Monetario.toString():
-                        totalDescuento = trunc_number((totalDescuento - sku.discountByFamily), this.configuracionDecimales.defaultCalculationsDecimals);
-                        break;                    
-                }
-
-                //Aplicamos el descuento por familia y tipo pago
-
-                switch (sku.typeOfDiscountByFamilyAndPaymentType) {
-                    case TiposDeDescuento.Porcentaje.toString():
-                        totalDescuento = trunc_number((totalDescuento - ((sku.discountByFamilyAndPaymentType * totalDescuento) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
-                        break;
-                    case TiposDeDescuento.Monetario.toString():
-                        totalDescuento = trunc_number((totalDescuento - sku.discountByFamilyAndPaymentType), this.configuracionDecimales.defaultCalculationsDecimals);
-                        break;                    
-                }*/
 
                 if (sku.dimensions.length > 0) {
 
@@ -873,59 +848,12 @@
                                 li += "<b> Des: </b><span>" + DarFormatoAlMonto(format_number(sku.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
                                 break;
                         }
-
-                        //Agregamos el descuento por monto general y familia
-                        if(sku.discountByFamily !== 0){
-                            switch (sku.typeOfDiscountByFamily) {
-                                case TiposDeDescuento.Porcentaje.toString():
-                                    li += "<b> DMF: </b><span>" + format_number(sku.discountByFamily, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
-                                    break;
-                                case TiposDeDescuento.Monetario.toString():
-                                    li += "<b> DMF: </b><span>" + DarFormatoAlMonto(format_number(sku.discountByFamily, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
-                                    break;                            
-                            }
-                        }
-                        //Agregamos el descuento por familia y tipo pago
-                        if(sku.discountByFamilyAndPaymentType !== 0){
-                            switch (sku.typeOfDiscountByFamilyAndPaymentType) {
-                                case TiposDeDescuento.Porcentaje.toString():
-                                    li += "<b> DFP: </b><span>" + format_number(sku.discountByFamilyAndPaymentType, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
-                                    break;
-                                case TiposDeDescuento.Monetario.toString():
-                                    li += "<b> DFP: </b><span>" + DarFormatoAlMonto(format_number(sku.discountByFamilyAndPaymentType, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
-                                    break;                            
-                            }
-                        }
-
-                        li += "<b> Total: </b><span>" + format_number(totalDescuento, this.configuracionDecimales.defaultDisplayDecimals) + " </span>";
+                        li += "<b> Total: </b><span>" + format_number(sku.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>";
+                        //li += "<span class='ui-li-count' style='position:absolute; top:80%'>Q" + ToDecimal(totalDescuento) + "</span><br/>";    
                         li += "<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(totalDescuento, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>";
                     } else {
-                        //Agregamos el descuento por monto general y tipo pago
-                        if(sku.discountByFamily !== 0){
-                            switch (sku.typeOfDiscountByFamily) {
-                                case TiposDeDescuento.Porcentaje.toString():
-                                    li += "<b> DMF: </b><span>" + format_number(sku.discountByFamily, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
-                                    break;
-                                case TiposDeDescuento.Monetario.toString():
-                                    li += "<b> DMF: </b><span>" + DarFormatoAlMonto(format_number(sku.discountByFamily, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
-                                    break;                            
-                            }
-                        }
-
-                        //Agregamos el descuento por familia y tipo pago
-                        if(sku.discountByFamilyAndPaymentType !== 0){
-                            switch (sku.typeOfDiscountByFamilyAndPaymentType) {
-                                case TiposDeDescuento.Porcentaje.toString():
-                                    li += "<b> DFP: </b><span>" + format_number(sku.discountByFamilyAndPaymentType, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
-                                    break;
-                                case TiposDeDescuento.Monetario.toString():
-                                    li += "<b> DFP: </b><span>" + DarFormatoAlMonto(format_number(sku.discountByFamilyAndPaymentType, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
-                                    break;                            
-                            }
-                        }
-
                         //li += "<span class='ui-li-count' style='position:absolute; top:80%'>Q" + ToDecimal(sku.total) + "</span><br/>";
-                        li += "<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(totalDescuento, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>";
+                        li += "<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(sku.total, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>";
                     }
                     if (sku.dimension > 0) {
                         li += "<b>Dimensión: </b><span>" + format_number(sku.dimension, this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
@@ -1105,6 +1033,7 @@
         $.mobile.changePage("UiPageCustomerInfo", {
             transition: "flow"
             , reverse: true
+            , changeHash: false
             , showLoadMsg: false,
             data: {
                 "cliente": this.cliente
@@ -1132,41 +1061,24 @@
     }
 
     obtenerTotalDeOrdenDeVenta(descuento: number, listaDeSku: Array<Sku>): number {
-        /*let total = 0;
-
+        let total = 0;
         for (let i = 0; i < listaDeSku.length; i++) {
             let sku: Sku = listaDeSku[i];
-            let totalSku: number = sku.total;
+
             switch (sku.discountType) {
                 case TiposDeDescuento.Porcentaje.toString():
-                    totalSku = (sku.appliedDiscount !== 0 ? (totalSku - ((sku.appliedDiscount * totalSku) / 100)) : totalSku);
+                    total += (sku.appliedDiscount !== 0 ? (sku.total - ((sku.appliedDiscount * sku.total) / 100)) : sku.total);
                     break;
                 case TiposDeDescuento.Monetario.toString():
-                    totalSku = (sku.appliedDiscount !== 0 ? (totalSku - sku.appliedDiscount) : totalSku);
-                    break;                
-            }
-            switch (sku.typeOfDiscountByFamily) {
-                case TiposDeDescuento.Porcentaje.toString():
-                    totalSku = (sku.discountByFamily !== 0 ? (totalSku - ((sku.discountByFamily * totalSku) / 100)) : totalSku);
+                    total += (sku.appliedDiscount !== 0 ? (sku.total - sku.appliedDiscount) : sku.total);
                     break;
-                case TiposDeDescuento.Monetario.toString():
-                    totalSku = (sku.discountByFamily !== 0 ? (totalSku - sku.discountByFamily) : totalSku);
-                    break;                
-            }
-
-            switch (sku.typeOfDiscountByFamilyAndPaymentType) {
-                case TiposDeDescuento.Porcentaje.toString():
-                    totalSku = (sku.discountByFamilyAndPaymentType !== 0 ? (totalSku - ((sku.discountByFamilyAndPaymentType * totalSku) / 100)) : totalSku);
+                default:
+                    total += sku.total;
                     break;
-                case TiposDeDescuento.Monetario.toString():
-                    totalSku = (sku.discountByFamilyAndPaymentType !== 0 ? (totalSku - sku.discountByFamilyAndPaymentType) : totalSku);
-                    break;                
             }
-
-            total += totalSku;
         }
-        total = (descuento !== 0 ? (total - ((descuento * total) / 100)) : total);*/
-        return this.totalDeLaOrden;
+        total = (descuento !== 0 ? (total - ((descuento * total) / 100)) : total);
+        return total;
     }
 
     obtenerFormatosDeImpresion(cliente: Cliente, ordenDeVenta: OrdenDeVenta, pago: PagoEncabezado, esOrdenDeVentaParaCobrar: boolean, callback: (formatoDeOrdenDeVenta: string, formatoDePago: string) => void, callbackError: (resultado: Operacion) => void): void {
@@ -1257,6 +1169,7 @@
         $.mobile.changePage("#UiPagePayment", {
             transition: "flow",
             reverse: true,
+            changeHash: false,
             showLoadMsg: false
         });
     }

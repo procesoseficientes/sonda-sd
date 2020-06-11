@@ -52,7 +52,5 @@
     multipleSaleQty: number;
     discountByGeneralAmountApplied: number;
     isPostedOffLine: number = 0;
-    deviceNetworkType: string = "";
-    goalHeaderId: number = 0;
-    purchaseOrderNumber: string = "";
+    deviceNetworkType: string = "";    
 }

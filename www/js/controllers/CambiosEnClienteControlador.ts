@@ -556,6 +556,7 @@ class CambiosEnClienteControlador {
                 $.mobile.changePage("pos_skus_page", {
                     transition: "pop"
                     , reverse: true
+                    , changeHash: false
                     , showLoadMsg: false,
                     data: {
                         "cliente": this.cliente
@@ -569,6 +570,7 @@ class CambiosEnClienteControlador {
                 $.mobile.changePage("#taskdetail_page", {
                     transition: "flow"
                     , reverse: true
+                    , changeHash: false
                     , showLoadMsg: false
                 });
                 break;
@@ -580,6 +582,7 @@ class CambiosEnClienteControlador {
                 $.mobile.changePage("#UiPageRepPreSale", {
                     transition: "pop"
                     , reverse: true
+                    , changeHash: false
                     , showLoadMsg: false
                 });
                 break;
