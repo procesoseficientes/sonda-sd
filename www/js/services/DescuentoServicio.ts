@@ -130,4 +130,197 @@
             }
         );
     }
+
+    obtenerDescuentoPorMontoGeneralYFamilia(cliente: Cliente, sku: Sku,total: number,callback: (descuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia) => void, callbackError: (resultado: Operacion) => void) {
+        SONDA_DB_Session.transaction(
+            (tx) => {
+                var sql = "SELECT";
+                sql += " DGF.DISCOUNT_LIST_ID";
+                sql += " ,DGF.CODE_FAMILY";
+                sql += " ,DGF.LOW_AMOUNT";
+                sql += " ,DGF.HIGH_AMOUNT";
+                sql += " ,DGF.DISCOUNT_TYPE";
+                sql += " ,DGF.DISCOUNT";                
+                sql += " ,DGF.PROMO_ID";
+                sql += " ,DGF.PROMO_NAME";
+                sql += " ,DGF.PROMO_TYPE";
+                sql += " ,DGF.FREQUENCY";
+                sql += " FROM DISCOUNT_LIST_BY_GENERAL_AMOUNT_AND_FAMILY DGF";
+                sql += " WHERE DGF.DISCOUNT_LIST_ID = " + cliente.discountListId;
+                sql += " AND " + total + " BETWEEN DGF.LOW_AMOUNT AND DGF.HIGH_AMOUNT";
+                sql += " AND DGF.CODE_FAMILY = '" + sku.codeFamilySku + "'";
+
+                tx.executeSql(sql, [],
+                    (tx: SqlTransaction, results: SqlResultSet) => {
+                        let descuentoPorMontoGeneralYFamilia = new DescuentoPorMontoGeneralYFamilia();
+                        for (var i = 0; i < results.rows.length; i++) {
+                            let descuentoSql: any = results.rows.item(i);
+                            let descuento = new DescuentoPorMontoGeneralYFamilia();
+
+                            descuento.discountListId = descuentoSql.DISCOUNT_LIST_ID;
+                            descuento.codeFamily = descuentoSql.CODE_FAMILY;
+                            descuento.lowAmount = descuentoSql.LOW_AMOUNT;
+                            descuento.highAmount = descuentoSql.HIGH_AMOUNT;
+                            descuento.discountType = descuentoSql.DISCOUNT_TYPE;
+                            descuento.discount = descuentoSql.DISCOUNT;
+                            descuento.promoId = descuentoSql.PROMO_ID;
+                            descuento.promoName = descuentoSql.PROMO_NAME;
+                            descuento.promoType = descuentoSql.PROMO_TYPE;
+                            descuento.frequency = descuentoSql.FREQUENCY;
+                            descuento.apply = true;
+
+                            descuentoPorMontoGeneralYFamilia = descuento;
+                        }
+                        callback(descuentoPorMontoGeneralYFamilia);
+                    }
+                );
+
+            }, (err: SqlError) => {
+                callbackError(<Operacion>{ codigo: -1, mensaje: "Error al obtener los descuentos por monto general: " + err.message });
+            }
+        );
+    }
+
+    obtenerListaDeDescuentoPorMontoGeneralYFamilia(cliente: Cliente, callback: (listaDeDescuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia[]) => void, callbackError: (resultado: Operacion) => void) {
+        SONDA_DB_Session.transaction(
+            (tx) => {
+                var sql = "SELECT";
+                sql += " DGF.DISCOUNT_LIST_ID";
+                sql += " ,DGF.CODE_FAMILY";
+                sql += " ,DGF.LOW_AMOUNT";
+                sql += " ,DGF.HIGH_AMOUNT";
+                sql += " ,DGF.DISCOUNT_TYPE";
+                sql += " ,DGF.DISCOUNT";                
+                sql += " ,DGF.PROMO_ID";
+                sql += " ,DGF.PROMO_NAME";
+                sql += " ,DGF.PROMO_TYPE";
+                sql += " ,DGF.FREQUENCY";
+                sql += " FROM DISCOUNT_LIST_BY_GENERAL_AMOUNT_AND_FAMILY DGF";
+                sql += " WHERE DGF.DISCOUNT_LIST_ID = " + cliente.discountListId;                
+
+                tx.executeSql(sql, [],
+                    (tx: SqlTransaction, results: SqlResultSet) => {
+                        let listaDeDescuentoPorMontoGeneralYFamilia :DescuentoPorMontoGeneralYFamilia[]=[];
+                        for (var i = 0; i < results.rows.length; i++) {
+                            let descuentoSql: any = results.rows.item(i);
+                            let descuento = new DescuentoPorMontoGeneralYFamilia();
+
+                            descuento.discountListId = descuentoSql.DISCOUNT_LIST_ID;
+                            descuento.codeFamily = descuentoSql.CODE_FAMILY;
+                            descuento.lowAmount = descuentoSql.LOW_AMOUNT;
+                            descuento.highAmount = descuentoSql.HIGH_AMOUNT;
+                            descuento.discountType = descuentoSql.DISCOUNT_TYPE;
+                            descuento.discount = descuentoSql.DISCOUNT;
+                            descuento.promoId = descuentoSql.PROMO_ID;
+                            descuento.promoName = descuentoSql.PROMO_NAME;
+                            descuento.promoType = descuentoSql.PROMO_TYPE;
+                            descuento.frequency = descuentoSql.FREQUENCY;
+                            descuento.apply = true;
+
+                            listaDeDescuentoPorMontoGeneralYFamilia.push(descuento);
+                        }
+                        callback(listaDeDescuentoPorMontoGeneralYFamilia);
+                    }
+                );
+
+            }, (err: SqlError) => {
+                callbackError(<Operacion>{ codigo: -1, mensaje: "Error al obtener el listado de descuentos por monto general y familia: " + err.message });
+            }
+        );
+    }
+
+    obtenerDescuentoPorFamiliaYTipoPago(cliente: Cliente, tarea: Tarea,callback: (listaDescuentoPorFamiliaYTipoPago: Array<DescuentoPorFamiliaYTipoPago>) => void, callbackError: (resultado: Operacion) => void) {
+        SONDA_DB_Session.transaction(
+            (tx) => {
+                var sql = "SELECT";
+                sql += " DFP.DISCOUNT_LIST_ID";
+                sql += " ,DFP.PAYMENT_TYPE";
+                sql += " ,DFP.CODE_FAMILY";                
+                sql += " ,DFP.DISCOUNT_TYPE";
+                sql += " ,DFP.DISCOUNT";                
+                sql += " ,DFP.PROMO_ID";
+                sql += " ,DFP.PROMO_NAME";
+                sql += " ,DFP.PROMO_TYPE";
+                sql += " ,DFP.FREQUENCY";
+                sql += " FROM DISCOUNT_LIST_BY_FAMILY_AND_PAYMENT_TYPE DFP";
+                sql += " WHERE DFP.DISCOUNT_LIST_ID = " + cliente.discountListId;
+                sql += " AND DFP.PAYMENT_TYPE = '" + gSalesOrderType + "'";
+
+                tx.executeSql(sql, [],
+                    (tx: SqlTransaction, results: SqlResultSet) => {
+                        let listaDescuentoPorFamiliaYTipoPago = new Array<DescuentoPorFamiliaYTipoPago>();
+                        for (var i = 0; i < results.rows.length; i++) {
+                            let descuentoSql: any = results.rows.item(i);
+                            let descuento = new DescuentoPorFamiliaYTipoPago();
+
+                            descuento.discountListId = descuentoSql.DISCOUNT_LIST_ID;
+                            descuento.paymentType = descuentoSql.PAYMENT_TYPE;
+                            descuento.codeFamily = descuentoSql.CODE_FAMILY;
+                            descuento.discountType = descuentoSql.DISCOUNT_TYPE;
+                            descuento.discount = descuentoSql.DISCOUNT;
+                            descuento.promoId = descuentoSql.PROMO_ID;
+                            descuento.promoName = descuentoSql.PROMO_NAME;
+                            descuento.promoType = descuentoSql.PROMO_TYPE;
+                            descuento.frequency = descuentoSql.FREQUENCY;
+                            descuento.apply = true;
+
+                            listaDescuentoPorFamiliaYTipoPago.push(descuento);
+                        }
+                        callback(listaDescuentoPorFamiliaYTipoPago);
+                    }
+                );
+
+            }, (err: SqlError) => {
+                callbackError(<Operacion>{ codigo: -1, mensaje: "Error al obtener los descuentos por monto general: " + err.message });
+            }
+        );
+    }
+
+    obtenerUnDescuentoPorFamiliaYTipoPago(cliente: Cliente, tarea: Tarea, sku: Sku,callback: (listaDescuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago) => void, callbackError: (resultado: Operacion) => void) {
+        SONDA_DB_Session.transaction(
+            (tx) => {
+                var sql = "SELECT";
+                sql += " DFP.DISCOUNT_LIST_ID";
+                sql += " ,DFP.PAYMENT_TYPE";
+                sql += " ,DFP.CODE_FAMILY";                
+                sql += " ,DFP.DISCOUNT_TYPE";
+                sql += " ,DFP.DISCOUNT";                
+                sql += " ,DFP.PROMO_ID";
+                sql += " ,DFP.PROMO_NAME";
+                sql += " ,DFP.PROMO_TYPE";
+                sql += " ,DFP.FREQUENCY";
+                sql += " FROM DISCOUNT_LIST_BY_FAMILY_AND_PAYMENT_TYPE DFP";
+                sql += " WHERE DFP.DISCOUNT_LIST_ID = " + cliente.discountListId;
+                sql += " AND DFP.PAYMENT_TYPE = '" + gSalesOrderType + "'";
+                sql += " AND DFP.CODE_FAMILY = '" + sku.codeFamilySku + "'";
+
+                tx.executeSql(sql, [],
+                    (tx: SqlTransaction, results: SqlResultSet) => {
+                        let descuentoPorFamiliaYTipoPago = new DescuentoPorFamiliaYTipoPago;
+                        for (var i = 0; i < results.rows.length; i++) {
+                            let descuentoSql: any = results.rows.item(i);
+                            let descuento = new DescuentoPorFamiliaYTipoPago();
+
+                            descuento.discountListId = descuentoSql.DISCOUNT_LIST_ID;
+                            descuento.paymentType = descuentoSql.PAYMENT_TYPE;
+                            descuento.codeFamily = descuentoSql.CODE_FAMILY;
+                            descuento.discountType = descuentoSql.DISCOUNT_TYPE;
+                            descuento.discount = descuentoSql.DISCOUNT;
+                            descuento.promoId = descuentoSql.PROMO_ID;
+                            descuento.promoName = descuentoSql.PROMO_NAME;
+                            descuento.promoType = descuentoSql.PROMO_TYPE;
+                            descuento.frequency = descuentoSql.FREQUENCY;
+                            descuento.apply = true;
+
+                            descuentoPorFamiliaYTipoPago = descuento
+                        }
+                        callback(descuentoPorFamiliaYTipoPago);
+                    }
+                );
+
+            }, (err: SqlError) => {
+                callbackError(<Operacion>{ codigo: -1, mensaje: "Error al obtener los descuentos por familia y tipo de pago: " + err.message });
+            }
+        );
+    }
 }

@@ -23,6 +23,8 @@ var ResumenDePedidoControlador = (function () {
         this.foto = null;
         this.formatoDeOrdenDeVenta = "";
         this.formatoDePago = "";
+        this.listaDeDescuentoPorMontoGeneralYFamilia = [];
+        this.listaDeDescuentoPorFamiliaYTipoPago = [];
         this.tokenPago = mensajero.subscribe(this.pagoEntregado, getType(PagoMensaje), this);
         this.tokenFirma = mensajero.subscribe(this.firmaEntregado, getType(FirmaMensaje), this);
     }
@@ -38,6 +40,8 @@ var ResumenDePedidoControlador = (function () {
                 este.listaDeSkuParaBonificacionDeCombo = data.options.data.listaDeSkuParaBonificacionDeCombo;
                 este.usuarioPuedeModificarBonificacionDeCombo = data.options.data.usuarioPuedeModificarBonificacionDeCombo;
                 este.listaDeBonificacionesPorMontoGeneral = data.options.data.listaDeBonificacionesPorMontoGeneral;
+                este.listaDeDescuentoPorMontoGeneralYFamilia = data.options.data.listaDeDescuentoPorMontoGeneralYFamilia;
+                este.listaDeDescuentoPorFamiliaYTipoPago = data.options.data.listaDeDescuentoPorFamiliaYTipoPago;
                 $.mobile.changePage("#SalesOrderSummaryPage");
             }
         });
@@ -221,32 +225,58 @@ var ResumenDePedidoControlador = (function () {
             var uiListaOrdenDeVenta = $('#UiListaSkuResumen');
             uiListaOrdenDeVenta.children().remove('li');
             var i = 0;
-            var sku = new Sku();
+            var sku_1 = new Sku();
             var listaDeLi_1 = [];
             for (i = 0; i < this.listaDeSkuDeVenta.length; i++) {
-                sku = this.listaDeSkuDeVenta[i];
-                var totalDescuento = 0;
-                switch (sku.discountType) {
+                sku_1 = this.listaDeSkuDeVenta[i];
+                var resultadoDescuentoPorMontoGeneralYFamilia = this.listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuentoABuscar) {
+                    return descuentoABuscar.codeFamily === sku_1.codeFamilySku;
+                });
+                var resultadoDescuentoPorFamiliaYTipoPago = this.listaDeDescuentoPorFamiliaYTipoPago.find(function (descuentoABuscar) {
+                    return descuentoABuscar.codeFamily === sku_1.codeFamilySku;
+                });
+                var total = sku_1.total;
+                switch (sku_1.discountType) {
                     case TiposDeDescuento.Porcentaje.toString():
-                        totalDescuento = trunc_number((sku.total - ((sku.appliedDiscount * sku.total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
+                        total = trunc_number((total - ((sku_1.appliedDiscount * total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
                         break;
                     case TiposDeDescuento.Monetario.toString():
-                        totalDescuento = trunc_number((sku.total - sku.appliedDiscount), this.configuracionDecimales.defaultCalculationsDecimals);
+                        total = trunc_number((total - sku_1.appliedDiscount), this.configuracionDecimales.defaultCalculationsDecimals);
                         break;
                 }
-                if (sku.dimensions.length > 0) {
-                    for (var _i = 0, _a = sku.dimensions; _i < _a.length; _i++) {
+                if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                    switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                        case TiposDeDescuento.Porcentaje.toString():
+                            total = trunc_number((total - ((resultadoDescuentoPorMontoGeneralYFamilia.discount * total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
+                            break;
+                        case TiposDeDescuento.Monetario.toString():
+                            total = trunc_number((total - resultadoDescuentoPorMontoGeneralYFamilia.discount), this.configuracionDecimales.defaultCalculationsDecimals);
+                            break;
+                    }
+                }
+                if (resultadoDescuentoPorFamiliaYTipoPago) {
+                    switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                        case TiposDeDescuento.Porcentaje.toString():
+                            total = trunc_number((total - ((resultadoDescuentoPorFamiliaYTipoPago.discount * total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
+                            break;
+                        case TiposDeDescuento.Monetario.toString():
+                            total = trunc_number((total - resultadoDescuentoPorFamiliaYTipoPago.discount), this.configuracionDecimales.defaultCalculationsDecimals);
+                            break;
+                    }
+                }
+                if (sku_1.dimensions.length > 0) {
+                    for (var _i = 0, _a = sku_1.dimensions; _i < _a.length; _i++) {
                         var skuConDimension = _a[_i];
                         listaDeLi_1.push("<li data-icon='false' class='ui-field-contain'>");
-                        listaDeLi_1.push("<p><h4>" + sku.sku + "/" + sku.skuName + "</h4></p>");
+                        listaDeLi_1.push("<p><h4>" + sku_1.sku + "/" + sku_1.skuName + "</h4></p>");
                         listaDeLi_1.push("<p>");
-                        listaDeLi_1.push("<b>UM: </b><span>" + sku.codePackUnit + " </span>");
+                        listaDeLi_1.push("<b>UM: </b><span>" + sku_1.codePackUnit + " </span>");
                         listaDeLi_1.push("<b> Cant: </b><span>" + skuConDimension.qtySku + " </span>");
-                        listaDeLi_1.push("<br/><b>Pre: </b><span>" + format_number(sku.cost, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
-                        if (sku.discount !== 0) {
-                            listaDeLi_1.push("<b> Des: </b><span>" + format_number(sku.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
-                            listaDeLi_1.push("<b> Total: </b><span>" + format_number(sku.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
-                            listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(totalDescuento, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
+                        listaDeLi_1.push("<br/><b>Pre: </b><span>" + format_number(sku_1.cost, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
+                        if (sku_1.discount !== 0) {
+                            listaDeLi_1.push("<b> Des: </b><span>" + format_number(sku_1.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
+                            listaDeLi_1.push("<b> Total: </b><span>" + format_number(sku_1.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
+                            listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(total, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
                         }
                         else {
                             listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(skuConDimension.total, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
@@ -257,35 +287,79 @@ var ResumenDePedidoControlador = (function () {
                 }
                 else {
                     listaDeLi_1.push("<li data-icon='false' class='ui-field-contain ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-check'>");
-                    listaDeLi_1.push("<p><h4>" + sku.sku + "/" + sku.skuName + "</h4></p>");
+                    listaDeLi_1.push("<p><h4>" + sku_1.sku + "/" + sku_1.skuName + "</h4></p>");
                     listaDeLi_1.push("<p>");
-                    listaDeLi_1.push("<b>UM: </b><span>" + sku.codePackUnit + " </span>");
-                    listaDeLi_1.push("<b> Cant: </b><span>" + sku.qty + " </span>");
-                    listaDeLi_1.push("<br/><b>Pre: </b><span>" + format_number(sku.cost, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
-                    if (sku.discount !== 0) {
-                        switch (sku.discountType) {
+                    listaDeLi_1.push("<b>UM: </b><span>" + sku_1.codePackUnit + " </span>");
+                    listaDeLi_1.push("<b> Cant: </b><span>" + sku_1.qty + " </span>");
+                    listaDeLi_1.push("<br/><b>Pre: </b><span>" + format_number(sku_1.cost, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
+                    if (sku_1.discount !== 0) {
+                        switch (sku_1.discountType) {
                             case TiposDeDescuento.Porcentaje.toString():
-                                listaDeLi_1.push("<b> Des: </b><span>" + format_number(sku.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
+                                listaDeLi_1.push("<b> Des: </b><span>" + format_number(sku_1.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
                                 break;
                             case TiposDeDescuento.Monetario.toString():
-                                listaDeLi_1.push("<b> Des: </b><span>" + DarFormatoAlMonto(format_number(sku.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>");
+                                listaDeLi_1.push("<b> Des: </b><span>" + DarFormatoAlMonto(format_number(sku_1.appliedDiscount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>");
                                 break;
                         }
-                        listaDeLi_1.push("<b> Total: </b><span>" + format_number(sku.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
-                        listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(totalDescuento, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
+                        if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                            switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    listaDeLi_1.push("<br/><b> DMF: </b><span>" + format_number(resultadoDescuentoPorMontoGeneralYFamilia.discount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    listaDeLi_1.push("<br/><b> DMF: </b><span>" + DarFormatoAlMonto(format_number(resultadoDescuentoPorMontoGeneralYFamilia.discount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>");
+                                    break;
+                            }
+                        }
+                        if (resultadoDescuentoPorFamiliaYTipoPago) {
+                            switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    listaDeLi_1.push("<br/><b> DFT: </b><span>" + format_number(resultadoDescuentoPorFamiliaYTipoPago.discount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    listaDeLi_1.push("<br/><b> DFT: </b><span>" + DarFormatoAlMonto(format_number(resultadoDescuentoPorFamiliaYTipoPago.discount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>");
+                                    break;
+                            }
+                        }
+                        listaDeLi_1.push("<b> Total: </b><span>" + format_number(sku_1.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
+                        listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(total, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
                     }
                     else {
-                        listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(sku.total, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
+                        if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                            switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    listaDeLi_1.push("<br/><b> DMF: </b><span>" + format_number(resultadoDescuentoPorMontoGeneralYFamilia.discount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    listaDeLi_1.push("<br/><b> DMF: </b><span>" + DarFormatoAlMonto(format_number(resultadoDescuentoPorMontoGeneralYFamilia.discount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>");
+                                    break;
+                            }
+                            if (!resultadoDescuentoPorFamiliaYTipoPago) {
+                                listaDeLi_1.push("<b> Total: </b><span>" + format_number(sku_1.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
+                            }
+                        }
+                        if (resultadoDescuentoPorFamiliaYTipoPago) {
+                            switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    listaDeLi_1.push("<br/><b> DFT: </b><span>" + format_number(resultadoDescuentoPorFamiliaYTipoPago.discount, this.configuracionDecimales.defaultDisplayDecimals) + "%</span>");
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    listaDeLi_1.push("<br/><b> DFT: </b><span>" + DarFormatoAlMonto(format_number(resultadoDescuentoPorFamiliaYTipoPago.discount, this.configuracionDecimales.defaultDisplayDecimals)) + "</span>");
+                                    break;
+                            }
+                            listaDeLi_1.push("<b> Total: </b><span>" + format_number(sku_1.total, this.configuracionDecimales.defaultDisplayDecimals) + " </span>");
+                        }
+                        listaDeLi_1.push("<span class='ui-li-count' style='position:absolute; top:55%'>" + DarFormatoAlMonto(format_number(total, this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>");
                     }
-                    if (sku.dimension > 0) {
-                        listaDeLi_1.push("<b>DIM: </b><span>" + format_number(sku.dimension, this.configuracionDecimales.defaultDisplayDecimals) + "</span>");
+                    if (sku_1.dimension > 0) {
+                        listaDeLi_1.push("<b>DIM: </b><span>" + format_number(sku_1.dimension, this.configuracionDecimales.defaultDisplayDecimals) + "</span>");
                     }
                     listaDeLi_1.push("</p>");
                 }
             }
             this.listaDeSkuParaBonificacionParaOrdenDeVenta.map(function (skuBonificacion) {
                 listaDeLi_1.push("<li data-icon='false' class='ui-field-contain ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-check'>");
-                listaDeLi_1.push("<p><h4>" + skuBonificacion.sku + "/" + skuBonificacion.skuName + "</h4></p>");
+                listaDeLi_1.push("<p><h4>" + skuBonificacion.sku + "/" + (skuBonificacion.skuName = "" ? skuBonificacion.skuDescription : skuBonificacion.skuName) + "</h4></p>");
                 listaDeLi_1.push("<p>");
                 listaDeLi_1.push("<b>UM: </b><span>" + skuBonificacion.codePackUnit + " </span>");
                 listaDeLi_1.push("<b> Cantidad: </b><span>" + skuBonificacion.qty + " </span>");
@@ -301,19 +375,46 @@ var ResumenDePedidoControlador = (function () {
         }
     };
     ResumenDePedidoControlador.prototype.obtenerTotalDeOrdenDeVenta = function (descuento, listaDeSku) {
+        var _this = this;
         var total = 0;
         listaDeSku.map(function (sku) {
+            var resultadoDescuentoPorMontoGeneralYFamilia = _this.listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuentoABuscar) {
+                return descuentoABuscar.codeFamily === sku.codeFamilySku;
+            });
+            var resultadoDescuentoPorFamiliaYTipoPago = _this.listaDeDescuentoPorFamiliaYTipoPago.find(function (descuentoABuscar) {
+                return descuentoABuscar.codeFamily === sku.codeFamilySku;
+            });
+            var totalSku = sku.total;
             switch (sku.discountType) {
                 case TiposDeDescuento.Porcentaje.toString():
-                    total += (parseFloat(sku.discount.toString()) ? (sku.total - ((parseFloat(sku.appliedDiscount.toString()) * sku.total) / 100)) : sku.total);
+                    totalSku = (parseFloat(sku.discount.toString()) ? (totalSku - ((parseFloat(sku.appliedDiscount.toString()) * totalSku) / 100)) : totalSku);
                     break;
                 case TiposDeDescuento.Monetario.toString():
-                    total += (parseFloat(sku.discount.toString()) !== 0 ? (sku.total - (parseFloat(sku.appliedDiscount.toString()))) : sku.total);
-                    break;
-                default:
-                    total += sku.total;
+                    totalSku = (parseFloat(sku.discount.toString()) !== 0 ? (totalSku - (parseFloat(sku.appliedDiscount.toString()))) : totalSku);
                     break;
             }
+            if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                    case TiposDeDescuento.Porcentaje.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalSku - ((parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) * totalSku) / 100)) : totalSku);
+                        break;
+                    case TiposDeDescuento.Monetario.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalSku - (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()))) : totalSku);
+                        break;
+                }
+            }
+            if (resultadoDescuentoPorFamiliaYTipoPago) {
+                switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                    case TiposDeDescuento.Porcentaje.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalSku - ((parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) * totalSku) / 100)) : totalSku);
+                        break;
+                    case TiposDeDescuento.Monetario.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalSku - (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()))) : totalSku);
+                        break;
+                }
+            }
+            total += totalSku;
+            sku = null;
         });
         total = (descuento !== 0 ? (total - ((descuento * total) / 100)) : total);
         return total;
@@ -579,7 +680,7 @@ var ResumenDePedidoControlador = (function () {
                     ordenDeVenta.sinc = 0;
                     ordenDeVenta.isPostedVoid = 2;
                     ordenDeVenta.isVoid = false;
-                    ordenDeVenta.salesOrderType = controlador.tarea.salesOrderType;
+                    ordenDeVenta.salesOrderType = gSalesOrderType;
                     ordenDeVenta.discountByGeneralAmountApplied = controlador.cliente.appliedDiscount;
                     ordenDeVenta.discountApplied = controlador.cliente.discount;
                     ordenDeVenta.taskId = controlador.tarea.taskId;
@@ -599,6 +700,12 @@ var ResumenDePedidoControlador = (function () {
                     var listaDePromosAGuardar = [];
                     listaSku.map(function (sku) {
                         ordenDeVentaDetalle = new OrdenDeVentaDetalle();
+                        var resultadoDescuentoPorMontoGeneralYFamilia = _this.listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuentoABuscar) {
+                            return descuentoABuscar.codeFamily === sku.codeFamilySku;
+                        });
+                        var resultadoDescuentoPorFamiliaYTipoPago = _this.listaDeDescuentoPorFamiliaYTipoPago.find(function (descuentoABuscar) {
+                            return descuentoABuscar.codeFamily === sku.codeFamilySku;
+                        });
                         ordenDeVentaDetalle.salesOrderId = ordenDeVenta.salesOrderId;
                         ordenDeVentaDetalle.sku = sku.sku;
                         ordenDeVentaDetalle.lineSeq = (lineSequence + 1);
@@ -625,9 +732,15 @@ var ResumenDePedidoControlador = (function () {
                         ordenDeVentaDetalle.owner = sku.owner;
                         ordenDeVentaDetalle.ownerId = sku.ownerId;
                         ordenDeVentaDetalle.discountType = sku.discountType;
+                        ordenDeVentaDetalle.discountByFamily = (resultadoDescuentoPorMontoGeneralYFamilia ? resultadoDescuentoPorMontoGeneralYFamilia.discount : 0);
+                        ordenDeVentaDetalle.typeOfDiscountByFamily = (resultadoDescuentoPorMontoGeneralYFamilia ? resultadoDescuentoPorMontoGeneralYFamilia.discountType : "");
+                        ordenDeVentaDetalle.discountByFamilyAndPaymentType = (resultadoDescuentoPorFamiliaYTipoPago ? resultadoDescuentoPorFamiliaYTipoPago.discount : 0);
+                        ordenDeVentaDetalle.typeOfDiscountByFamilyAndPaymentType = (resultadoDescuentoPorFamiliaYTipoPago ? resultadoDescuentoPorFamiliaYTipoPago.discountType : "");
                         ordenDeVenta.ordenDeVentaDetalle.push(ordenDeVentaDetalle);
                         total += ordenDeVentaDetalle.totalLine;
                         sku.listPromo.map(function (promo) {
+                            promo.salesOrderDocumentNumber = numeroDeDocumento;
+                            promo.salesOrderDocumentSeries = serie;
                             listaDePromosAGuardar.push(promo);
                         });
                         lineSequence++;
@@ -661,6 +774,8 @@ var ResumenDePedidoControlador = (function () {
                         ordenDeVentaDetalle.ownerId = sku.ownerId;
                         ordenDeVenta.ordenDeVentaDetalle.push(ordenDeVentaDetalle);
                         sku.listPromo.map(function (promo) {
+                            promo.salesOrderDocumentNumber = numeroDeDocumento;
+                            promo.salesOrderDocumentSeries = serie;
                             listaDePromosAGuardar.push(promo);
                         });
                         lineSequence++;
@@ -676,6 +791,8 @@ var ResumenDePedidoControlador = (function () {
                                 promoParaAgregar.promoName = bonificacionPorCombo.promoName;
                                 promoParaAgregar.promoType = bonificacionPorCombo.promoType;
                                 promoParaAgregar.frequency = bonificacionPorCombo.frequency;
+                                promoParaAgregar.salesOrderDocumentNumber = numeroDeDocumento;
+                                promoParaAgregar.salesOrderDocumentSeries = serie;
                                 listaDePromosAGuardar.push(promoParaAgregar);
                                 promoParaAgregar = null;
                             }
@@ -691,9 +808,33 @@ var ResumenDePedidoControlador = (function () {
                             promoParaAgregar.promoName = bonificacion.promoName;
                             promoParaAgregar.promoType = bonificacion.promoType;
                             promoParaAgregar.frequency = bonificacion.frequency;
+                            promoParaAgregar.salesOrderDocumentNumber = numeroDeDocumento;
+                            promoParaAgregar.salesOrderDocumentSeries = serie;
                             listaDePromosAGuardar.push(promoParaAgregar);
                             promoParaAgregar = null;
                         }
+                    });
+                    _this.listaDeDescuentoPorMontoGeneralYFamilia.forEach(function (descuento) {
+                        var promoParaAgregar = new Promo();
+                        promoParaAgregar.promoId = descuento.promoId;
+                        promoParaAgregar.promoName = descuento.promoName;
+                        promoParaAgregar.promoType = descuento.promoType;
+                        promoParaAgregar.frequency = descuento.frequency;
+                        promoParaAgregar.salesOrderDocumentNumber = numeroDeDocumento;
+                        promoParaAgregar.salesOrderDocumentSeries = serie;
+                        listaDePromosAGuardar.push(promoParaAgregar);
+                        promoParaAgregar = null;
+                    });
+                    _this.listaDeDescuentoPorFamiliaYTipoPago.forEach(function (descuento) {
+                        var promoParaAgregar = new Promo();
+                        promoParaAgregar.promoId = descuento.promoId;
+                        promoParaAgregar.promoName = descuento.promoName;
+                        promoParaAgregar.promoType = descuento.promoType;
+                        promoParaAgregar.frequency = descuento.frequency;
+                        promoParaAgregar.salesOrderDocumentNumber = numeroDeDocumento;
+                        promoParaAgregar.salesOrderDocumentSeries = serie;
+                        listaDePromosAGuardar.push(promoParaAgregar);
+                        promoParaAgregar = null;
                     });
                     ordenDeVenta.detailQty = ordenDeVenta.ordenDeVentaDetalle.length;
                     ordenDeVenta.totalAmount = total;

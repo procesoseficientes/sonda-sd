@@ -205,9 +205,9 @@
                 li += `<li id=${clienteTemp.clientId} class='small-roboto ui-content'>
                         <a href='#'>
                         <p>
-                        <span><strong>CLIENTE: </strong>${clienteTemp.clientId}</span>
-                        <br><span><strong>NOMBRE CLIENTE: </strong>${clienteTemp.clientName}</span>
-                        <br><span><strong>DIRECCION: </strong>${clienteTemp.address}</span>
+                        <span>${clienteTemp.clientId}</span>
+                        <br><span>${clienteTemp.clientName}</span>
+                        <br><span>${clienteTemp.address}</span>
                         </p>
                         </a>
                       </li>`;

@@ -84,7 +84,7 @@ var default_image;
 //var SondaServerURL = "http://190.56.115.27:9596"; //IP Publica Servidor QA Mobility 
 var SondaServerURL = "";
 
-var SondaVersion = "4.2.0";
+var SondaVersion = "4.4.0";
 var SondaServerOptions =
 {
     'reconnect': true,
@@ -196,7 +196,7 @@ function DeviceIsOnline() {
         gNetworkState = navigator.connection.type.toUpperCase();
 
         states[0] = '[]';
-        states[Connection.UNKNOWN.toUpperCase()] = '?';
+        states[Connection.UNKNOWN.toUpperCase()] = 'LTE';
         states[Connection.ETHERNET.toUpperCase()] = 'Ethernet';
         states[Connection.WIFI.toUpperCase()] = 'WiFi';
         states[Connection.CELL_2G.toUpperCase()] = '2G';
@@ -2220,7 +2220,16 @@ function ShowListPicker(options, callback) {
 }
 
 function onDeviceReady() {
-
+    const path = cordova.file.externalDataDirectory;
+        console.log(path)
+        window.resolveLocalFileSystemURL(path, (dir) => {
+            console.log("got main dir",dir);
+            dir.getFile("conf.json", {create:true}, (file) => {
+                console.log("got the file", file);
+                logOb = file;
+            });
+        });
+        
     var pDebug = '1';
     try {
 
@@ -2338,6 +2347,7 @@ function onDeviceReady() {
 
         var avanceDeRutaControlador = new AvanceDeRutaControlador();
         avanceDeRutaControlador.delegarAvanceDeRutaControlador();
+
 
         //// TODO: EJEMPLO DE COMO USAR EL MESSENGER
         //var mensajero = new Messenger();

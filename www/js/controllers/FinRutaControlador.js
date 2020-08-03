@@ -80,14 +80,14 @@ function MostrarFinDeRuta() {
         changeHash: true,
         showLoadMsg: false
     });
-    //_formatoImpresion = "! 0 50 50 50 1 \r\n";
+    //_formatoImpresion = "! 0 50 _len_ 50 1 \r\n";
     _formatoImpresion = "! U1 LMARGIN 10 \r\n";
     _formatoImpresion = _formatoImpresion + "! U \r\n";
     _formatoImpresion = _formatoImpresion + "! U1 PAGE-WIDTH 1400 \r\n";
     _formatoImpresion = _formatoImpresion + "ON-FEED IGNORE \r\n";
-    _formatoImpresion = _formatoImpresion + "CENTER 550 T 1 2 0 10 " + localStorage.getItem('POS_SAT_BRANCH_NAME').toString() + "\r\n";
+    _formatoImpresion = _formatoImpresion + "CENTER 550 T 1 2 0 10 " + (localStorage.getItem('POS_SAT_BRANCH_NAME').toString()) + "\r\n";
     if (localStorage.getItem('POS_SAT_BRANCH_ADDRESS').toString() != null && localStorage.getItem('POS_SAT_BRANCH_ADDRESS').toString() !== "null") {
-        _formatoImpresion = _formatoImpresion + "CENTER 550 T 0 2 0 90 " + localStorage.getItem('POS_SAT_BRANCH_ADDRESS').toString() + "\r\n";
+        _formatoImpresion = _formatoImpresion + "CENTER 550 T 0 2 0 90 " + (localStorage.getItem('POS_SAT_BRANCH_ADDRESS').toString()) + "\r\n";
     }
     _fila = 150;
     GenerarReporte();
@@ -189,13 +189,21 @@ function BorrarDatosTablas() {
                                                                                                                                                                                             BorrarListaDeBonosPorMontoGeneral(function () {
                                                                                                                                                                                                 BorrarListaDeDescuentoPorMontoGeneral(function () {
                                                                                                                                                                                                     BorrarHistoricoDePromo(function () {
-                                                                                                                                                                                                        localStorage.setItem("LOGIN_STATUS", "CLOSE");
-                                                                                                                                                                                                        localStorage.setItem("POS_STATUS", "CLOSE");
-                                                                                                                                                                                                        localStorage.setItem("SeCargaronListas", "NO");
-                                                                                                                                                                                                        var btnStartPosAction = $("#btnStartPOS_action");
-                                                                                                                                                                                                        btnStartPosAction.css("display", "none");
-                                                                                                                                                                                                        btnStartPosAction = null;
-                                                                                                                                                                                                        _actualizandoRuta = false;
+                                                                                                                                                                                                        BorrarDescuentoPorMontoGeneralYFamilia(function () {
+                                                                                                                                                                                                            BorrarDescuentoPorFamiliaYTipoPago(function () {
+                                                                                                                                                                                                                localStorage.setItem("LOGIN_STATUS", "CLOSE");
+                                                                                                                                                                                                                localStorage.setItem("POS_STATUS", "CLOSE");
+                                                                                                                                                                                                                localStorage.setItem("SeCargaronListas", "NO");
+                                                                                                                                                                                                                var btnStartPosAction = $("#btnStartPOS_action");
+                                                                                                                                                                                                                btnStartPosAction.css("display", "none");
+                                                                                                                                                                                                                btnStartPosAction = null;
+                                                                                                                                                                                                                _actualizandoRuta = false;
+                                                                                                                                                                                                            }, function (err) {
+                                                                                                                                                                                                                notify(err);
+                                                                                                                                                                                                            });
+                                                                                                                                                                                                        }, function (err) {
+                                                                                                                                                                                                            notify(err);
+                                                                                                                                                                                                        });
                                                                                                                                                                                                     }, function (err) {
                                                                                                                                                                                                         notify(err);
                                                                                                                                                                                                     });
@@ -827,13 +835,21 @@ function BorrarTablasParaInicioDeRuta() {
                                                                                                                                                                                         BorrarListaDeBonosPorMontoGeneral(function () {
                                                                                                                                                                                             BorrarListaDeDescuentoPorMontoGeneral(function () {
                                                                                                                                                                                                 BorrarHistoricoDePromo(function () {
-                                                                                                                                                                                                    var btnImprimirReporteFinDeRuta = $('btnImprimirReporteFinDeRuta');
-                                                                                                                                                                                                    btnImprimirReporteFinDeRuta.prop("disabled", true);
-                                                                                                                                                                                                    btnImprimirReporteFinDeRuta = null;
-                                                                                                                                                                                                    localStorage.setItem("LOGIN_STATUS", "CLOSE");
-                                                                                                                                                                                                    localStorage.setItem("POS_STATUS", "CLOSE");
-                                                                                                                                                                                                    localStorage.setItem("SeCargaronListas", "NO");
-                                                                                                                                                                                                    _actualizandoRuta = false;
+                                                                                                                                                                                                    BorrarDescuentoPorMontoGeneralYFamilia(function () {
+                                                                                                                                                                                                        BorrarDescuentoPorFamiliaYTipoPago(function () {
+                                                                                                                                                                                                            var btnImprimirReporteFinDeRuta = $('btnImprimirReporteFinDeRuta');
+                                                                                                                                                                                                            btnImprimirReporteFinDeRuta.prop("disabled", true);
+                                                                                                                                                                                                            btnImprimirReporteFinDeRuta = null;
+                                                                                                                                                                                                            localStorage.setItem("LOGIN_STATUS", "CLOSE");
+                                                                                                                                                                                                            localStorage.setItem("POS_STATUS", "CLOSE");
+                                                                                                                                                                                                            localStorage.setItem("SeCargaronListas", "NO");
+                                                                                                                                                                                                            _actualizandoRuta = false;
+                                                                                                                                                                                                        }, function (err) {
+                                                                                                                                                                                                            notify(err);
+                                                                                                                                                                                                        });
+                                                                                                                                                                                                    }, function (err) {
+                                                                                                                                                                                                        notify(err);
+                                                                                                                                                                                                    });
                                                                                                                                                                                                 }, function (err) {
                                                                                                                                                                                                     notify(err);
                                                                                                                                                                                                 });

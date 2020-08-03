@@ -288,7 +288,11 @@ declare function MostrarPantallaDeControlDeFinDeRuta(documentosDeFinDeRuta: any)
 declare function EnviarBorradoresDeBonificaciones(origenDeEnvio: number): void;
 declare function AgregarHistoricoPorPromo(data):void;
 declare function MarcarHistoricoDePromocionesComoPosteado(historialDePromociones: any): void;
-
+declare function DiscountListByGeneralAmountAndFamilyNotFound(data): void;
+declare function AddDiscountListByGeneralAmountAndFamily(row): void;
+declare function DiscountListByFamilyAndPaymentTypeNotFound(data): void;
+declare function AddDiscountListByFamilyAndPaymentType(row): void;
+declare function SetApplyDiscountParameter(value): void;
 
 class JavaScriptServicio {
 

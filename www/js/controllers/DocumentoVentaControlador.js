@@ -21,6 +21,8 @@ var DocumentoVentaControlador = (function () {
         this.esPrimeraVez = true;
         this.listaDeBonificacionesPorMontoGeneral = new Array();
         this.promoServicio = new PromoServicio();
+        this.listaDeDescuentoPorMontoGeneralYFamilia = [];
+        this.listaDeDescuentoPorFamiliaYTipoPago = [];
         this.obtenerConfiguracionDeDecimales();
         this.tokenSocketIo = mensajero.subscribe(this.socketIoEntregado, getType(SocketIoMensaje), this);
         this.tokenCliente = mensajero.subscribe(this.clienteEntregado, getType(ClienteMensaje), this);
@@ -387,7 +389,9 @@ var DocumentoVentaControlador = (function () {
                         "listaDeSkuParaBonificacion": _this.listaDeSkuParaBonificacion,
                         "listaDeSkuParaBonificacionDeCombo": _this.listaDeSkuParaBonificacionDeCombo,
                         "usuarioPuedeModificarBonificacionDeCombo": _this.usuarioPuedeModificarBonificacionDeCombo,
-                        "listaDeBonificacionesPorMontoGeneral": _this.listaDeBonificacionesPorMontoGeneral
+                        "listaDeBonificacionesPorMontoGeneral": _this.listaDeBonificacionesPorMontoGeneral,
+                        "listaDeDescuentoPorMontoGeneralYFamilia": _this.listaDeDescuentoPorMontoGeneralYFamilia,
+                        "listaDeDescuentoPorFamiliaYTipoPago": _this.listaDeDescuentoPorFamiliaYTipoPago
                     }
                 });
             }, function (resultado) {
@@ -430,7 +434,8 @@ var DocumentoVentaControlador = (function () {
                         "sku": (listarSku_1.length > 0) ? listarSku_1[0] : null,
                         "listaSku": listarSku_1,
                         "estaAgregando": false,
-                        "listaDeSkuParaBonificacion": listaDeSkuParaBonificacion_1
+                        "listaDeSkuParaBonificacion": listaDeSkuParaBonificacion_1,
+                        "listaDeSkuOrdenDeVenta": _this.listaDeSkuOrdenDeVenta
                     }
                 });
             }, function (resultado) {
@@ -529,7 +534,8 @@ var DocumentoVentaControlador = (function () {
                 "cliente": this.cliente,
                 "tarea": this.tarea,
                 "configuracionDecimales": this.configuracionDecimales,
-                "esPrimeraVez": this.esPrimeraVez
+                "esPrimeraVez": this.esPrimeraVez,
+                "listaDeSkuOrdenDeVenta": this.listaDeSkuOrdenDeVenta
             }
         });
     };
@@ -654,166 +660,220 @@ var DocumentoVentaControlador = (function () {
             var cantidadSinDetalle_1 = 0;
             var skulist_1 = $("#pos_skus_page_listview");
             skulist_1.children().remove("li");
-            this.cargarBonificacionesPorMontoGeneral(function () {
-                if (_this.listaDeSkuOrdenDeVenta.length > 0) {
-                    for (var j = 0; j < _this.listaDeSkuParaBonificacionDeCombo.length; j++) {
-                        if (_this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorCombo.length > 0) {
-                            var liPorCombo = "<li LineSeq='" + j.toString() + "' esCombo='1' id='" + _this.listaDeSkuParaBonificacionDeCombo[j].comboId + "' data-filtertext='" + _this.listaDeSkuParaBonificacionDeCombo[j].comboId + " " + _this.listaDeSkuParaBonificacionDeCombo[j].nameCombo + "' style='padding:5px; background-color:#1a8dff'>";
-                            liPorCombo += "<a class='ui-alt-icon ui-shadow ui-nodisc-icon' href='#' id=''>";
-                            liPorCombo += "<h4>" + _this.listaDeSkuParaBonificacionDeCombo[j].nameCombo + " - " + (_this.listaDeSkuParaBonificacionDeCombo[j].bonusSubType === SubTipoDeBonificacionPorCombo.Unica.toString() ? DescripcionSubTipoDeBonificacionPorCombo.Unica.toString() : DescripcionSubTipoDeBonificacionPorCombo.Multiple.toString()) + "</h4>";
-                            if (_this.listaDeSkuParaBonificacionDeCombo[j].isConfig) {
-                                if (_this.listaDeSkuParaBonificacionDeCombo[j].isEmpty) {
-                                    liPorCombo += "<span class='small-roboto'>Se configuro el combo para que no bonifique</span><br/>";
-                                }
-                                else {
-                                    for (var _i = 0, _a = _this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorComboAsociados; _i < _a.length; _i++) {
-                                        var skuParaBonificacionDeCombo = _a[_i];
-                                        liPorCombo += "<span class='small-roboto'>Bonificaci\u00F3n: " + skuParaBonificacionDeCombo.descriptionSku + "</span><br/>";
-                                        if (skuParaBonificacionDeCombo.selectedQty > skuParaBonificacionDeCombo.qty) {
-                                            skuParaBonificacionDeCombo.selectedQty = skuParaBonificacionDeCombo.qty;
-                                        }
-                                        else {
-                                            if (!_this.usuarioPuedeModificarBonificacionDeCombo) {
-                                                skuParaBonificacionDeCombo.selectedQty = skuParaBonificacionDeCombo.qty;
-                                            }
-                                        }
-                                        liPorCombo += "<span class='small-roboto'>Cod. SKU: " + skuParaBonificacionDeCombo.codeSku + " UM.: " + skuParaBonificacionDeCombo.codePackUnit + " Cant.: " + skuParaBonificacionDeCombo.selectedQty + "</span><br/>";
-                                    }
-                                }
-                            }
-                            else {
-                                if (_this.listaDeSkuParaBonificacionDeCombo[j].bonusSubType === SubTipoDeBonificacionPorCombo.Unica.toString() && _this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorCombo.length > 1) {
-                                    liPorCombo += "<span class='small-roboto'>No se ha configurado la Bonificaci\u00F3n</span><br/>";
-                                }
-                                else {
-                                    if (_this.usuarioPuedeModificarBonificacionDeCombo && usarMaximaBonificacion_1 === false) {
+            this.obtenerDescuentosPorMontoYFamiliaYTipoPago(function () {
+                _this.cargarBonificacionesPorMontoGeneral(function () {
+                    if (_this.listaDeSkuOrdenDeVenta.length > 0) {
+                        for (var j = 0; j < _this.listaDeSkuParaBonificacionDeCombo.length; j++) {
+                            if (_this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorCombo.length > 0) {
+                                var liPorCombo = "<li LineSeq='" + j.toString() + "' esCombo='1' id='" + _this.listaDeSkuParaBonificacionDeCombo[j].comboId + "' data-filtertext='" + _this.listaDeSkuParaBonificacionDeCombo[j].comboId + " " + _this.listaDeSkuParaBonificacionDeCombo[j].nameCombo + "' style='padding:5px; background-color:#1a8dff'>";
+                                liPorCombo += "<a class='ui-alt-icon ui-shadow ui-nodisc-icon' href='#' id=''>";
+                                liPorCombo += "<h4>" + _this.listaDeSkuParaBonificacionDeCombo[j].nameCombo + " - " + (_this.listaDeSkuParaBonificacionDeCombo[j].bonusSubType === SubTipoDeBonificacionPorCombo.Unica.toString() ? DescripcionSubTipoDeBonificacionPorCombo.Unica.toString() : DescripcionSubTipoDeBonificacionPorCombo.Multiple.toString()) + "</h4>";
+                                if (_this.listaDeSkuParaBonificacionDeCombo[j].isConfig) {
+                                    if (_this.listaDeSkuParaBonificacionDeCombo[j].isEmpty) {
                                         liPorCombo += "<span class='small-roboto'>Se configuro el combo para que no bonifique</span><br/>";
                                     }
                                     else {
-                                        for (var _b = 0, _c = _this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorCombo; _b < _c.length; _b++) {
-                                            var skuParaBonificacionDeCombo = _c[_b];
+                                        for (var _i = 0, _a = _this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorComboAsociados; _i < _a.length; _i++) {
+                                            var skuParaBonificacionDeCombo = _a[_i];
                                             liPorCombo += "<span class='small-roboto'>Bonificaci\u00F3n: " + skuParaBonificacionDeCombo.descriptionSku + "</span><br/>";
                                             if (skuParaBonificacionDeCombo.selectedQty > skuParaBonificacionDeCombo.qty) {
                                                 skuParaBonificacionDeCombo.selectedQty = skuParaBonificacionDeCombo.qty;
                                             }
                                             else {
-                                                if (!_this.usuarioPuedeModificarBonificacionDeCombo || usarMaximaBonificacion_1) {
+                                                if (!_this.usuarioPuedeModificarBonificacionDeCombo) {
                                                     skuParaBonificacionDeCombo.selectedQty = skuParaBonificacionDeCombo.qty;
                                                 }
                                             }
-                                            liPorCombo += "<span class='small-roboto'>Cod. SKU: " + skuParaBonificacionDeCombo.codeSku + " UM.: " + skuParaBonificacionDeCombo.codePackUnit + " Cant.: " + skuParaBonificacionDeCombo.qty + "</span><br/>";
+                                            liPorCombo += "<span class='small-roboto'>Cod. SKU: " + skuParaBonificacionDeCombo.codeSku + " UM.: " + skuParaBonificacionDeCombo.codePackUnit + " Cant.: " + skuParaBonificacionDeCombo.selectedQty + "</span><br/>";
                                         }
                                     }
                                 }
+                                else {
+                                    if (_this.listaDeSkuParaBonificacionDeCombo[j].bonusSubType === SubTipoDeBonificacionPorCombo.Unica.toString() && _this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorCombo.length > 1) {
+                                        liPorCombo += "<span class='small-roboto'>No se ha configurado la Bonificaci\u00F3n</span><br/>";
+                                    }
+                                    else {
+                                        if (_this.usuarioPuedeModificarBonificacionDeCombo && usarMaximaBonificacion_1 === false) {
+                                            liPorCombo += "<span class='small-roboto'>Se configuro el combo para que no bonifique</span><br/>";
+                                        }
+                                        else {
+                                            for (var _b = 0, _c = _this.listaDeSkuParaBonificacionDeCombo[j].skusDeBonoPorCombo; _b < _c.length; _b++) {
+                                                var skuParaBonificacionDeCombo = _c[_b];
+                                                liPorCombo += "<span class='small-roboto'>Bonificaci\u00F3n: " + skuParaBonificacionDeCombo.descriptionSku + "</span><br/>";
+                                                if (skuParaBonificacionDeCombo.selectedQty > skuParaBonificacionDeCombo.qty) {
+                                                    skuParaBonificacionDeCombo.selectedQty = skuParaBonificacionDeCombo.qty;
+                                                }
+                                                else {
+                                                    if (!_this.usuarioPuedeModificarBonificacionDeCombo || usarMaximaBonificacion_1) {
+                                                        skuParaBonificacionDeCombo.selectedQty = skuParaBonificacionDeCombo.qty;
+                                                    }
+                                                }
+                                                liPorCombo += "<span class='small-roboto'>Cod. SKU: " + skuParaBonificacionDeCombo.codeSku + " UM.: " + skuParaBonificacionDeCombo.codePackUnit + " Cant.: " + skuParaBonificacionDeCombo.qty + "</span><br/>";
+                                            }
+                                        }
+                                    }
+                                }
+                                liPorCombo += "</a>";
+                                liPorCombo += "</li>";
+                                skulist_1.append(liPorCombo);
                             }
-                            liPorCombo += "</a>";
-                            liPorCombo += "</li>";
-                            skulist_1.append(liPorCombo);
+                            else {
+                                cantidadSinDetalle_1++;
+                            }
                         }
-                        else {
-                            cantidadSinDetalle_1++;
+                        if (cantidadSinDetalle_1 > 0) {
+                            notify("Tiene " + cantidadSinDetalle_1 + " combo(s) que bonifica(n) productos que en este momento no se encuentran en su bodega de preventa.");
                         }
                     }
-                    if (cantidadSinDetalle_1 > 0) {
-                        notify("Tiene " + cantidadSinDetalle_1 + " combo(s) que bonifica(n) productos que en este momento no se encuentran en su bodega de preventa.");
-                    }
-                }
-                var tabla = '<li esCombo="0" data-icon="false">' +
-                    '<table data-role="table" data-mode="reflow" class="ui-responsive table-stroke" style="width: 100%">';
-                for (var i = 0; i < _this.listaDeSkuOrdenDeVenta.length; i++) {
-                    var sku = _this.listaDeSkuOrdenDeVenta[i];
-                    tabla += '<tr style="display: flex;">';
-                    tabla += '<td style="width: 10%" valign="center" align="center">' +
-                        '<a href="#" id="' + OpcionEnListadoDePedido.Eliminar.toString() + '|' + sku.sku + '|' + sku.codePackUnit + '|detalle" class="ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext" style="margin-top: 20px;"></a></td>';
-                    tabla += '<td style="width: 60%; word-break: break-all;">';
-                    tabla += "<span class='small-roboto'>" + (sku.skuName.length > 40 ? sku.skuName.substring(0, 40) : sku.skuName) + "</span><br/>";
-                    tabla += "<span id='SKU_QTY_" + sku.sku.replace(" ", "_") + "' class='small-roboto'>Cant.: " + format_number(sku.qty, _this.configuracionDecimales.defaultDisplayDecimals) + "  UM: " + sku.codePackUnit + "  Pre.: " + DarFormatoAlMonto(format_number(sku.cost, _this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>";
-                    tabla += "<span id='SKU_AVAIL_" + sku.sku.replace(" ", "_") + "' class='small-roboto'>Disponible: " + format_number(sku.available, _this.configuracionDecimales.defaultDisplayDecimals) + "</span><br/>";
-                    if (sku.handleDimension) {
-                        tabla += "<table style='width: 75%;' data-role='table' data-mode='reflow' class='ui-responsive table-stroke'>";
-                        tabla += "<tr>";
-                        tabla += "<td style='width: 30%; text-align: left;'>";
-                        tabla += "<span class='small-roboto'>" + "<b>" + "CANTIDAD" + "</b>";
-                        tabla += "</td>";
-                        tabla += "<td style='width: 30%;text-align: center;'>";
-                        tabla += "<span class='small-roboto'>" + "<b>" + "DIMENSION" + "</b>";
-                        tabla += "</td>";
-                        tabla += "<td style='width: 30%;text-align: right;'>";
-                        tabla += "<span class='small-roboto'>" + "<b>" + "TOTAL" + "</b>";
-                        tabla += "</td>";
-                        tabla += "</tr>";
-                        for (var _d = 0, _e = sku.dimensions; _d < _e.length; _d++) {
-                            var dimension = _e[_d];
-                            var dimensionSku = trunc_number(dimension.dimensionSku, _this.configuracionDecimales.defaultCalculationsDecimals);
-                            var cantidad = trunc_number(dimension.qtySku, _this.configuracionDecimales.defaultCalculationsDecimals);
-                            var total = trunc_number(parseFloat(dimension.total.toString()), _this.configuracionDecimales.defaultCalculationsDecimals);
+                    var tabla = '<li esCombo="0" data-icon="false">' +
+                        '<table data-role="table" data-mode="reflow" class="ui-responsive table-stroke" style="width: 100%">';
+                    for (var i = 0; i < _this.listaDeSkuOrdenDeVenta.length; i++) {
+                        var sku = _this.listaDeSkuOrdenDeVenta[i];
+                        tabla += '<tr style="display: flex;">';
+                        tabla += '<td style="width: 10%" valign="center" align="center">' +
+                            '<a href="#" id="' + OpcionEnListadoDePedido.Eliminar.toString() + '|' + sku.sku + '|' + sku.codePackUnit + '|detalle" class="ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext" style="margin-top: 20px;"></a></td>';
+                        tabla += '<td style="width: 60%; word-break: break-all;">';
+                        tabla += "<span class='small-roboto'>" + (sku.skuName.length > 40 ? sku.skuName.substring(0, 40) : sku.skuName) + "</span><br/>";
+                        tabla += "<span id='SKU_QTY_" + sku.sku.replace(" ", "_") + "' class='small-roboto'>Cant.: " + format_number(sku.qty, _this.configuracionDecimales.defaultDisplayDecimals) + "  UM: " + sku.codePackUnit + "  Pre.: " + DarFormatoAlMonto(format_number(sku.cost, _this.configuracionDecimales.defaultDisplayDecimals)) + "</span><br/>";
+                        tabla += "<span id='SKU_AVAIL_" + sku.sku.replace(" ", "_") + "' class='small-roboto'>Disponible: " + format_number(sku.available, _this.configuracionDecimales.defaultDisplayDecimals) + "</span><br/>";
+                        if (sku.handleDimension) {
+                            tabla += "<table style='width: 75%;' data-role='table' data-mode='reflow' class='ui-responsive table-stroke'>";
                             tabla += "<tr>";
                             tabla += "<td style='width: 30%; text-align: left;'>";
-                            tabla += "<span class='small-roboto'>" + format_number(cantidad, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                            tabla += "<span class='small-roboto'>" + "<b>" + "CANTIDAD" + "</b>";
                             tabla += "</td>";
                             tabla += "<td style='width: 30%;text-align: center;'>";
-                            tabla += "<span class='small-roboto'>" + format_number(dimensionSku, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                            tabla += "<span class='small-roboto'>" + "<b>" + "DIMENSION" + "</b>";
                             tabla += "</td>";
                             tabla += "<td style='width: 30%;text-align: right;'>";
-                            tabla += "<span class='small-roboto'>" + format_number(total, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                            tabla += "<span class='small-roboto'>" + "<b>" + "TOTAL" + "</b>";
                             tabla += "</td>";
                             tabla += "</tr>";
+                            for (var _d = 0, _e = sku.dimensions; _d < _e.length; _d++) {
+                                var dimension = _e[_d];
+                                var dimensionSku = trunc_number(dimension.dimensionSku, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                var cantidad = trunc_number(dimension.qtySku, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                var total_1 = trunc_number(parseFloat(dimension.total.toString()), _this.configuracionDecimales.defaultCalculationsDecimals);
+                                tabla += "<tr>";
+                                tabla += "<td style='width: 30%; text-align: left;'>";
+                                tabla += "<span class='small-roboto'>" + format_number(cantidad, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                                tabla += "</td>";
+                                tabla += "<td style='width: 30%;text-align: center;'>";
+                                tabla += "<span class='small-roboto'>" + format_number(dimensionSku, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                                tabla += "</td>";
+                                tabla += "<td style='width: 30%;text-align: right;'>";
+                                tabla += "<span class='small-roboto'>" + format_number(total_1, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                                tabla += "</td>";
+                                tabla += "</tr>";
+                            }
+                            tabla += "</table><br/>";
                         }
-                        tabla += "</table><br/>";
-                    }
-                    if (sku.discount !== 0) {
-                        switch (sku.discountType) {
-                            case TiposDeDescuento.Porcentaje.toString():
-                                tabla += "<span id='SKU_DISCOUNT_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Des: " + format_number(sku.appliedDiscount, _this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
-                                break;
-                            case TiposDeDescuento.Monetario.toString():
-                                tabla += "<span id='SKU_DISCOUNT_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Des: " + DarFormatoAlMonto(format_number(sku.appliedDiscount, _this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
-                                break;
+                        var resultadoDescuentoPorMontoGeneralYFamilia = _this.listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuentoABuscar) {
+                            return descuentoABuscar.codeFamily === sku.codeFamilySku;
+                        });
+                        var resultadoDescuentoPorFamiliaYTipoPago = _this.listaDeDescuentoPorFamiliaYTipoPago.find(function (descuentoABuscar) {
+                            return descuentoABuscar.codeFamily === sku.codeFamilySku;
+                        });
+                        if (sku.discount !== 0) {
+                            switch (sku.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    tabla += "<span id='SKU_DISCOUNT_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Des: " + format_number(sku.appliedDiscount, _this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    tabla += "<span id='SKU_DISCOUNT_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Des: " + DarFormatoAlMonto(format_number(sku.appliedDiscount, _this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
+                                    break;
+                            }
+                            if (!resultadoDescuentoPorMontoGeneralYFamilia && !resultadoDescuentoPorFamiliaYTipoPago) {
+                                tabla += "<span id='SKU_LINE_TOTALCD_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Total: " + format_number(sku.total, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                            }
                         }
-                        tabla += "<span id='SKU_LINE_TOTALCD_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Total: " + format_number(sku.total, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
-                    }
-                    tabla += "";
-                    tabla += '</td>';
-                    tabla += '<td style="width: 20%">';
-                    if (sku.discount !== 0) {
-                        var totalDescuento = 0;
-                        switch (sku.discountType) {
-                            case TiposDeDescuento.Porcentaje.toString():
-                                totalDescuento = trunc_number((sku.total - ((sku.appliedDiscount * sku.total) / 100)), _this.configuracionDecimales.defaultCalculationsDecimals);
-                                break;
-                            case TiposDeDescuento.Monetario.toString():
-                                totalDescuento = trunc_number(sku.total - sku.appliedDiscount, _this.configuracionDecimales.defaultCalculationsDecimals);
-                                break;
+                        if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                            switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    tabla += "<span id='SKU_DISCOUNT_MGF_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> DMF: " + format_number(resultadoDescuentoPorMontoGeneralYFamilia.discount, _this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    tabla += "<span id='SKU_DISCOUNT_MGF_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> DMF: " + DarFormatoAlMonto(format_number(resultadoDescuentoPorMontoGeneralYFamilia.discount, _this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
+                                    break;
+                            }
+                            if (!resultadoDescuentoPorFamiliaYTipoPago) {
+                                tabla += "<span id='SKU_LINE_TOTALCD_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Total: " + format_number(sku.total, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
+                            }
                         }
-                        tabla += "<a href=\"#\" id=\"" + OpcionEnListadoDePedido.Modificar.toString() + "|" + sku.sku + "|" + sku.codePackUnit + "|detalle\" class='ui-btn ui-corner-all small-roboto' style=\"margin-top: 20px;\">" + DarFormatoAlMonto(format_number(totalDescuento, _this.configuracionDecimales.defaultDisplayDecimals)) + "</a>";
-                    }
-                    else {
-                        tabla += "<a href=\"#\" id=\"" + OpcionEnListadoDePedido.Modificar.toString() + "|" + sku.sku + "|" + sku.codePackUnit + "|detalle\" class='ui-btn ui-corner-all small-roboto' style=\"margin-top: 20px;\">" + DarFormatoAlMonto(format_number(sku.total, _this.configuracionDecimales.defaultDisplayDecimals)) + "</a>";
-                    }
-                    tabla += '</td></tr>';
-                    var listaDeSkuABonificar = new Array();
-                    _this.obtenerBonificacionPorUnidad(sku, listaDeSkuABonificar);
-                    var tieneBonificaciones = (listaDeSkuABonificar.length > 0);
-                    if (tieneBonificaciones) {
-                        tabla += '<tr style="display: flex;border-bottom: 1px solid #00ff00;border-top: 1px solid #00ff00;border-left: 1px solid #00ff00;border-right: 1px solid #00ff00;">';
-                        tabla += '<td style="width: 10%" valign="center" align="center"><a href="#" id="' + OpcionEnListadoDePedido.Eliminar.toString() + '|' + sku.sku + '|' + sku.codePackUnit + '|bonificacion" class="ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext"></a></td>';
-                        tabla += '<td style="width: 65%">';
-                        for (var _f = 0, listaDeSkuABonificar_1 = listaDeSkuABonificar; _f < listaDeSkuABonificar_1.length; _f++) {
-                            var skuParaBonificacion = listaDeSkuABonificar_1[_f];
-                            tabla += "<span style=\"display:inline-block;width:100px;word-wrap:break-word\" class='small-roboto'>Bonificaci\u00F3n: " + (skuParaBonificacion.skuDescription) + "</span><br/>";
-                            tabla += "<span class='small-roboto'>Cod. SKU: " + skuParaBonificacion.sku + " UM.: " + skuParaBonificacion.codePackUnit + " Cant.: " + skuParaBonificacion.qty + "</span><br/>";
+                        if (resultadoDescuentoPorFamiliaYTipoPago) {
+                            switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    tabla += "<span id='SKU_DISCOUNT_MGF_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> DFT: " + format_number(resultadoDescuentoPorFamiliaYTipoPago.discount, _this.configuracionDecimales.defaultDisplayDecimals) + "%</span>";
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    tabla += "<span id='SKU_DISCOUNT_MGF_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> DFT: " + DarFormatoAlMonto(format_number(resultadoDescuentoPorFamiliaYTipoPago.discount, _this.configuracionDecimales.defaultDisplayDecimals)) + "</span>";
+                                    break;
+                            }
+                            tabla += "<span id='SKU_LINE_TOTALCD_" + sku.sku.replace(" ", "_") + "' class='small-roboto'> Total: " + format_number(sku.total, _this.configuracionDecimales.defaultDisplayDecimals) + "</span>";
                         }
+                        tabla += "";
                         tabla += '</td>';
-                        tabla += '<td style="width: 25%">';
+                        tabla += '<td style="width: 20%">';
+                        var total = sku.total;
+                        if (sku.discount !== 0) {
+                            switch (sku.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    total = trunc_number((total - ((sku.appliedDiscount * total) / 100)), _this.configuracionDecimales.defaultCalculationsDecimals);
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    total = trunc_number(total - sku.appliedDiscount, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                    break;
+                            }
+                        }
+                        if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                            switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    total = trunc_number((total - ((resultadoDescuentoPorMontoGeneralYFamilia.discount * total) / 100)), _this.configuracionDecimales.defaultCalculationsDecimals);
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    total = trunc_number(total - resultadoDescuentoPorMontoGeneralYFamilia.discount, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                    break;
+                            }
+                        }
+                        if (resultadoDescuentoPorFamiliaYTipoPago) {
+                            switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    total = trunc_number((total - ((resultadoDescuentoPorFamiliaYTipoPago.discount * total) / 100)), _this.configuracionDecimales.defaultCalculationsDecimals);
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    total = trunc_number(total - resultadoDescuentoPorFamiliaYTipoPago.discount, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                    break;
+                            }
+                        }
+                        tabla += "<a href=\"#\" id=\"" + OpcionEnListadoDePedido.Modificar.toString() + "|" + sku.sku + "|" + sku.codePackUnit + "|detalle\" class='ui-btn ui-corner-all small-roboto' style=\"margin-top: 20px;\">" + DarFormatoAlMonto(format_number(total, _this.configuracionDecimales.defaultDisplayDecimals)) + "</a>";
                         tabla += '</td></tr>';
+                        var listaDeSkuABonificar = new Array();
+                        _this.obtenerBonificacionPorUnidad(sku, listaDeSkuABonificar);
+                        var tieneBonificaciones = (listaDeSkuABonificar.length > 0);
+                        if (tieneBonificaciones) {
+                            tabla += '<tr style="display: flex;border-bottom: 1px solid #00ff00;border-top: 1px solid #00ff00;border-left: 1px solid #00ff00;border-right: 1px solid #00ff00;">';
+                            tabla += '<td style="width: 10%" valign="center" align="center"><a href="#" id="' + OpcionEnListadoDePedido.Eliminar.toString() + '|' + sku.sku + '|' + sku.codePackUnit + '|bonificacion" class="ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext"></a></td>';
+                            tabla += '<td style="width: 65%">';
+                            for (var _f = 0, listaDeSkuABonificar_1 = listaDeSkuABonificar; _f < listaDeSkuABonificar_1.length; _f++) {
+                                var skuParaBonificacion = listaDeSkuABonificar_1[_f];
+                                tabla += "<span style=\"display:inline-block;width:100px;word-wrap:break-word\" class='small-roboto'>Bonificaci\u00F3n: " + (skuParaBonificacion.skuDescription) + "</span><br/>";
+                                tabla += "<span class='small-roboto'>Cod. SKU: " + skuParaBonificacion.sku + " UM.: " + skuParaBonificacion.codePackUnit + " Cant.: " + skuParaBonificacion.qty + "</span><br/>";
+                            }
+                            tabla += '</td>';
+                            tabla += '<td style="width: 25%">';
+                            tabla += '</td></tr>';
+                        }
                     }
-                }
-                tabla += '</table></li>';
-                skulist_1.append(tabla);
-                skulist_1.listview("refresh");
-                skulist_1 = null;
-                _this.establecerTotalOrdenDeVenta(_this);
-                my_dialog("", "", "close");
+                    tabla += '</table></li>';
+                    skulist_1.append(tabla);
+                    skulist_1.listview("refresh");
+                    skulist_1 = null;
+                    _this.establecerTotalOrdenDeVenta(_this);
+                    my_dialog("", "", "close");
+                }, function (resultado) {
+                    my_dialog("", "", "close");
+                    notify(resultado.mensaje);
+                });
             }, function (resultado) {
                 my_dialog("", "", "close");
                 notify(resultado.mensaje);
@@ -1439,37 +1499,92 @@ var DocumentoVentaControlador = (function () {
         });
     };
     DocumentoVentaControlador.prototype.obtenerTotalDeOrdenDeVenta = function (descuentoDelCliente, listaDeSku) {
+        var _this = this;
         var total = 0;
         listaDeSku.map(function (sku) {
+            var totalSku = sku.total;
             switch (sku.discountType) {
                 case TiposDeDescuento.Porcentaje.toString():
-                    total += (parseFloat(sku.discount.toString()) !== 0 ? (sku.total - ((parseFloat(sku.appliedDiscount.toString()) * sku.total) / 100)) : sku.total);
+                    totalSku = (parseFloat(sku.discount.toString()) !== 0 ? (totalSku - ((parseFloat(sku.appliedDiscount.toString()) * totalSku) / 100)) : totalSku);
                     break;
                 case TiposDeDescuento.Monetario.toString():
-                    total += (parseFloat(sku.discount.toString()) !== 0 ? (sku.total - (parseFloat(sku.appliedDiscount.toString()))) : sku.total);
-                    break;
-                default:
-                    total += sku.total;
+                    totalSku = (parseFloat(sku.discount.toString()) !== 0 ? (totalSku - (parseFloat(sku.appliedDiscount.toString()))) : totalSku);
                     break;
             }
+            var resultadoDescuentoPorMontoGeneralYFamilia = _this.listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuentoABuscar) {
+                return descuentoABuscar.codeFamily === sku.codeFamilySku;
+            });
+            if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                    case TiposDeDescuento.Porcentaje.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalSku - ((parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) * totalSku) / 100)) : totalSku);
+                        break;
+                    case TiposDeDescuento.Monetario.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalSku - (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()))) : totalSku);
+                        break;
+                }
+            }
+            var resultadoDescuentoPorFamiliaYTipoPago = _this.listaDeDescuentoPorFamiliaYTipoPago.find(function (descuentoABuscar) {
+                return descuentoABuscar.codeFamily === sku.codeFamilySku;
+            });
+            if (resultadoDescuentoPorFamiliaYTipoPago) {
+                switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                    case TiposDeDescuento.Porcentaje.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalSku - ((parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) * totalSku) / 100)) : totalSku);
+                        break;
+                    case TiposDeDescuento.Monetario.toString():
+                        totalSku = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalSku - (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()))) : totalSku);
+                        break;
+                }
+            }
+            total += totalSku;
         });
         total = (descuentoDelCliente !== 0 ? (total - ((descuentoDelCliente * total) / 100)) : total);
         return total;
     };
     DocumentoVentaControlador.prototype.obtenerTotalParaEnviar = function (listaDeSku, sku) {
+        var _this = this;
         var total = 0;
         listaDeSku.map(function (skuParaTotal) {
+            var totalPaquete = skuParaTotal.total;
             switch (skuParaTotal.discountType) {
                 case TiposDeDescuento.Porcentaje.toString():
-                    total += (parseFloat(skuParaTotal.discount.toString()) !== 0 ? (skuParaTotal.total - ((parseFloat(skuParaTotal.appliedDiscount.toString()) * skuParaTotal.total) / 100)) : skuParaTotal.total);
+                    totalPaquete = (parseFloat(skuParaTotal.discount.toString()) !== 0 ? (skuParaTotal.total - ((parseFloat(skuParaTotal.appliedDiscount.toString()) * skuParaTotal.total) / 100)) : skuParaTotal.total);
                     break;
                 case TiposDeDescuento.Monetario.toString():
-                    total += (parseFloat(skuParaTotal.discount.toString()) !== 0 ? (skuParaTotal.total - (parseFloat(skuParaTotal.appliedDiscount.toString()))) : skuParaTotal.total);
-                    break;
-                default:
-                    total += skuParaTotal.total;
+                    totalPaquete = (parseFloat(skuParaTotal.discount.toString()) !== 0 ? (skuParaTotal.total - (parseFloat(skuParaTotal.appliedDiscount.toString()))) : skuParaTotal.total);
                     break;
             }
+            if (sku.codeFamilySku !== skuParaTotal.codeFamilySku) {
+                var resultadoDescuentoPorMontoGeneralYFamilia = _this.listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuentoABuscar) {
+                    return descuentoABuscar.codeFamily === skuParaTotal.codeFamilySku;
+                });
+                if (resultadoDescuentoPorMontoGeneralYFamilia) {
+                    switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                        case TiposDeDescuento.Porcentaje.toString():
+                            totalPaquete = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                            break;
+                        case TiposDeDescuento.Monetario.toString():
+                            totalPaquete = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()))) : totalPaquete);
+                            break;
+                    }
+                }
+                var resultadoDescuentoPorFamiliaYTipoPago = _this.listaDeDescuentoPorFamiliaYTipoPago.find(function (descuentoABuscar) {
+                    return descuentoABuscar.codeFamily === skuParaTotal.codeFamilySku;
+                });
+                if (resultadoDescuentoPorFamiliaYTipoPago) {
+                    switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                        case TiposDeDescuento.Porcentaje.toString():
+                            totalPaquete = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                            break;
+                        case TiposDeDescuento.Monetario.toString():
+                            totalPaquete = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()))) : totalPaquete);
+                            break;
+                    }
+                }
+            }
+            total += totalPaquete;
+            totalPaquete = null;
         });
         return total;
     };
@@ -1660,6 +1775,80 @@ var DocumentoVentaControlador = (function () {
             errCallback({ codigo: -1, mensaje: "Error al cargar bonificaciones por monto general: " + ex.message });
         }
     };
+    DocumentoVentaControlador.prototype.obtenerDescuentosPorMontoYFamiliaYTipoPago = function (callback, errCallback) {
+        var _this = this;
+        try {
+            this.descuentoServicio.obtenerListaDeDescuentoPorMontoGeneralYFamilia(this.cliente, function (listaDeDescuentoPorMontoGeneralYFamilia) {
+                _this.obtenerHistoricodePromo(function (listaHistoricoDePromos) {
+                    _this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuentoPorMontoGeneralYFamilia, 0, listaHistoricoDePromos, function (listaDeDescuentoPorMontoGeneralYFamilia) {
+                        _this.descuentoServicio.obtenerDescuentoPorFamiliaYTipoPago(_this.cliente, _this.tarea, function (listaDeDescuentoPorFamiliaYTipoPago) {
+                            _this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuentoPorFamiliaYTipoPago, 0, listaHistoricoDePromos, function (listaDeDescuentoPorFamiliaYTipoPago) {
+                                _this.listaDeDescuentoPorFamiliaYTipoPago = listaDeDescuentoPorFamiliaYTipoPago;
+                                if (listaDeDescuentoPorMontoGeneralYFamilia.length > 0) {
+                                    var listaDeSku_1 = [];
+                                    _this.listaDeSkuOrdenDeVenta.forEach(function (skuOrden) {
+                                        var total = 0;
+                                        if (skuOrden.discount !== 0) {
+                                            switch (skuOrden.discountType) {
+                                                case TiposDeDescuento.Porcentaje.toString():
+                                                    total = trunc_number((skuOrden.total - ((skuOrden.appliedDiscount * skuOrden.total) / 100)), _this.configuracionDecimales.defaultCalculationsDecimals);
+                                                    break;
+                                                case TiposDeDescuento.Monetario.toString():
+                                                    total = trunc_number(skuOrden.total - skuOrden.appliedDiscount, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                                    break;
+                                            }
+                                        }
+                                        else {
+                                            total += trunc_number(skuOrden.total, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                        }
+                                        var resultadoSku = listaDeSku_1.find(function (sku) {
+                                            return (skuOrden.codeFamilySku === sku.codeFamilySku);
+                                        });
+                                        if (resultadoSku) {
+                                            resultadoSku.total += trunc_number(total, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                        }
+                                        else {
+                                            var skuAAgregar = new Sku();
+                                            skuAAgregar.codeFamilySku = skuOrden.codeFamilySku;
+                                            skuAAgregar.total = trunc_number(total, _this.configuracionDecimales.defaultCalculationsDecimals);
+                                            listaDeSku_1.push(skuAAgregar);
+                                        }
+                                    });
+                                    var listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer_1 = [];
+                                    listaDeSku_1.forEach(function (sku) {
+                                        var resultadoDescuento = listaDeDescuentoPorMontoGeneralYFamilia.find(function (descuento) {
+                                            return (sku.codeFamilySku === descuento.codeFamily) && (descuento.lowAmount <= sku.total && sku.total <= descuento.highAmount);
+                                        });
+                                        if (resultadoDescuento) {
+                                            listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer_1.push(resultadoDescuento);
+                                        }
+                                    });
+                                    _this.listaDeDescuentoPorMontoGeneralYFamilia = listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer_1;
+                                    callback();
+                                }
+                                else {
+                                    callback();
+                                }
+                            }, function (resultado) {
+                                errCallback(resultado);
+                            });
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                    }, function (resultado) {
+                        errCallback(resultado);
+                    });
+                }, function (resultado) {
+                    errCallback(resultado);
+                });
+            }, function (resultado) {
+                errCallback(resultado);
+            });
+        }
+        catch (ex) {
+            errCallback({ codigo: -1, mensaje: "Error al cargar bonificaciones por monto general: " + ex.message });
+        }
+    };
     DocumentoVentaControlador.prototype.validarSiAplicaLaBonificacionesPorMontoGeneral = function (listaDeBonificaciones, indiceDeListaDeBonificacion, listaHistoricoDePromos, callBack, errCallback) {
         var _this = this;
         try {
@@ -1730,6 +1919,118 @@ var DocumentoVentaControlador = (function () {
                 mensaje: "Error al obtener historico de promociones: " + ex.message
             });
         }
+    };
+    DocumentoVentaControlador.prototype.validarSiAplicaElDescuentoPorMontoGeneralYFamilia = function (listaDeDescuento, indiceDeListaDeDescuento, listaHistoricoDePromos, callBack, errCallback) {
+        var _this = this;
+        try {
+            if (listaHistoricoDePromos.length > 0) {
+                if (this.listaDeDescuentoPorMontoGeneralYFamiliaTerminoDeIterar(listaDeDescuento, indiceDeListaDeDescuento)) {
+                    var descuentoAValidar_1 = listaDeDescuento[indiceDeListaDeDescuento];
+                    var resultadoDePromoHistorico_2 = listaHistoricoDePromos.find(function (promo) {
+                        return promo.promoId === descuentoAValidar_1.promoId;
+                    });
+                    if (resultadoDePromoHistorico_2) {
+                        var promoDeDescuento = new Promo();
+                        promoDeDescuento.promoId = descuentoAValidar_1.promoId;
+                        promoDeDescuento.promoName = descuentoAValidar_1.promoName;
+                        promoDeDescuento.frequency = descuentoAValidar_1.frequency;
+                        this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico_2, function (aplicaDescuento) {
+                            if (!aplicaDescuento) {
+                                listaDeDescuento = listaDeDescuento.filter(function (descuento) {
+                                    return resultadoDePromoHistorico_2.promoId !== descuento.promoId;
+                                });
+                            }
+                            _this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuento, indiceDeListaDeDescuento + (aplicaDescuento ? 1 : 0), listaHistoricoDePromos, function (listaDeDescuento) {
+                                callBack(listaDeDescuento);
+                            }, function (resultado) {
+                                errCallback(resultado);
+                            });
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                        promoDeDescuento = null;
+                    }
+                    else {
+                        this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuento, indiceDeListaDeDescuento + 1, listaHistoricoDePromos, function (listaDeDescuento) {
+                            callBack(listaDeDescuento);
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                    }
+                }
+                else {
+                    callBack(listaDeDescuento);
+                }
+            }
+            else {
+                callBack(listaDeDescuento);
+            }
+        }
+        catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: "Error al validar la si aplica el descuento por monto general y familia: " + ex.message
+            });
+        }
+    };
+    DocumentoVentaControlador.prototype.listaDeDescuentoPorMontoGeneralYFamiliaTerminoDeIterar = function (listaDeDescuento, indiceDeListaDeDescuento) {
+        return (listaDeDescuento.length > 0 && listaDeDescuento.length > indiceDeListaDeDescuento);
+    };
+    DocumentoVentaControlador.prototype.validarSiAplicaElDescuentoPorFamiliaYTipoPago = function (listaDeDescuento, indiceDeListaDeDescuento, listaHistoricoDePromos, callBack, errCallback) {
+        var _this = this;
+        try {
+            if (listaHistoricoDePromos.length > 0) {
+                if (this.listaDeDescuentoPorMontoFamiliaYTipoPagoTerminoDeIterar(listaDeDescuento, indiceDeListaDeDescuento)) {
+                    var descuentoAValidar_2 = listaDeDescuento[indiceDeListaDeDescuento];
+                    var resultadoDePromoHistorico_3 = listaHistoricoDePromos.find(function (promo) {
+                        return promo.promoId === descuentoAValidar_2.promoId;
+                    });
+                    if (resultadoDePromoHistorico_3) {
+                        var promoDeDescuento = new Promo();
+                        promoDeDescuento.promoId = descuentoAValidar_2.promoId;
+                        promoDeDescuento.promoName = descuentoAValidar_2.promoName;
+                        promoDeDescuento.frequency = descuentoAValidar_2.frequency;
+                        this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico_3, function (aplicaDescuento) {
+                            if (!aplicaDescuento) {
+                                listaDeDescuento = listaDeDescuento.filter(function (descuento) {
+                                    return resultadoDePromoHistorico_3.promoId !== descuento.promoId;
+                                });
+                            }
+                            _this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuento, indiceDeListaDeDescuento + (aplicaDescuento ? 1 : 0), listaHistoricoDePromos, function (listaDeDescuento) {
+                                callBack(listaDeDescuento);
+                            }, function (resultado) {
+                                errCallback(resultado);
+                            });
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                        promoDeDescuento = null;
+                    }
+                    else {
+                        this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuento, indiceDeListaDeDescuento + 1, listaHistoricoDePromos, function (listaDeDescuento) {
+                            callBack(listaDeDescuento);
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                    }
+                }
+                else {
+                    callBack(listaDeDescuento);
+                }
+            }
+            else {
+                callBack(listaDeDescuento);
+            }
+        }
+        catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: "Error al validar la si aplica el descuento por familia y tipo pago: " + ex.message
+            });
+        }
+    };
+    DocumentoVentaControlador.prototype.listaDeDescuentoPorMontoFamiliaYTipoPagoTerminoDeIterar = function (listaDeDescuento, indiceDeListaDeDescuento) {
+        return (listaDeDescuento.length > 0 && listaDeDescuento.length > indiceDeListaDeDescuento);
     };
     return DocumentoVentaControlador;
 }());

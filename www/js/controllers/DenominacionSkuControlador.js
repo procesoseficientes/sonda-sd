@@ -19,6 +19,9 @@ var DenominacionSkuControlador = (function () {
         this.listaHistoricoDePromos = [];
         this.descuentoPorMontoGeneral = new DescuentoPorMontoGeneral();
         this.usuarioEstaRegresandoAPantallaAnterior = false;
+        this.descuentoPorMontoGeneralYFamilia = new DescuentoPorMontoGeneralYFamilia();
+        this.descuentoPorFamiliaYTipoPago = new DescuentoPorFamiliaYTipoPago();
+        this.listaDeSkuOrdenDeVenta = [];
         this.paqueteServicio = new PaqueteServicio();
         this.historicoDeArticuloServicio = new HistoricoDeArticuloServicio();
         this.precioSkuServicio = new PrecioSkuServicio();
@@ -45,9 +48,16 @@ var DenominacionSkuControlador = (function () {
                 este.listaDeSku = JSON.parse(JSON.stringify(data.options.data.listaSku));
                 este.listaDeSkuDeBonificacion = JSON.parse(JSON.stringify(data.options.data.listaDeSkuParaBonificacion));
                 este.usuarioEstaRegresandoAPantallaAnterior = false;
+                este.listaDeSkuOrdenDeVenta = data.options.data.listaDeSkuOrdenDeVenta;
                 este.cargarPantalla();
                 $.mobile.changePage("#skucant_page");
             }
+        });
+        $("#skucant_page").on("pageshow", function (e) {
+            e.preventDefault();
+            var textoCantidadSku = $("#UiTextoCantidadUnidadMedida");
+            textoCantidadSku.focus();
+            textoCantidadSku = null;
         });
         $("#UiBotonListadoDeUnidadesDeMedida").bind("touchstart", function () {
             este.usuarioSeleccionoPaquete();
@@ -94,6 +104,15 @@ var DenominacionSkuControlador = (function () {
                 DesBloquearPantalla();
             });
         });
+        $("#UiTextoCantidadUnidadMedida").on("keypress", function (e) {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                var UiBotonAceptarCantidadSku = $("#UiBotonAceptarCantidadSku");
+                UiBotonAceptarCantidadSku.focus();
+                UiBotonAceptarCantidadSku.trigger("keyup");
+                UiBotonAceptarCantidadSku = null;
+            }
+        });
     };
     DenominacionSkuControlador.prototype.cargarPantalla = function () {
         var _this = this;
@@ -118,7 +137,7 @@ var DenominacionSkuControlador = (function () {
                                             _this.obtenerBonificacionesDelPaqueteSeleccionado(function (listaBonificaciones) {
                                                 _this.cargarControlesBonificaciones(listaBonificaciones, function () {
                                                     _this.cargarControlesDeDescuento(function () {
-                                                        _this.obtenerTotalDePaquetesConDescuentoAplicados(function (total) {
+                                                        _this.obtenerTotalDePaquetesConDescuentoAplicados(false, function (total) {
                                                             _this.tarea.salesOrderTotal -= total;
                                                             _this.cargarDatosDelPaqueteSeleccionado(function () {
                                                                 my_dialog("", "", "close");
@@ -525,55 +544,59 @@ var DenominacionSkuControlador = (function () {
                 var uiEtiquetaTotalUnidadMedida = $("#UiEtiquetaTotalUnidadMedida");
                 uiEtiquetaTotalUnidadMedida.text("Total: " + DarFormatoAlMonto(format_number(paquete.price * paquete.qty, _this.configuracionDeDecimales.defaultDisplayDecimals)));
                 uiEtiquetaTotalUnidadMedida = null;
-                _this.obtenerTotalDePaquetesConDescuentoAplicados(function (total) {
-                    var uiTotalCantidadSkus = $("#UiTotalCantidadSkus");
-                    var totalDeLaOrden = _this.tarea.salesOrderTotal + total;
-                    if (totalDeLaOrden >= _this.tarea.discountPerGeneralAmountLowLimit &&
-                        _this.tarea.discountPerGeneralAmountHighLimit >= totalDeLaOrden) {
-                        uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number((totalDeLaOrden - (totalDeLaOrden * (_this.cliente.appliedDiscount / 100))), _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                        if (callback) {
-                            callback();
-                        }
-                    }
-                    else {
-                        if (totalDeLaOrden > 0) {
-                            _this.obtenerDescuentoPorMontoGeneral(totalDeLaOrden, function () {
-                                if (_this.descuentoPorMontoGeneral.apply) {
-                                    if (_this
-                                        .seAplicaElDescuentoModificado(_this.cliente.discount, _this.cliente.appliedDiscount, _this.descuentoPorMontoGeneral.discount)) {
-                                        uiTotalCantidadSkus
-                                            .text(DarFormatoAlMonto(format_number((totalDeLaOrden -
-                                            (totalDeLaOrden * (_this.cliente.appliedDiscount / 100))), _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                                    }
-                                    else {
-                                        uiTotalCantidadSkus
-                                            .text(DarFormatoAlMonto(format_number((totalDeLaOrden -
-                                            (totalDeLaOrden * (_this.descuentoPorMontoGeneral.discount / 100))), _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                                    }
-                                    uiTotalCantidadSkus = null;
-                                    if (callback) {
-                                        callback();
-                                    }
-                                }
-                                else {
-                                    uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number(totalDeLaOrden, _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                                    uiTotalCantidadSkus = null;
-                                    if (callback) {
-                                        callback();
-                                    }
-                                }
-                            }, function (resultado) {
-                                notify(resultado.mensaje);
-                            });
-                        }
-                        else {
-                            uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number(0, _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                            uiTotalCantidadSkus = null;
+                _this.obtenerTotalDePaquetesConDescuentoAplicados(true, function (total) {
+                    _this.ObtenerTotalDeLaOrden(function (totalConDes) {
+                        var uiTotalCantidadSkus = $("#UiTotalCantidadSkus");
+                        var totalDeLaOrden = totalConDes + total;
+                        if (totalDeLaOrden >= _this.tarea.discountPerGeneralAmountLowLimit &&
+                            _this.tarea.discountPerGeneralAmountHighLimit >= totalDeLaOrden) {
+                            uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number((totalDeLaOrden - (totalDeLaOrden * (_this.cliente.appliedDiscount / 100))), _this.configuracionDeDecimales.defaultDisplayDecimals)));
                             if (callback) {
                                 callback();
                             }
                         }
-                    }
+                        else {
+                            if (totalDeLaOrden > 0) {
+                                _this.obtenerDescuentoPorMontoGeneral(totalDeLaOrden, function () {
+                                    if (_this.descuentoPorMontoGeneral.apply) {
+                                        if (_this
+                                            .seAplicaElDescuentoModificado(_this.cliente.discount, _this.cliente.appliedDiscount, _this.descuentoPorMontoGeneral.discount)) {
+                                            uiTotalCantidadSkus
+                                                .text(DarFormatoAlMonto(format_number((totalDeLaOrden -
+                                                (totalDeLaOrden * (_this.cliente.appliedDiscount / 100))), _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                                        }
+                                        else {
+                                            uiTotalCantidadSkus
+                                                .text(DarFormatoAlMonto(format_number((totalDeLaOrden -
+                                                (totalDeLaOrden * (_this.descuentoPorMontoGeneral.discount / 100))), _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                                        }
+                                        uiTotalCantidadSkus = null;
+                                        if (callback) {
+                                            callback();
+                                        }
+                                    }
+                                    else {
+                                        uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number(totalDeLaOrden, _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                                        uiTotalCantidadSkus = null;
+                                        if (callback) {
+                                            callback();
+                                        }
+                                    }
+                                }, function (resultado) {
+                                    notify(resultado.mensaje);
+                                });
+                            }
+                            else {
+                                uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number(0, _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                                uiTotalCantidadSkus = null;
+                                if (callback) {
+                                    callback();
+                                }
+                            }
+                        }
+                    }, function (resultado) {
+                        notify(resultado.mensaje);
+                    });
                 }, function (resultado) {
                     notify(resultado.mensaje);
                 });
@@ -783,7 +806,8 @@ var DenominacionSkuControlador = (function () {
             errCallback({ codigo: -1, mensaje: "Error al obtener total de paquetes: " + ex.message });
         }
     };
-    DenominacionSkuControlador.prototype.obtenerTotalDePaquetesConDescuentoAplicados = function (callback, errCallback) {
+    DenominacionSkuControlador.prototype.obtenerTotalDePaquetesConDescuentoAplicados = function (aplicarDescuentoPorMontoGeneralYFamiliaYTipoPago, callback, errCallback) {
+        var _this = this;
         try {
             var total_2 = 0;
             this.paquetes.map(function (paquete) {
@@ -791,15 +815,31 @@ var DenominacionSkuControlador = (function () {
                     var totalPaquete = (paquete.price * paquete.qty);
                     switch (paquete.discountType) {
                         case TiposDeDescuento.Porcentaje.toString():
-                            total_2 += (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - ((parseFloat(paquete.appliedDiscount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                            totalPaquete = (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - ((parseFloat(paquete.appliedDiscount.toString()) * totalPaquete) / 100)) : totalPaquete);
                             break;
                         case TiposDeDescuento.Monetario.toString():
-                            total_2 += (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - (parseFloat(paquete.appliedDiscount.toString()))) : totalPaquete);
-                            break;
-                        default:
-                            total_2 += totalPaquete;
+                            totalPaquete = (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - (parseFloat(paquete.appliedDiscount.toString()))) : totalPaquete);
                             break;
                     }
+                    if (aplicarDescuentoPorMontoGeneralYFamiliaYTipoPago) {
+                        switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = (parseFloat(_this.descuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(_this.descuentoPorMontoGeneralYFamilia.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = (parseFloat(_this.descuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(_this.descuentoPorMontoGeneralYFamilia.discount.toString()))) : totalPaquete);
+                                break;
+                        }
+                        switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = (parseFloat(_this.descuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(_this.descuentoPorFamiliaYTipoPago.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = (parseFloat(_this.descuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(_this.descuentoPorFamiliaYTipoPago.discount.toString()))) : totalPaquete);
+                                break;
+                        }
+                    }
+                    total_2 += totalPaquete;
                     totalPaquete = null;
                 }
             });
@@ -834,12 +874,16 @@ var DenominacionSkuControlador = (function () {
     DenominacionSkuControlador.prototype.publicarTarea = function (callback, errCallback) {
         var _this = this;
         try {
-            this.obtenerTotalDePaquetesConDescuentoAplicados(function (total) {
-                var msg = new TareaMensaje(_this);
-                _this.tarea.salesOrderTotal += total;
-                msg.tarea = _this.tarea;
-                _this.mensajero.publish(msg, getType(TareaMensaje));
-                callback();
+            this.obtenerTotalDePaquetesConDescuentoAplicados(true, function (total) {
+                _this.ObtenerTotalDeLaOrden(function (totalConDes) {
+                    var msg = new TareaMensaje(_this);
+                    _this.tarea.salesOrderTotal = totalConDes + total;
+                    msg.tarea = _this.tarea;
+                    _this.mensajero.publish(msg, getType(TareaMensaje));
+                    callback();
+                }, function (resultado) {
+                    errCallback({ codigo: -1, mensaje: resultado.mensaje });
+                });
             }, function (resultado) {
                 errCallback({ codigo: -1, mensaje: resultado.mensaje });
             });
@@ -912,14 +956,38 @@ var DenominacionSkuControlador = (function () {
             uiListaResumenUnidadMedida.children().remove("li");
             var _loop_1 = function (paquete) {
                 if (paquete.qty !== 0) {
-                    var totalDescuento = 0;
+                    var total = (paquete.qty * paquete.price);
+                    var totalConDescuentoPorEscala = 0;
+                    var totalConDescuentoPorFamilia = 0;
                     switch (paquete.discountType) {
                         case TiposDeDescuento.Porcentaje.toString():
-                            totalDescuento = trunc_number(((paquete.qty * paquete.price) - ((paquete.appliedDiscount * (paquete.qty * paquete.price)) / 100)), this_1.configuracionDeDecimales.defaultCalculationsDecimals);
+                            total = trunc_number((total - ((paquete.appliedDiscount * total) / 100)), this_1.configuracionDeDecimales.defaultCalculationsDecimals);
                             break;
                         case TiposDeDescuento.Monetario.toString():
-                            totalDescuento = (trunc_number((paquete.qty * paquete.price), this_1.configuracionDeDecimales.defaultCalculationsDecimals) < paquete.appliedDiscount) ? 0 : trunc_number((paquete.qty * paquete.price) - paquete.appliedDiscount, this_1.configuracionDeDecimales.defaultCalculationsDecimals);
+                            total = (trunc_number(total, this_1.configuracionDeDecimales.defaultCalculationsDecimals) < paquete.appliedDiscount) ? 0 : trunc_number(total - paquete.appliedDiscount, this_1.configuracionDeDecimales.defaultCalculationsDecimals);
                             break;
+                    }
+                    totalConDescuentoPorEscala = total;
+                    if (this_1.descuentoPorMontoGeneralYFamilia.discount > 0) {
+                        switch (this_1.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                total = trunc_number((total - ((this_1.descuentoPorMontoGeneralYFamilia.discount * total) / 100)), this_1.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                total = (trunc_number(total, this_1.configuracionDeDecimales.defaultCalculationsDecimals) < this_1.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(total - this_1.descuentoPorMontoGeneralYFamilia.discount, this_1.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    totalConDescuentoPorFamilia = total;
+                    if (this_1.descuentoPorFamiliaYTipoPago.discount > 0) {
+                        switch (this_1.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                total = trunc_number((total - ((this_1.descuentoPorFamiliaYTipoPago.discount * total) / 100)), this_1.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                total = (trunc_number(total, this_1.configuracionDeDecimales.defaultCalculationsDecimals) < this_1.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(total - this_1.descuentoPorFamiliaYTipoPago.discount, this_1.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
                     }
                     var li = "<li class='ui-field - contain' data-theme='a' style='text- align: right'>";
                     li += "<a href='#' style='text-align: left; background-color: #666;' data-theme='b' class='ui-btn ui-btn-icon-top ui-nodisc-icon'>";
@@ -945,8 +1013,34 @@ var DenominacionSkuControlador = (function () {
                                     li += "<span class='HeaderSmall'>Descuento &emsp;&emsp; " + DarFormatoAlMonto(format_number(paquete.appliedDiscount, this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span><hr>";
                                     break;
                             }
-                            li += "<span class='HeaderSmall'> Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span>";
+                            if (this_1.descuentoPorMontoGeneralYFamilia.discount <= 0 && this_1.descuentoPorFamiliaYTipoPago.discount <= 0) {
+                                li += "<span class='HeaderSmall'> Total CD: " + DarFormatoAlMonto(format_number((total), this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span>";
+                            }
                         }
+                    }
+                    if (this_1.descuentoPorMontoGeneralYFamilia.discount > 0) {
+                        switch (this_1.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                li += "<span class='HeaderSmall'>Descuento(" + this_1.descuentoPorMontoGeneralYFamilia.discount + "%) &emsp;&emsp; " + DarFormatoAlMonto(format_number((this_1.descuentoPorMontoGeneralYFamilia.discount / 100) * totalConDescuentoPorEscala, this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span><hr>";
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                li += "<span class='HeaderSmall'>Descuento &emsp;&emsp; " + DarFormatoAlMonto(format_number(this_1.descuentoPorMontoGeneralYFamilia.discount, this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span><hr>";
+                                break;
+                        }
+                        if (this_1.descuentoPorFamiliaYTipoPago.discount <= 0) {
+                            li += "<span class='HeaderSmall'> Total CD: " + DarFormatoAlMonto(format_number((total), this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span>";
+                        }
+                    }
+                    if (this_1.descuentoPorFamiliaYTipoPago.discount > 0) {
+                        switch (this_1.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                li += "<span class='HeaderSmall'>Descuento(" + this_1.descuentoPorFamiliaYTipoPago.discount + "%) &emsp;&emsp; " + DarFormatoAlMonto(format_number((this_1.descuentoPorFamiliaYTipoPago.discount / 100) * totalConDescuentoPorFamilia, this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span><hr>";
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                li += "<span class='HeaderSmall'>Descuento &emsp;&emsp; " + DarFormatoAlMonto(format_number(this_1.descuentoPorFamiliaYTipoPago.discount, this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span><hr>";
+                                break;
+                        }
+                        li += "<span class='HeaderSmall'> Total CD: " + DarFormatoAlMonto(format_number((total), this_1.configuracionDeDecimales.defaultDisplayDecimals)) + "</span>";
                     }
                     li += "</li>";
                     uiListaResumenUnidadMedida.append(li);
@@ -979,7 +1073,7 @@ var DenominacionSkuControlador = (function () {
                             listaDeLi = null;
                         });
                     }
-                    totalDescuento = null;
+                    total = null;
                 }
             };
             var this_1 = this;
@@ -1392,7 +1486,11 @@ var DenominacionSkuControlador = (function () {
                 _this.descuentoServicio.obtenerDescuentosPorClienteSku(_this.cliente, _this.sku, function (listaDeDescuento) {
                     _this.validarSiAplicaElDescuento(listaDeDescuento, 0, function (listaDeDescuentoParaAplicar) {
                         _this.listaDeDescuento = listaDeDescuentoParaAplicar;
-                        callback();
+                        _this.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(function () {
+                            callback();
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
                     }, function (resultado) {
                         errCallback(resultado);
                     });
@@ -1410,67 +1508,216 @@ var DenominacionSkuControlador = (function () {
             });
         }
     };
+    DenominacionSkuControlador.prototype.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago = function (callback, errCallback) {
+        var _this = this;
+        try {
+            this.obtenerTotalDePaquetesConDescuentoAplicados(false, function (total) {
+                var totalDeLaOrden = 0;
+                _this.listaDeSkuOrdenDeVenta.forEach(function (sku) {
+                    if (sku.sku != _this.sku.sku && sku.codeFamilySku == _this.sku.codeFamilySku) {
+                        if (sku.discount !== 0) {
+                            switch (sku.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    totalDeLaOrden += trunc_number((sku.total - ((sku.discount * sku.total) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    totalDeLaOrden += trunc_number(sku.total - sku.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                    break;
+                            }
+                        }
+                        else {
+                            totalDeLaOrden += sku.total;
+                        }
+                    }
+                });
+                totalDeLaOrden += total;
+                _this.descuentoServicio.obtenerDescuentoPorMontoGeneralYFamilia(_this.cliente, _this.sku, totalDeLaOrden, function (descuentoPorMontoGeneralYFamilia) {
+                    _this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(descuentoPorMontoGeneralYFamilia, 0, function (descuentoPorMontoGeneralYFamilia) {
+                        _this.descuentoPorMontoGeneralYFamilia = descuentoPorMontoGeneralYFamilia;
+                        _this.descuentoServicio.obtenerUnDescuentoPorFamiliaYTipoPago(_this.cliente, _this.tarea, _this.sku, function (descuentoPorFamiliaYTipoPago) {
+                            _this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(descuentoPorFamiliaYTipoPago, 0, function (descuentoPorFamiliaYTipoPago) {
+                                _this.descuentoPorFamiliaYTipoPago = descuentoPorFamiliaYTipoPago;
+                                var descuentoPorFamilia = _this.descuentoPorMontoGeneralYFamilia.discount;
+                                var descuentoPorTipoPago = _this.descuentoPorFamiliaYTipoPago.discount;
+                                var uiLiDescuentoPorFamilia = $('#UiLiDescuentoPorFamilia');
+                                uiLiDescuentoPorFamilia.css("display", "none");
+                                uiLiDescuentoPorFamilia = null;
+                                var uiEtiquetaDescuentoPorFamiliaMaximo = $('#UiEtiquetaDescuentoPorFamiliaMaximo');
+                                uiEtiquetaDescuentoPorFamiliaMaximo.css("display", "none");
+                                uiEtiquetaDescuentoPorFamiliaMaximo = null;
+                                var uiEtiquetaDescuentoPorTipoPagoMaximo = $('#UiEtiquetaDescuentoPorTipoPagoMaximo');
+                                uiEtiquetaDescuentoPorTipoPagoMaximo.css("display", "none");
+                                uiEtiquetaDescuentoPorTipoPagoMaximo = null;
+                                if (descuentoPorFamilia > 0 || descuentoPorTipoPago > 0) {
+                                    var UiLiDescuentoPorFamilia = $('#UiLiDescuentoPorFamilia');
+                                    UiLiDescuentoPorFamilia.css("display", "block");
+                                    UiLiDescuentoPorFamilia = null;
+                                }
+                                if (descuentoPorFamilia > 0) {
+                                    var uiEtiquetaDescuentoPorFamiliaMaximo_1 = $('#UiEtiquetaDescuentoPorFamiliaMaximo');
+                                    uiEtiquetaDescuentoPorFamiliaMaximo_1.css("display", "block");
+                                    switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                                        case TiposDeDescuento.Porcentaje.toString():
+                                            uiEtiquetaDescuentoPorFamiliaMaximo_1.text("Descuento por monto general y familia: " + format_number(descuentoPorFamilia, _this.configuracionDeDecimales.defaultDisplayDecimals) + "%");
+                                            break;
+                                        case TiposDeDescuento.Monetario.toString():
+                                            uiEtiquetaDescuentoPorFamiliaMaximo_1.text("Descuento por monto general y familia: " + DarFormatoAlMonto(format_number(descuentoPorFamilia, _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                                            break;
+                                    }
+                                    uiEtiquetaDescuentoPorFamiliaMaximo_1 = null;
+                                }
+                                if (descuentoPorTipoPago > 0) {
+                                    var uiEtiquetaDescuentoPorTipoPagoMaximo_1 = $('#UiEtiquetaDescuentoPorTipoPagoMaximo');
+                                    uiEtiquetaDescuentoPorTipoPagoMaximo_1.css("display", "block");
+                                    switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                                        case TiposDeDescuento.Porcentaje.toString():
+                                            uiEtiquetaDescuentoPorTipoPagoMaximo_1.text("Descuento por familia y tipo pago: " + format_number(descuentoPorTipoPago, _this.configuracionDeDecimales.defaultDisplayDecimals) + "%");
+                                            break;
+                                        case TiposDeDescuento.Monetario.toString():
+                                            uiEtiquetaDescuentoPorTipoPagoMaximo_1.text("Descuento por familia y tipo pago: " + DarFormatoAlMonto(format_number(descuentoPorTipoPago, _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                                            break;
+                                    }
+                                    uiEtiquetaDescuentoPorTipoPagoMaximo_1 = null;
+                                }
+                                callback();
+                            }, function (resultado) {
+                                errCallback(resultado);
+                            });
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                    }, function (resultado) {
+                        errCallback(resultado);
+                    });
+                }, function (resultado) {
+                    errCallback(resultado);
+                });
+            }, function (resultado) {
+                my_dialog("", "", "close");
+                notify(resultado.mensaje);
+            });
+        }
+        catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: "Error al obtener descuentos por familias: " + ex.message
+            });
+        }
+    };
     DenominacionSkuControlador.prototype.validarIngresoDeDescuento = function (errCallback, callBack) {
         var _this = this;
         try {
-            this.obtenerPaqueteSeleccionado(function (paquete) {
-                paquete.appliedDiscount = 0;
-                paquete.promoDescuento = new Promo();
-                var elDescuentoIngresadoSobrepasaLoMaximo = false;
-                var resultadoDescuento = _this.listaDeDescuento.find(function (descuento) {
-                    return (_this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
-                });
-                if (resultadoDescuento) {
-                    if (_this.usuarioPuedeModificarDescuentos) {
-                        var uiTextoDescuentoSku = $("#UiTextoDescuentoSku");
-                        var cantidadDeDescuento = (uiTextoDescuentoSku.val() === "") ? 0 : parseFloat(uiTextoDescuentoSku.val());
-                        if (cantidadDeDescuento > resultadoDescuento.discount) {
-                            elDescuentoIngresadoSobrepasaLoMaximo = true;
-                            var uiListaSkuMedidas = $('#UiTextoDescuentoSku');
-                            uiListaSkuMedidas.focus();
-                            uiListaSkuMedidas = null;
+            this.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(function () {
+                _this.obtenerPaqueteSeleccionado(function (paquete) {
+                    paquete.appliedDiscount = 0;
+                    paquete.promoDescuento = new Promo();
+                    var elDescuentoIngresadoSobrepasaLoMaximo = false;
+                    var resultadoDescuento = _this.listaDeDescuento.find(function (descuento) {
+                        return (_this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
+                    });
+                    if (resultadoDescuento) {
+                        if (_this.usuarioPuedeModificarDescuentos) {
+                            var uiTextoDescuentoSku = $("#UiTextoDescuentoSku");
+                            var cantidadDeDescuento = (uiTextoDescuentoSku.val() === "") ? 0 : parseFloat(uiTextoDescuentoSku.val());
+                            if (cantidadDeDescuento > resultadoDescuento.discount) {
+                                elDescuentoIngresadoSobrepasaLoMaximo = true;
+                                var uiListaSkuMedidas = $('#UiTextoDescuentoSku');
+                                uiListaSkuMedidas.focus();
+                                uiListaSkuMedidas = null;
+                            }
+                            else {
+                                resultadoDescuento.qty = cantidadDeDescuento;
+                                paquete.appliedDiscount = cantidadDeDescuento;
+                                paquete.discountType = resultadoDescuento.discountType;
+                            }
+                            cantidadDeDescuento = null;
+                            uiTextoDescuentoSku = null;
                         }
                         else {
-                            resultadoDescuento.qty = cantidadDeDescuento;
-                            paquete.appliedDiscount = cantidadDeDescuento;
+                            paquete.appliedDiscount = resultadoDescuento.qty;
                             paquete.discountType = resultadoDescuento.discountType;
                         }
-                        cantidadDeDescuento = null;
-                        uiTextoDescuentoSku = null;
+                        paquete.promoDescuento.promoId = resultadoDescuento.promoId;
+                        paquete.promoDescuento.promoName = resultadoDescuento.promoName;
+                        paquete.promoDescuento.promoType = resultadoDescuento.promoType;
+                        paquete.promoDescuento.frequency = resultadoDescuento.frequency;
+                        var totalDescuento = (paquete.qty * paquete.price);
+                        var descuentoPorcentaje = 0;
+                        var descuentoMonetario = 0;
+                        switch (paquete.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                descuentoPorcentaje = resultadoDescuento.qty;
+                                totalDescuento = trunc_number((totalDescuento - ((descuentoPorcentaje * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                descuentoMonetario = resultadoDescuento.qty;
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < descuentoMonetario) ? 0 : trunc_number(totalDescuento - descuentoMonetario, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                descuentoPorcentaje = _this.descuentoPorMontoGeneralYFamilia.discount;
+                                totalDescuento = trunc_number((totalDescuento - ((descuentoPorcentaje * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                descuentoMonetario = _this.descuentoPorMontoGeneralYFamilia.discount;
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < descuentoMonetario) ? 0 : trunc_number(totalDescuento - descuentoMonetario, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                descuentoPorcentaje = _this.descuentoPorFamiliaYTipoPago.discount;
+                                totalDescuento = trunc_number((totalDescuento - ((descuentoPorcentaje * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                descuentoMonetario = _this.descuentoPorFamiliaYTipoPago.discount;
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < descuentoMonetario) ? 0 : trunc_number(totalDescuento - descuentoMonetario, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        var uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida.text("Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                        uiEtiquetaTotalCdUnidadMedida = null;
                     }
                     else {
-                        paquete.appliedDiscount = resultadoDescuento.qty;
-                        paquete.discountType = resultadoDescuento.discountType;
+                        var totalDescuento = (paquete.qty * paquete.price);
+                        switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((_this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < _this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - _this.descuentoPorMontoGeneralYFamilia.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((_this.descuentoPorFamiliaYTipoPago.discount * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < _this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(totalDescuento - _this.descuentoPorFamiliaYTipoPago.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        var uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "block");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "inline");
+                        uiEtiquetaTotalCdUnidadMedida.text("Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                        uiEtiquetaTotalCdUnidadMedida = null;
+                        totalDescuento = null;
                     }
-                    paquete.promoDescuento.promoId = resultadoDescuento.promoId;
-                    paquete.promoDescuento.promoName = resultadoDescuento.promoName;
-                    paquete.promoDescuento.promoType = resultadoDescuento.promoType;
-                    paquete.promoDescuento.frequency = resultadoDescuento.frequency;
-                    var totalDescuento = 0;
-                    switch (paquete.discountType) {
-                        case TiposDeDescuento.Porcentaje.toString():
-                            totalDescuento = trunc_number(((paquete.qty * paquete.price) - ((resultadoDescuento.qty * (paquete.qty * paquete.price)) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
-                        case TiposDeDescuento.Monetario.toString():
-                            totalDescuento = (trunc_number((paquete.qty * paquete.price), _this.configuracionDeDecimales.defaultCalculationsDecimals) < resultadoDescuento.qty) ? 0 : trunc_number((paquete.qty * paquete.price) - resultadoDescuento.qty, _this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
+                    resultadoDescuento = null;
+                    if (elDescuentoIngresadoSobrepasaLoMaximo) {
+                        errCallback({
+                            codigo: -1,
+                            mensaje: "El descuento sobrepasa lo máximo establecido."
+                        });
                     }
-                    var uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
-                    uiEtiquetaTotalCdUnidadMedida.text("Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                    uiEtiquetaTotalCdUnidadMedida = null;
-                }
-                resultadoDescuento = null;
-                if (elDescuentoIngresadoSobrepasaLoMaximo) {
-                    errCallback({
-                        codigo: -1,
-                        mensaje: "El descuento sobrepasa lo máximo establecido."
-                    });
-                }
-                else {
-                    if (callBack) {
-                        callBack();
+                    else {
+                        if (callBack) {
+                            callBack();
+                        }
                     }
-                }
+                }, function (resultado) {
+                    errCallback(resultado);
+                });
             }, function (resultado) {
                 errCallback(resultado);
             });
@@ -1491,70 +1738,114 @@ var DenominacionSkuControlador = (function () {
             var uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
             uiEtiquetaTotalCdUnidadMedida.css("display", "none");
             uiEtiquetaTotalCdUnidadMedida = null;
-            this.obtenerPaqueteSeleccionado(function (paquete) {
-                var resultadoDeDescuento = _this.listaDeDescuento.find(function (descuento) {
-                    return (_this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
-                });
-                if (resultadoDeDescuento) {
-                    var resultadoListaDeDescuento = _this.listaDeDescuento.filter(function (descuento) {
-                        return (_this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit !== resultadoDeDescuento.lowLimit && resultadoDeDescuento.highLimit !== descuento.highLimit);
+            this.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(function () {
+                _this.obtenerPaqueteSeleccionado(function (paquete) {
+                    var resultadoDeDescuento = _this.listaDeDescuento.find(function (descuento) {
+                        return (_this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
                     });
-                    if (resultadoListaDeDescuento && resultadoListaDeDescuento.length > 0) {
-                        resultadoListaDeDescuento.map(function (descuento) {
-                            descuento.qty = -1;
+                    if (resultadoDeDescuento) {
+                        var resultadoListaDeDescuento = _this.listaDeDescuento.filter(function (descuento) {
+                            return (_this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit !== resultadoDeDescuento.lowLimit && resultadoDeDescuento.highLimit !== descuento.highLimit);
                         });
-                    }
-                    resultadoListaDeDescuento = null;
-                    var uiListViewDescuento_1 = $('#UiLiDescuentoSkuMaximo');
-                    uiListViewDescuento_1.css("display", "block");
-                    uiListViewDescuento_1 = null;
-                    var textoAMostrar = "";
-                    switch (resultadoDeDescuento.discountType.toString()) {
-                        case TiposDeDescuento.Porcentaje.toString():
-                            textoAMostrar = "Descuento: " + resultadoDeDescuento.discount + "%";
-                            break;
-                        case TiposDeDescuento.Monetario.toString():
-                            textoAMostrar = "Descuento: " + DarFormatoAlMonto(format_number(resultadoDeDescuento.discount, _this.configuracionDeDecimales.defaultDisplayDecimals));
-                            break;
-                    }
-                    var uiEtiquetaDescuentoSkuMaximo = $('#UiEtiquetaDescuentoSkuMaximo');
-                    uiEtiquetaDescuentoSkuMaximo.text(textoAMostrar);
-                    uiEtiquetaDescuentoSkuMaximo = null;
-                    var uiDivIngresoDescuentoSku = $('#UiDivIngresoDescuentoSku');
-                    uiDivIngresoDescuentoSku.css("display", "none");
-                    if (_this.usuarioPuedeModificarDescuentos) {
-                        uiDivIngresoDescuentoSku.css("display", "block");
-                        if (localStorage.getItem("USE_MAX_DISCOUNT") === SiNo.Si.toString()) {
-                            if (resultadoDeDescuento.qty === -1) {
-                                resultadoDeDescuento.qty = ((paquete.appliedDiscount > 0) ? paquete.appliedDiscount : resultadoDeDescuento.discount);
-                            }
+                        if (resultadoListaDeDescuento && resultadoListaDeDescuento.length > 0) {
+                            resultadoListaDeDescuento.map(function (descuento) {
+                                descuento.qty = -1;
+                            });
                         }
-                        var uiTextoDescuentoSku = $('#UiTextoDescuentoSku');
-                        uiTextoDescuentoSku.val((resultadoDeDescuento.qty > 0) ? resultadoDeDescuento.qty : "");
-                        uiTextoDescuentoSku = null;
+                        resultadoListaDeDescuento = null;
+                        var uiListViewDescuento_1 = $('#UiLiDescuentoSkuMaximo');
+                        uiListViewDescuento_1.css("display", "block");
+                        uiListViewDescuento_1 = null;
+                        var textoAMostrar = "";
+                        switch (resultadoDeDescuento.discountType.toString()) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                textoAMostrar = "Descuento: " + resultadoDeDescuento.discount + "%";
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                textoAMostrar = "Descuento: " + DarFormatoAlMonto(format_number(resultadoDeDescuento.discount, _this.configuracionDeDecimales.defaultDisplayDecimals));
+                                break;
+                        }
+                        var uiEtiquetaDescuentoSkuMaximo = $('#UiEtiquetaDescuentoSkuMaximo');
+                        uiEtiquetaDescuentoSkuMaximo.text(textoAMostrar);
+                        uiEtiquetaDescuentoSkuMaximo = null;
+                        var uiDivIngresoDescuentoSku = $('#UiDivIngresoDescuentoSku');
+                        uiDivIngresoDescuentoSku.css("display", "none");
+                        if (_this.usuarioPuedeModificarDescuentos) {
+                            uiDivIngresoDescuentoSku.css("display", "block");
+                            if (localStorage.getItem("USE_MAX_DISCOUNT") === SiNo.Si.toString()) {
+                                if (resultadoDeDescuento.qty === -1) {
+                                    resultadoDeDescuento.qty = ((paquete.appliedDiscount > 0) ? paquete.appliedDiscount : resultadoDeDescuento.discount);
+                                }
+                            }
+                            var uiTextoDescuentoSku = $('#UiTextoDescuentoSku');
+                            uiTextoDescuentoSku.val((resultadoDeDescuento.qty > 0) ? resultadoDeDescuento.qty : "");
+                            uiTextoDescuentoSku = null;
+                        }
+                        else {
+                            resultadoDeDescuento.qty = resultadoDeDescuento.discount;
+                        }
+                        var totalDescuento = (paquete.qty * paquete.price);
+                        switch (paquete.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((resultadoDeDescuento.qty * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < resultadoDeDescuento.qty) ? 0 : trunc_number(totalDescuento - resultadoDeDescuento.qty, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((_this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < _this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - _this.descuentoPorMontoGeneralYFamilia.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((_this.descuentoPorFamiliaYTipoPago.discount * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < _this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(totalDescuento - _this.descuentoPorFamiliaYTipoPago.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        var uiEtiquetaTotalCdUnidadMedida_1 = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida_1.css("display", "block");
+                        uiEtiquetaTotalCdUnidadMedida_1.css("display", "inline");
+                        uiEtiquetaTotalCdUnidadMedida_1.text("Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                        uiEtiquetaTotalCdUnidadMedida_1 = null;
+                        uiDivIngresoDescuentoSku = null;
                     }
                     else {
-                        resultadoDeDescuento.qty = resultadoDeDescuento.discount;
+                        var totalDescuento = (paquete.qty * paquete.price);
+                        switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((_this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < _this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - _this.descuentoPorMontoGeneralYFamilia.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((_this.descuentoPorFamiliaYTipoPago.discount * totalDescuento) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, _this.configuracionDeDecimales.defaultCalculationsDecimals) < _this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(totalDescuento - _this.descuentoPorFamiliaYTipoPago.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        var uiEtiquetaTotalCdUnidadMedida_2 = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida_2.css("display", "block");
+                        uiEtiquetaTotalCdUnidadMedida_2.css("display", "inline");
+                        uiEtiquetaTotalCdUnidadMedida_2.text("Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), _this.configuracionDeDecimales.defaultDisplayDecimals)));
+                        uiEtiquetaTotalCdUnidadMedida_2 = null;
+                        totalDescuento = null;
                     }
-                    var totalDescuento = 0;
-                    switch (resultadoDeDescuento.discountType) {
-                        case TiposDeDescuento.Porcentaje.toString():
-                            totalDescuento = trunc_number(((paquete.qty * paquete.price) - ((resultadoDeDescuento.qty * (paquete.qty * paquete.price)) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
-                        case TiposDeDescuento.Monetario.toString():
-                            totalDescuento = (trunc_number((paquete.qty * paquete.price), _this.configuracionDeDecimales.defaultCalculationsDecimals) < resultadoDeDescuento.qty) ? 0 : trunc_number((paquete.qty * paquete.price) - resultadoDeDescuento.qty, _this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
-                    }
-                    var uiEtiquetaTotalCdUnidadMedida_1 = $("#UiEtiquetaTotalCDUnidadMedida");
-                    uiEtiquetaTotalCdUnidadMedida_1.css("display", "block");
-                    uiEtiquetaTotalCdUnidadMedida_1.css("display", "inline");
-                    uiEtiquetaTotalCdUnidadMedida_1.text("Total CD: " + DarFormatoAlMonto(format_number((totalDescuento), _this.configuracionDeDecimales.defaultDisplayDecimals)));
-                    uiEtiquetaTotalCdUnidadMedida_1 = null;
-                    totalDescuento = null;
-                    uiDivIngresoDescuentoSku = null;
-                }
-                resultadoDeDescuento = null;
-                callBack();
+                    resultadoDeDescuento = null;
+                    callBack();
+                }, function (resultado) {
+                    errCallback(resultado);
+                });
             }, function (resultado) {
                 errCallback(resultado);
             });
@@ -1737,6 +2028,148 @@ var DenominacionSkuControlador = (function () {
     };
     DenominacionSkuControlador.prototype.listaDeDescuentoTerminoDeIterar = function (listaDeDescuento, indiceDeListaDeDescuento) {
         return (listaDeDescuento.length > 0 && listaDeDescuento.length > indiceDeListaDeDescuento);
+    };
+    DenominacionSkuControlador.prototype.validarSiAplicaElDescuentoPorMontoGeneralYFamilia = function (descuentoAValidar, indiceDeListaDeDescuento, callBack, errCallback) {
+        try {
+            if (this.listaHistoricoDePromos.length > 0) {
+                var resultadoDePromoHistorico = this.listaHistoricoDePromos.find(function (promo) {
+                    return promo.promoId === descuentoAValidar.promoId;
+                });
+                if (resultadoDePromoHistorico) {
+                    var promoDeDescuento = new Promo();
+                    promoDeDescuento.promoId = descuentoAValidar.promoId;
+                    promoDeDescuento.promoName = descuentoAValidar.promoName;
+                    promoDeDescuento.frequency = descuentoAValidar.frequency;
+                    this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico, function (aplicaDescuento) {
+                        if (!aplicaDescuento) {
+                            descuentoAValidar = new DescuentoPorMontoGeneralYFamilia();
+                        }
+                        callBack(descuentoAValidar);
+                    }, function (resultado) {
+                        errCallback(resultado);
+                    });
+                }
+                else {
+                    callBack(descuentoAValidar);
+                }
+            }
+            else {
+                callBack(descuentoAValidar);
+            }
+        }
+        catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: "Error al validar la si aplica el descuento por monto general y familia: " + ex.message
+            });
+        }
+    };
+    DenominacionSkuControlador.prototype.validarSiAplicaElDescuentoPorFamiliaYTipoPago = function (descuentoAValidar, indiceDeListaDeDescuento, callBack, errCallback) {
+        try {
+            if (this.listaHistoricoDePromos.length > 0) {
+                var resultadoDePromoHistorico = this.listaHistoricoDePromos.find(function (promo) {
+                    return promo.promoId === descuentoAValidar.promoId;
+                });
+                if (resultadoDePromoHistorico) {
+                    var promoDeDescuento = new Promo();
+                    promoDeDescuento.promoId = descuentoAValidar.promoId;
+                    promoDeDescuento.promoName = descuentoAValidar.promoName;
+                    promoDeDescuento.frequency = descuentoAValidar.frequency;
+                    this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico, function (aplicaDescuento) {
+                        if (!aplicaDescuento) {
+                            descuentoAValidar = new DescuentoPorFamiliaYTipoPago();
+                        }
+                        callBack(descuentoAValidar);
+                    }, function (resultado) {
+                        errCallback(resultado);
+                    });
+                }
+                else {
+                    callBack(descuentoAValidar);
+                }
+            }
+            else {
+                callBack(descuentoAValidar);
+            }
+        }
+        catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: "Error al validar la si aplica el descuento por familia y tipo pago: " + ex.message
+            });
+        }
+    };
+    DenominacionSkuControlador.prototype.ObtenerTotalDeLaOrden = function (callBack, errCallback) {
+        var _this = this;
+        try {
+            var totalOrden = this.tarea.salesOrderTotal;
+            var total_3 = 0;
+            this.listaDeSkuOrdenDeVenta.forEach(function (sku) {
+                if (sku.sku != _this.sku.sku && sku.codeFamilySku == _this.sku.codeFamilySku) {
+                    if (sku.discount !== 0) {
+                        switch (sku.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                total_3 += trunc_number((sku.total - ((sku.discount * sku.total) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                total_3 += trunc_number(sku.total - sku.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    else {
+                        total_3 += trunc_number(sku.total, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                    }
+                }
+            });
+            totalOrden = totalOrden - total_3;
+            var totalConDescuento_1 = 0;
+            this.listaDeSkuOrdenDeVenta.forEach(function (sku) {
+                if (sku.sku != _this.sku.sku && sku.codeFamilySku == _this.sku.codeFamilySku) {
+                    var totalPaquete = sku.total;
+                    if (sku.discount !== 0) {
+                        switch (sku.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = trunc_number((sku.total - ((sku.discount * sku.total) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = trunc_number(sku.total - sku.discount, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    var descuentoPorFamilia = _this.descuentoPorMontoGeneralYFamilia.discount;
+                    var descuentoPorTipoPago = _this.descuentoPorFamiliaYTipoPago.discount;
+                    if (descuentoPorFamilia > 0) {
+                        switch (_this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = trunc_number((totalPaquete - ((descuentoPorFamilia * totalPaquete) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = trunc_number(totalPaquete - descuentoPorFamilia, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    if (descuentoPorTipoPago > 0) {
+                        switch (_this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = trunc_number((totalPaquete - ((descuentoPorTipoPago * totalPaquete) / 100)), _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = trunc_number(totalPaquete - descuentoPorTipoPago, _this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    totalConDescuento_1 += totalPaquete;
+                }
+            });
+            totalOrden = totalOrden + totalConDescuento_1;
+            callBack(totalOrden);
+        }
+        catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: "Error al obtener el total: " + ex.message
+            });
+        }
     };
     return DenominacionSkuControlador;
 }());

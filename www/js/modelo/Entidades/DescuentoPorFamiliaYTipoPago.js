@@ -3,7 +3,6 @@ var DescuentoPorFamiliaYTipoPago = (function () {
         this.discountListId = 0;
         this.paymentType = "";
         this.codeFamily = "";
-        this.descriptionFamilySku = "";
         this.discountType = "";
         this.discount = 0;
         this.promoId = 0;

@@ -51,6 +51,10 @@ var Sku = (function () {
         this.deleted = false;
         this.discountType = "";
         this.listPromo = [];
+        this.discountByFamily = 0;
+        this.discountByFamilyAndPaymentType = 0;
+        this.typeOfDiscountByFamily = "";
+        this.typeOfDiscountByFamilyAndPaymentType = "";
         if (obj === null)
             return;
         this.sku = obj.sku;

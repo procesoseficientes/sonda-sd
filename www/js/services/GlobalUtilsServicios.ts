@@ -1485,6 +1485,27 @@
                     case "AddHistoryByPromoForRoute":
                         AgregarHistoricoPorPromo(data.row);
                         break;
+                    //DescuentosPorMontoGeneralYFamilia
+                    case "not_discount_by_general_amount_and_family_list_found":
+                        DiscountListByGeneralAmountAndFamilyNotFound(data);
+                        break;
+                    case "add_discount_by_general_amount_and_family_list":
+                        AddDiscountListByGeneralAmountAndFamily(data.row);
+                        break;
+                    //DescuentosPorFamiliaYTipoPago
+                    case "not_discount_by_family_and_payment_type_list_found":
+                        DiscountListByFamilyAndPaymentTypeNotFound(data);
+                        break;
+                    case "add_discount_by_family_and_payment_type_list":
+                        AddDiscountListByFamilyAndPaymentType(data.row);
+                        break;
+                    //GetMaxBonusParameter
+                    case "not_found_GetApplyDiscountParameter":
+                        SetApplyDiscountParameter(0);
+                        break;
+                    case "add_GetApplyDiscountParameter":
+                        SetApplyDiscountParameter(data.row.Value);
+                        break;
                 }
             });
 

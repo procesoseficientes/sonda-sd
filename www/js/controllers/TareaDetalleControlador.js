@@ -543,7 +543,8 @@ var TareaDetalleControlador = (function () {
                     "tarea": this.tarea,
                     "configuracionDecimales": this.configuracionDecimales,
                     "listaSku": new Array(),
-                    "esPrimeraVez": true
+                    "esPrimeraVez": true,
+                    "listaDeSkuOrdenDeVenta": new Array()
                 }
             });
             my_dialog("", "", "closed");
@@ -707,6 +708,7 @@ var TareaDetalleControlador = (function () {
         sku.sku = "";
         sku.onHand = 0;
         var lstSku = [];
+        localStorage.setItem("LISTA_TIPO_FAMILIA_SKU", "ALL");
         this.clienteServicio.obtenerCuentaCorriente(cliente, tareaDetalleControlador.configuracionDecimales, function (cliente) {
             _this.tareaServicio.obtenerRegla("tipoOrdenDeVenta", function (listaDeReglasTipoOrdenDeVenta) {
                 _this.tareaServicio.obtenerRegla("AplicarReglasComerciales", function (listaDeReglasAplicarReglasComerciales) {

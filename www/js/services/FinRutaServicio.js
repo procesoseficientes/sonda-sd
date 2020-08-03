@@ -1363,3 +1363,43 @@ function BorrarHistoricoDePromo(callback, errCallBack) {
          }
     );
 }
+
+function BorrarDescuentoPorMontoGeneralYFamilia(callback, errCallBack) {
+    SONDA_DB_Session.transaction(
+        function (tx) {
+            var sql = " DELETE FROM DISCOUNT_LIST_BY_GENERAL_AMOUNT_AND_FAMILY";
+            tx.executeSql(sql, [],
+                function (tx, results) {
+                    callback();
+                },
+                function (tx, err) {
+                    if (err.code !== 0)
+                        errCallBack(err);
+                }
+            );
+        },
+         function (err) {
+             errCallBack(err);
+         }
+    );
+}
+
+function BorrarDescuentoPorFamiliaYTipoPago(callback, errCallBack) {
+    SONDA_DB_Session.transaction(
+        function (tx) {
+            var sql = " DELETE FROM DISCOUNT_LIST_BY_FAMILY_AND_PAYMENT_TYPE";
+            tx.executeSql(sql, [],
+                function (tx, results) {
+                    callback();
+                },
+                function (tx, err) {
+                    if (err.code !== 0)
+                        errCallBack(err);
+                }
+            );
+        },
+         function (err) {
+             errCallBack(err);
+         }
+    );
+}

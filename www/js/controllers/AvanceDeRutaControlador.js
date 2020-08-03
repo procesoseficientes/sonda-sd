@@ -47,11 +47,11 @@ var AvanceDeRutaControlador = (function () {
                 _this.configuracionDecimales = decimales;
                 _this.ordenDeVentaServicio.ObtenerTotalesParaEstadoDeRuta(_this.ordenDeVentaServicio.ObtenerCantidadDeTotalDeOrdenDeVenta(), function (total) {
                     var uiEtiquetaDeTituloTotalDePedidos = $('#UiEtiquetaDeTituloTotalDePedidos');
-                    uiEtiquetaDeTituloTotalDePedidos.text('Total CD(' + total + '):');
+                    uiEtiquetaDeTituloTotalDePedidos.text('Total CD(' + total + ')');
                     uiEtiquetaDeTituloTotalDePedidos = null;
                     _this.ordenDeVentaServicio.ObtenerTotalesParaEstadoDeRuta(_this.ordenDeVentaServicio.ObtenerTotalDeOrdenDeVenta(), function (total) {
                         var uiEtiquetaARTotalDePedidos = $('#UiEtiquetaARTotalDePedidos');
-                        uiEtiquetaARTotalDePedidos.text(DarFormatoAlMonto(format_number(total, _this.configuracionDecimales.defaultDisplayDecimals)));
+                        uiEtiquetaARTotalDePedidos.text(format_number(total, _this.configuracionDecimales.defaultDisplayDecimals));
                         uiEtiquetaARTotalDePedidos = null;
                         _this.ordenDeVentaServicio.ObtenerTotalesParaEstadoDeRuta(_this.ordenDeVentaServicio.ObtenerTotalDeClientesAVisitar(), function (total) {
                             var totalClientesAVisitar = total;
@@ -73,7 +73,7 @@ var AvanceDeRutaControlador = (function () {
                                             uiEtiquetaARTotalClientesNuevos = null;
                                             _this.ordenDeVentaServicio.ObtenerTotalesParaEstadoDeRuta(_this.ordenDeVentaServicio.ObtenerTotalSinDescuentoDeOrdenDeVenta(), function (total) {
                                                 var uiEtiquetaARTotalDePedidosSinDescuento = $('#UiEtiquetaARTotalDePedidosSinDescuento');
-                                                uiEtiquetaARTotalDePedidosSinDescuento.text(DarFormatoAlMonto(format_number(total, _this.configuracionDecimales.defaultDisplayDecimals)));
+                                                uiEtiquetaARTotalDePedidosSinDescuento.text(format_number(total, _this.configuracionDecimales.defaultDisplayDecimals));
                                                 uiEtiquetaARTotalDePedidosSinDescuento = null;
                                             }, function (resultado) {
                                                 notify(resultado.mensaje);

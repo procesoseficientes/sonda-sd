@@ -52,5 +52,5 @@
     multipleSaleQty: number;
     discountByGeneralAmountApplied: number;
     isPostedOffLine: number = 0;
-    deviceNetworkType: string = "";    
+    deviceNetworkType: string = "";
 }

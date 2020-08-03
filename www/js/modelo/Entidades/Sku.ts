@@ -50,6 +50,10 @@
     deleted: boolean = false;
     discountType: string = "";
     listPromo: Promo[] = [];
+    discountByFamily: number = 0;    
+    discountByFamilyAndPaymentType: number = 0;
+    typeOfDiscountByFamily: string = "";    
+    typeOfDiscountByFamilyAndPaymentType: string = "";
     //listaDePromo: Promo[] = [];
   
 

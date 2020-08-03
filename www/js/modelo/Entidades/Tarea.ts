@@ -26,5 +26,5 @@
     discountPerGeneralAmountHighLimit: number = -1;
     taskIsFrom: string = "";
     isPostedOffLine: number = 0;
-    deviceNetworkType: string = "";
+    deviceNetworkType: string = "";    
 }

@@ -166,7 +166,7 @@ var NuevaTareaControlador = (function () {
             var li = "";
             for (var _i = 0, clientes_1 = clientes; _i < clientes_1.length; _i++) {
                 var clienteTemp = clientes_1[_i];
-                li += "<li id=" + clienteTemp.clientId + " class='small-roboto ui-content'>\n                        <a href='#'>\n                        <p>\n                        <span><strong>CLIENTE: </strong>" + clienteTemp.clientId + "</span>\n                        <br><span><strong>NOMBRE CLIENTE: </strong>" + clienteTemp.clientName + "</span>\n                        <br><span><strong>DIRECCION: </strong>" + clienteTemp.address + "</span>\n                        </p>\n                        </a>\n                      </li>";
+                li += "<li id=" + clienteTemp.clientId + " class='small-roboto ui-content'>\n                        <a href='#'>\n                        <p>\n                        <span>" + clienteTemp.clientId + "</span>\n                        <br><span>" + clienteTemp.clientName + "</span>\n                        <br><span>" + clienteTemp.address + "</span>\n                        </p>\n                        </a>\n                      </li>";
             }
             objetoListaDeClientes.append(li);
             objetoListaDeClientes.listview("refresh");

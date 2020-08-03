@@ -18,6 +18,9 @@
     listaHistoricoDePromos: Promo[] = [];
     descuentoPorMontoGeneral: DescuentoPorMontoGeneral = new DescuentoPorMontoGeneral();
     usuarioEstaRegresandoAPantallaAnterior : boolean = false;
+    descuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia = new DescuentoPorMontoGeneralYFamilia();
+    descuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago = new DescuentoPorFamiliaYTipoPago();
+    listaDeSkuOrdenDeVenta: Sku[] = [];
 
     //----------Fin Propiedades----------//
 
@@ -58,10 +61,20 @@
                     este.configuracionDeDecimales = data.options.data.configuracionDecimales;
                     este.listaDeSku = <Array<Sku>>JSON.parse(JSON.stringify(data.options.data.listaSku));
                     este.listaDeSkuDeBonificacion = <Array<Sku>>JSON.parse(JSON.stringify(data.options.data.listaDeSkuParaBonificacion));
-                    este.usuarioEstaRegresandoAPantallaAnterior = false;
+                    este.usuarioEstaRegresandoAPantallaAnterior = false; 
+                    este.listaDeSkuOrdenDeVenta = data.options.data.listaDeSkuOrdenDeVenta
                     este.cargarPantalla();
                     $.mobile.changePage("#skucant_page");
                 }
+            });
+
+        $("#skucant_page").on("pageshow",
+            (e: JQueryEventObject) => {
+                e.preventDefault();
+                let textoCantidadSku = $("#UiTextoCantidadUnidadMedida");
+
+                textoCantidadSku.focus();
+                textoCantidadSku = null;
             });
 
         $("#UiBotonListadoDeUnidadesDeMedida").bind("touchstart", () => {
@@ -113,6 +126,18 @@
                 DesBloquearPantalla();
             });
         });
+
+        $("#UiTextoCantidadUnidadMedida").on("keypress", e => {
+            if (e.keyCode === 13) {
+
+                e.preventDefault();
+
+                let UiBotonAceptarCantidadSku = $("#UiBotonAceptarCantidadSku");
+                UiBotonAceptarCantidadSku.focus();
+                UiBotonAceptarCantidadSku.trigger("keyup");
+                UiBotonAceptarCantidadSku = null;                
+            }
+        });
     }
     //----------Fin Constructor y Delegados----------//
 
@@ -138,7 +163,7 @@
                                             this.obtenerBonificacionesDelPaqueteSeleccionado((listaBonificaciones: Bono[]) => {
                                                 this.cargarControlesBonificaciones(listaBonificaciones, () => {
                                                     this.cargarControlesDeDescuento(() => {
-                                                        this.obtenerTotalDePaquetesConDescuentoAplicados((total: number) => {
+                                                        this.obtenerTotalDePaquetesConDescuentoAplicados(false, (total: number) => {
                                                             this.tarea.salesOrderTotal -= total;
                                                             this.cargarDatosDelPaqueteSeleccionado(() => {
                                                                 my_dialog("", "", "close");
@@ -583,9 +608,11 @@
                 uiEtiquetaTotalUnidadMedida.text(`Total: ${DarFormatoAlMonto(format_number(paquete.price * paquete.qty, this.configuracionDeDecimales.defaultDisplayDecimals))}`);
                 uiEtiquetaTotalUnidadMedida = null;
 
-                this.obtenerTotalDePaquetesConDescuentoAplicados((total: number) => {
+                this.obtenerTotalDePaquetesConDescuentoAplicados(true, (total: number) => {                    
+                    this.ObtenerTotalDeLaOrden((totalConDes: number)=>{
                     let uiTotalCantidadSkus = $("#UiTotalCantidadSkus");
-                    let totalDeLaOrden = this.tarea.salesOrderTotal + total;
+                    let totalDeLaOrden = totalConDes + total;
+
                     if (totalDeLaOrden >= this.tarea.discountPerGeneralAmountLowLimit &&
                         this.tarea.discountPerGeneralAmountHighLimit >= totalDeLaOrden) {
                         uiTotalCantidadSkus.text(DarFormatoAlMonto(format_number((totalDeLaOrden - (totalDeLaOrden * (this.cliente.appliedDiscount / 100))), this.configuracionDeDecimales.defaultDisplayDecimals)));
@@ -638,6 +665,10 @@
                 }, (resultado: Operacion) => {
                     notify(resultado.mensaje);
                 });
+                    }, (resultado: Operacion) => {
+                     notify(resultado.mensaje);
+                });
+                    
             }, (resultado: Operacion) => {
                 notify(resultado.mensaje);
             });
@@ -848,23 +879,42 @@
         }
     }
 
-    obtenerTotalDePaquetesConDescuentoAplicados(callback: (total: number) => void, errCallback: (resultado: Operacion) => void) {
+    obtenerTotalDePaquetesConDescuentoAplicados(aplicarDescuentoPorMontoGeneralYFamiliaYTipoPago: boolean, callback: (total: number) => void, errCallback: (resultado: Operacion) => void) {
         try {
             let total = 0;
             this.paquetes.map((paquete: Paquete) => {
                 if (paquete.qty !== 0) {
-                    let totalPaquete: number = (paquete.price * paquete.qty);
+                    let totalPaquete: number = (paquete.price * paquete.qty);                    
                     switch (paquete.discountType) {
                         case TiposDeDescuento.Porcentaje.toString():
-                            total += (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - ((parseFloat(paquete.appliedDiscount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                            totalPaquete = (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - ((parseFloat(paquete.appliedDiscount.toString()) * totalPaquete) / 100)) : totalPaquete);
                             break;
                         case TiposDeDescuento.Monetario.toString():
-                            total += (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - (parseFloat(paquete.appliedDiscount.toString()))) : totalPaquete);
-                            break;
-                        default:
-                            total += totalPaquete;
-                            break;
+                            totalPaquete = (parseFloat(paquete.appliedDiscount.toString()) !== 0 ? (totalPaquete - (parseFloat(paquete.appliedDiscount.toString()))) : totalPaquete);
+                            break;                        
                     }
+                    //-----Validamos si aplicamos el descuento de familia y tipo
+                    if(aplicarDescuentoPorMontoGeneralYFamiliaYTipoPago){
+                        //-----Aplicamos el descuento por monto general y familia
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                            totalPaquete = (parseFloat(this.descuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(this.descuentoPorMontoGeneralYFamilia.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                            totalPaquete  = (parseFloat(this.descuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(this.descuentoPorMontoGeneralYFamilia.discount.toString()))) : totalPaquete);
+                                break;
+                        }
+                        //-----Aplicamos el descuento por familia y tipo pago
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = (parseFloat(this.descuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(this.descuentoPorFamiliaYTipoPago.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete  = (parseFloat(this.descuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(this.descuentoPorFamiliaYTipoPago.discount.toString()))) : totalPaquete);
+                                break;
+                        }
+                    }                    
+                    total += totalPaquete;
                     totalPaquete = null;
                 }
             });
@@ -899,12 +949,16 @@
 
     publicarTarea(callback: () => void, errCallback: (resultado: Operacion) => void) {
         try {
-            this.obtenerTotalDePaquetesConDescuentoAplicados((total: number) => {
-                let msg = new TareaMensaje(this);
-                this.tarea.salesOrderTotal += total;
-                msg.tarea = this.tarea;
-                this.mensajero.publish(msg, getType(TareaMensaje));
-                callback();
+            this.obtenerTotalDePaquetesConDescuentoAplicados(true, (total: number) => {
+                this.ObtenerTotalDeLaOrden((totalConDes: number)=>{
+                    let msg = new TareaMensaje(this);
+                    this.tarea.salesOrderTotal = totalConDes + total;
+                    msg.tarea = this.tarea;
+                    this.mensajero.publish(msg, getType(TareaMensaje));
+                    callback();
+                 }, (resultado: Operacion) => {
+                    errCallback(<Operacion>{ codigo: -1, mensaje: resultado.mensaje });
+                });                
             }, (resultado: Operacion) => {
                 errCallback(<Operacion>{ codigo: -1, mensaje: resultado.mensaje });
             });
@@ -981,21 +1035,50 @@
             }
 
             let uiListaResumenUnidadMedida = $("#UiListaResumenUnidadMedida");
-            uiListaResumenUnidadMedida.children().remove("li");
+            uiListaResumenUnidadMedida.children().remove("li");            
 
             for (let paquete of this.paquetes) {
                 if (paquete.qty !== 0) {
 
-                    let totalDescuento = 0;
+                    let total : number= (paquete.qty * paquete.price);     
+                    let totalConDescuentoPorEscala : number = 0;
+                    let totalConDescuentoPorFamilia : number = 0;
                     switch (paquete.discountType) {
                         case TiposDeDescuento.Porcentaje.toString():
-                            totalDescuento = trunc_number(((paquete.qty * paquete.price) - ((paquete.appliedDiscount * (paquete.qty * paquete.price)) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                            total = trunc_number((total - ((paquete.appliedDiscount * total) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
                             break;
                         case TiposDeDescuento.Monetario.toString():
-                            totalDescuento = (trunc_number((paquete.qty * paquete.price), this.configuracionDeDecimales.defaultCalculationsDecimals) < paquete.appliedDiscount) ? 0 : trunc_number((paquete.qty * paquete.price) - paquete.appliedDiscount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                            total = (trunc_number(total, this.configuracionDeDecimales.defaultCalculationsDecimals) < paquete.appliedDiscount) ? 0 : trunc_number(total - paquete.appliedDiscount, this.configuracionDeDecimales.defaultCalculationsDecimals);
                             break;
                     }
+                    totalConDescuentoPorEscala = total;
 
+                    //-----Validamos si aplica el descuento por monto general y familia
+                    if(this.descuentoPorMontoGeneralYFamilia.discount > 0){
+                        //-----Aplicamos el descuento por monto general y familia
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                total = trunc_number((total - ((this.descuentoPorMontoGeneralYFamilia.discount * total) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                total = (trunc_number(total, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(total - this.descuentoPorMontoGeneralYFamilia.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    totalConDescuentoPorFamilia = total;
+
+                    //-----Validamos si aplica el descuento por familia y tipo pago
+                    if(this.descuentoPorFamiliaYTipoPago.discount > 0){
+                        //-----Aplicamos el descuento por familia y tipo pago
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                total = trunc_number((total - ((this.descuentoPorFamiliaYTipoPago.discount * total) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                total = (trunc_number(total, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(total - this.descuentoPorFamiliaYTipoPago.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
 
                     let li = "<li class='ui-field - contain' data-theme='a' style='text- align: right'>";
                     li += "<a href='#' style='text-align: left; background-color: #666;' data-theme='b' class='ui-btn ui-btn-icon-top ui-nodisc-icon'>";
@@ -1024,9 +1107,40 @@
                                     li += `<span class='HeaderSmall'>Descuento &emsp;&emsp; ${DarFormatoAlMonto(format_number(paquete.appliedDiscount, this.configuracionDeDecimales.defaultDisplayDecimals))}</span><hr>`;
                                     break;
                             }
-                            li += `<span class='HeaderSmall'> Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}</span>`;
+                            //Validamos si hay un descuento por familia o tipo de pago
+                            if(this.descuentoPorMontoGeneralYFamilia.discount <= 0 && this.descuentoPorFamiliaYTipoPago.discount <= 0){
+                                li += `<span class='HeaderSmall'> Total CD: ${DarFormatoAlMonto(format_number((total), this.configuracionDeDecimales.defaultDisplayDecimals))}</span>`;
+                            }                            
                         }
                     }
+                    //Validamos si aplica el descuento por monto genera y familia
+                    if(this.descuentoPorMontoGeneralYFamilia.discount > 0){
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                li += `<span class='HeaderSmall'>Descuento(${this.descuentoPorMontoGeneralYFamilia.discount}%) &emsp;&emsp; ${DarFormatoAlMonto(format_number((this.descuentoPorMontoGeneralYFamilia.discount / 100) * totalConDescuentoPorEscala, this.configuracionDeDecimales.defaultDisplayDecimals))}</span><hr>`;
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                li += `<span class='HeaderSmall'>Descuento &emsp;&emsp; ${DarFormatoAlMonto(format_number(this.descuentoPorMontoGeneralYFamilia.discount, this.configuracionDeDecimales.defaultDisplayDecimals))}</span><hr>`;
+                                break;
+                        }
+                        if(this.descuentoPorFamiliaYTipoPago.discount <= 0){
+                            li += `<span class='HeaderSmall'> Total CD: ${DarFormatoAlMonto(format_number((total), this.configuracionDeDecimales.defaultDisplayDecimals))}</span>`;                        
+                        }                        
+                    }
+                    //Validamos si aplica el descuento por familia y tipo pago
+                    if(this.descuentoPorFamiliaYTipoPago.discount > 0){
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                li += `<span class='HeaderSmall'>Descuento(${this.descuentoPorFamiliaYTipoPago.discount}%) &emsp;&emsp; ${DarFormatoAlMonto(format_number((this.descuentoPorFamiliaYTipoPago.discount / 100) * totalConDescuentoPorFamilia, this.configuracionDeDecimales.defaultDisplayDecimals))}</span><hr>`;
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                li += `<span class='HeaderSmall'>Descuento &emsp;&emsp; ${DarFormatoAlMonto(format_number(this.descuentoPorFamiliaYTipoPago.discount, this.configuracionDeDecimales.defaultDisplayDecimals))}</span><hr>`;
+                                break;
+                        }                        
+                        li += `<span class='HeaderSmall'> Total CD: ${DarFormatoAlMonto(format_number((total), this.configuracionDeDecimales.defaultDisplayDecimals))}</span>`;                        
+                                                
+                    }
+
                     li += "</li>";
                     uiListaResumenUnidadMedida.append(li);
                     uiListaResumenUnidadMedida.listview("refresh");
@@ -1065,7 +1179,7 @@
                         });
                     }
 
-                    totalDescuento = null;
+                    total = null;
                 }
             }
             uiListaResumenUnidadMedida = null;
@@ -1482,7 +1596,11 @@
                 this.descuentoServicio.obtenerDescuentosPorClienteSku(this.cliente, this.sku, (listaDeDescuento: DescuentoPorEscalaSku[]) => {
                     this.validarSiAplicaElDescuento(listaDeDescuento, 0, (listaDeDescuentoParaAplicar: DescuentoPorEscalaSku[]) => {
                         this.listaDeDescuento = listaDeDescuentoParaAplicar;
-                        callback();
+                        this.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(()=>{
+                            callback();
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });                        
                     }, (resultado: Operacion) => {
                         errCallback(resultado);
                     });
@@ -1500,68 +1618,243 @@
         }
     }
 
-    validarIngresoDeDescuento(errCallback: (resultado: Operacion) => void, callBack?: () => void) {
-        try {
-            this.obtenerPaqueteSeleccionado((paquete: Paquete) => {
-                paquete.appliedDiscount = 0;
-                paquete.promoDescuento = new Promo();
-                let elDescuentoIngresadoSobrepasaLoMaximo = false;
-                let resultadoDescuento: DescuentoPorEscalaSku = this.listaDeDescuento.find((descuento: DescuentoPorEscalaSku) => {
-                    return (this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
-                });
-                if (resultadoDescuento) {
+    cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(callback:()=>void, errCallback:(resultado: Operacion)=>void){
+        try{
+            this.obtenerTotalDePaquetesConDescuentoAplicados(false,(total: number) => {
+                let totalDeLaOrden: number = 0;//this.tarea.salesOrderTotal + total;
+                this.listaDeSkuOrdenDeVenta.forEach((sku:Sku)=>{                    
+                    if(sku.sku != this.sku.sku && sku.codeFamilySku == this.sku.codeFamilySku){
+                        if (sku.discount !== 0) {
+                            switch (sku.discountType) {
+                                case TiposDeDescuento.Porcentaje.toString():
+                                    totalDeLaOrden += trunc_number((sku.total - ((sku.discount * sku.total) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                    break;
+                                case TiposDeDescuento.Monetario.toString():
+                                    totalDeLaOrden += trunc_number(sku.total - sku.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                    break;
+                            }
+                        }
+                        else{
+                            totalDeLaOrden += sku.total
+                        }
+                    }                
+                })
+                
+                totalDeLaOrden += total;
+                //-----Obtenemos descuento por monto general y familia
+                this.descuentoServicio.obtenerDescuentoPorMontoGeneralYFamilia(this.cliente, this.sku, totalDeLaOrden, (descuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia)=>{                    
+                    //-----Validamos si aplica el descuento por monto general y familia
+                    this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(descuentoPorMontoGeneralYFamilia, 0, (descuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia)=>{
+                        this.descuentoPorMontoGeneralYFamilia = descuentoPorMontoGeneralYFamilia;
+                        //-----Obtenemos descuento por familia y tipo pago
+                        this.descuentoServicio.obtenerUnDescuentoPorFamiliaYTipoPago(this.cliente, this.tarea, this.sku, (descuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago)=>{
+                            //-----Validamos si aplica el descuento por familia y tipo pago
+                            this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(descuentoPorFamiliaYTipoPago, 0, (descuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago)=>{
+                                this.descuentoPorFamiliaYTipoPago = descuentoPorFamiliaYTipoPago
+                            
+                                let descuentoPorFamilia: number = this.descuentoPorMontoGeneralYFamilia.discount;
+                                let descuentoPorTipoPago: number = this.descuentoPorFamiliaYTipoPago.discount;
+                                
+                                //-----Ocultamos las etiquetas 
+                                let uiLiDescuentoPorFamilia = $('#UiLiDescuentoPorFamilia');
+                                uiLiDescuentoPorFamilia.css("display", "none");                                
+                                uiLiDescuentoPorFamilia = null;
 
-                    if (this.usuarioPuedeModificarDescuentos) {
-                        let uiTextoDescuentoSku = $("#UiTextoDescuentoSku");
-                        let cantidadDeDescuento = (uiTextoDescuentoSku.val() === "") ? 0 : parseFloat(uiTextoDescuentoSku.val());
-                        if (cantidadDeDescuento > resultadoDescuento.discount) {
-                            elDescuentoIngresadoSobrepasaLoMaximo = true;
-                            let uiListaSkuMedidas = $('#UiTextoDescuentoSku');
-                            uiListaSkuMedidas.focus();
-                            uiListaSkuMedidas = null;
+                                let uiEtiquetaDescuentoPorFamiliaMaximo = $('#UiEtiquetaDescuentoPorFamiliaMaximo');
+                                uiEtiquetaDescuentoPorFamiliaMaximo.css("display", "none");
+                                uiEtiquetaDescuentoPorFamiliaMaximo = null;
+
+                                let uiEtiquetaDescuentoPorTipoPagoMaximo = $('#UiEtiquetaDescuentoPorTipoPagoMaximo');
+                                uiEtiquetaDescuentoPorTipoPagoMaximo.css("display", "none");
+                                uiEtiquetaDescuentoPorTipoPagoMaximo = null;
+
+                                //-----Validamos si  aplica un descuento
+                                if(descuentoPorFamilia > 0 || descuentoPorTipoPago > 0){
+                                    let UiLiDescuentoPorFamilia = $('#UiLiDescuentoPorFamilia');
+                                    UiLiDescuentoPorFamilia.css("display", "block");
+                                    UiLiDescuentoPorFamilia = null;                                   
+                                }
+                                //----Validamos si aplica el descuento por monto general y familia
+                                if(descuentoPorFamilia > 0){
+                                    
+                                    let uiEtiquetaDescuentoPorFamiliaMaximo = $('#UiEtiquetaDescuentoPorFamiliaMaximo');
+                                    uiEtiquetaDescuentoPorFamiliaMaximo.css("display", "block");
+                                    switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                                        case TiposDeDescuento.Porcentaje.toString():
+                                            uiEtiquetaDescuentoPorFamiliaMaximo.text(`Descuento por monto general y familia: ${format_number(descuentoPorFamilia, this.configuracionDeDecimales.defaultDisplayDecimals)}%`);
+                                            break;
+                                        case TiposDeDescuento.Monetario.toString():
+                                        uiEtiquetaDescuentoPorFamiliaMaximo.text(`Descuento por monto general y familia: ${DarFormatoAlMonto(format_number(descuentoPorFamilia, this.configuracionDeDecimales.defaultDisplayDecimals))}`);
+                                            break;
+                                    }                                    
+                                    uiEtiquetaDescuentoPorFamiliaMaximo = null;                                    
+                                }
+                                //----Validamos si aplica el descuento por familia y tipo pago
+                                if(descuentoPorTipoPago > 0){                                    
+                                    let uiEtiquetaDescuentoPorTipoPagoMaximo = $('#UiEtiquetaDescuentoPorTipoPagoMaximo');
+                                    uiEtiquetaDescuentoPorTipoPagoMaximo.css("display", "block");
+                                    switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                                        case TiposDeDescuento.Porcentaje.toString():
+                                            uiEtiquetaDescuentoPorTipoPagoMaximo.text(`Descuento por familia y tipo pago: ${format_number(descuentoPorTipoPago, this.configuracionDeDecimales.defaultDisplayDecimals)}%`);
+                                            break;
+                                        case TiposDeDescuento.Monetario.toString():
+                                            uiEtiquetaDescuentoPorTipoPagoMaximo.text(`Descuento por familia y tipo pago: ${DarFormatoAlMonto(format_number(descuentoPorTipoPago, this.configuracionDeDecimales.defaultDisplayDecimals))}`);
+                                            break;
+                                    }                                    
+                                    uiEtiquetaDescuentoPorTipoPagoMaximo = null;                                    
+                                }
+
+                                callback();
+                            }, (resultado: Operacion) => {
+                                errCallback(resultado);
+                            });                                                 
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });                        
+                    }, (resultado: Operacion) => {
+                        errCallback(resultado);
+                    });                                        
+                }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });
+            }, (resultado: Operacion) => {
+                my_dialog("", "", "close");
+                notify(resultado.mensaje);
+            });                
+            //}, (resultado: Operacion) => {
+                //errCallback(resultado);
+            //});
+        } catch (ex) {
+            errCallback(<Operacion>{
+                codigo: -1,
+                mensaje: `Error al obtener descuentos por familias: ${ex.message}`
+            });
+        }
+    }
+
+    validarIngresoDeDescuento(errCallback: (resultado: Operacion) => void, callBack?: () => void) {
+        try {            
+            this.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(()=>{
+                this.obtenerPaqueteSeleccionado((paquete: Paquete) => {
+                    paquete.appliedDiscount = 0;
+                    paquete.promoDescuento = new Promo();
+                    let elDescuentoIngresadoSobrepasaLoMaximo = false;
+                    let resultadoDescuento: DescuentoPorEscalaSku = this.listaDeDescuento.find((descuento: DescuentoPorEscalaSku) => {
+                        return (this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
+                    });
+                    if (resultadoDescuento) {
+    
+                        if (this.usuarioPuedeModificarDescuentos) {
+                            let uiTextoDescuentoSku = $("#UiTextoDescuentoSku");
+                            let cantidadDeDescuento = (uiTextoDescuentoSku.val() === "") ? 0 : parseFloat(uiTextoDescuentoSku.val());
+                            if (cantidadDeDescuento > resultadoDescuento.discount) {
+                                elDescuentoIngresadoSobrepasaLoMaximo = true;
+                                let uiListaSkuMedidas = $('#UiTextoDescuentoSku');
+                                uiListaSkuMedidas.focus();
+                                uiListaSkuMedidas = null;
+                            } else {
+                                resultadoDescuento.qty = cantidadDeDescuento;
+                                paquete.appliedDiscount = cantidadDeDescuento;
+                                paquete.discountType = resultadoDescuento.discountType;
+                            }
+                            cantidadDeDescuento = null;
+                            uiTextoDescuentoSku = null;
                         } else {
-                            resultadoDescuento.qty = cantidadDeDescuento;
-                            paquete.appliedDiscount = cantidadDeDescuento;
+                            paquete.appliedDiscount = resultadoDescuento.qty;
                             paquete.discountType = resultadoDescuento.discountType;
                         }
-                        cantidadDeDescuento = null;
-                        uiTextoDescuentoSku = null;
-                    } else {
-                        paquete.appliedDiscount = resultadoDescuento.qty;
-                        paquete.discountType = resultadoDescuento.discountType;
-                    }
-                    paquete.promoDescuento.promoId = resultadoDescuento.promoId;
-                    paquete.promoDescuento.promoName = resultadoDescuento.promoName;
-                    paquete.promoDescuento.promoType = resultadoDescuento.promoType;
-                    paquete.promoDescuento.frequency = resultadoDescuento.frequency;
+                        paquete.promoDescuento.promoId = resultadoDescuento.promoId;
+                        paquete.promoDescuento.promoName = resultadoDescuento.promoName;
+                        paquete.promoDescuento.promoType = resultadoDescuento.promoType;
+                        paquete.promoDescuento.frequency = resultadoDescuento.frequency;
+    
+                        let totalDescuento: number = (paquete.qty * paquete.price);
+                        let descuentoPorcentaje : number = 0;
+                        let descuentoMonetario : number = 0;
+                        
+                        switch (paquete.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                descuentoPorcentaje = resultadoDescuento.qty;            
+                                totalDescuento = trunc_number((totalDescuento - ((descuentoPorcentaje * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                descuentoMonetario = resultadoDescuento.qty;
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < descuentoMonetario) ? 0 : trunc_number(totalDescuento - descuentoMonetario, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        //-----Aplicamos el descuento por monto general y familia
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                descuentoPorcentaje = this.descuentoPorMontoGeneralYFamilia.discount;
+                                totalDescuento = trunc_number((totalDescuento - ((descuentoPorcentaje * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                            descuentoMonetario = this.descuentoPorMontoGeneralYFamilia.discount;
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < descuentoMonetario) ? 0 : trunc_number(totalDescuento - descuentoMonetario, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }                        
+                        //-----Aplicamos el descuento por monto familia y tipo pago
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                descuentoPorcentaje = this.descuentoPorFamiliaYTipoPago.discount;
+                                totalDescuento = trunc_number((totalDescuento - ((descuentoPorcentaje * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                descuentoMonetario = this.descuentoPorFamiliaYTipoPago.discount;
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < descuentoMonetario) ? 0 : trunc_number(totalDescuento - descuentoMonetario, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }  
 
-                    let totalDescuento = 0;
-                    switch (paquete.discountType) {
-                        case TiposDeDescuento.Porcentaje.toString():
-                            totalDescuento = trunc_number(((paquete.qty * paquete.price) - ((resultadoDescuento.qty * (paquete.qty * paquete.price)) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
-                        case TiposDeDescuento.Monetario.toString():
-                            totalDescuento = (trunc_number((paquete.qty * paquete.price), this.configuracionDeDecimales.defaultCalculationsDecimals) < resultadoDescuento.qty) ? 0 : trunc_number((paquete.qty * paquete.price) - resultadoDescuento.qty, this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
+
+                        let uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida.text(`Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}`);
+                        uiEtiquetaTotalCdUnidadMedida = null;                                                                                                 
                     }
-                    let uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
-                    uiEtiquetaTotalCdUnidadMedida.text(`Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}`);
-                    uiEtiquetaTotalCdUnidadMedida = null;
-                }
-                resultadoDescuento = null;
-                if (elDescuentoIngresadoSobrepasaLoMaximo) {
-                    errCallback(<Operacion>{
-                        codigo: -1,
-                        mensaje: "El descuento sobrepasa lo máximo establecido."
-                    });
-                } else {
-                    if (callBack) {
-                        callBack();
+                    else {  
+                        //-----Aplicamos el descuento por monto general y familia                  
+                        let totalDescuento = (paquete.qty * paquete.price);
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorMontoGeneralYFamilia.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        //-----Aplicamos el descuento por monto familia y tipo pago
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():                                
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorFamiliaYTipoPago.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():                                
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorFamiliaYTipoPago.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }  
+                        let uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "block");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "inline");
+                        uiEtiquetaTotalCdUnidadMedida.text(`Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}`);
+                        uiEtiquetaTotalCdUnidadMedida = null;
+                        totalDescuento = null;
                     }
-                }
-            }, (resultado: Operacion) => {
+                    resultadoDescuento = null;
+                    if (elDescuentoIngresadoSobrepasaLoMaximo) {
+                        errCallback(<Operacion>{
+                            codigo: -1,
+                            mensaje: "El descuento sobrepasa lo máximo establecido."
+                        });
+                    } else {
+                        if (callBack) {
+                            callBack();
+                        }
+                    }
+                }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });
+            }, (resultado: Operacion) =>{
                 errCallback(resultado);
-            });
+            });   
+                  
         } catch (ex) {
             errCallback(<Operacion>{
                 codigo: -1,
@@ -1580,84 +1873,147 @@
             uiEtiquetaTotalCdUnidadMedida.css("display", "none");
             uiEtiquetaTotalCdUnidadMedida = null;
 
-            this.obtenerPaqueteSeleccionado((paquete: Paquete) => {
+            this.cargarDescuentosPorMontoGeneralYFamiliaYTipoPago(()=>{
+                this.obtenerPaqueteSeleccionado((paquete: Paquete) => {
 
-                let resultadoDeDescuento = this.listaDeDescuento.find((descuento: DescuentoPorEscalaSku) => {
-                    return (this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
-                });
-                if (resultadoDeDescuento) {
-
-                    let resultadoListaDeDescuento = this.listaDeDescuento.filter((descuento: DescuentoPorEscalaSku) => {
-                        return (this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit !== resultadoDeDescuento.lowLimit && resultadoDeDescuento.highLimit !== descuento.highLimit);
+                    let resultadoDeDescuento:DescuentoPorEscalaSku = this.listaDeDescuento.find((descuento: DescuentoPorEscalaSku) => {
+                        return (this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit <= paquete.qty && paquete.qty <= descuento.highLimit);
                     });
-
-                    if (resultadoListaDeDescuento && resultadoListaDeDescuento.length > 0) {
-                        resultadoListaDeDescuento.map((descuento: DescuentoPorEscalaSku) => {
-                            descuento.qty = -1;
+                    if (resultadoDeDescuento) {
+    
+                        let resultadoListaDeDescuento = this.listaDeDescuento.filter((descuento: DescuentoPorEscalaSku) => {
+                            return (this.paqueteSeleccionadoActual.codePackUnit === descuento.codePackUnit) && (descuento.lowLimit !== resultadoDeDescuento.lowLimit && resultadoDeDescuento.highLimit !== descuento.highLimit);
                         });
-                    }
-                    resultadoListaDeDescuento = null;
-
-                    let uiListViewDescuento = $('#UiLiDescuentoSkuMaximo');
-                    uiListViewDescuento.css("display", "block");
-                    uiListViewDescuento = null;
-
-                    let textoAMostrar = "";
-
-                    switch (resultadoDeDescuento.discountType.toString()) {
-                        case TiposDeDescuento.Porcentaje.toString():
-                            textoAMostrar = `Descuento: ${resultadoDeDescuento.discount}%`;
-                            break;
-                        case TiposDeDescuento.Monetario.toString():
-                            textoAMostrar = `Descuento: ${DarFormatoAlMonto(format_number(resultadoDeDescuento.discount, this.configuracionDeDecimales.defaultDisplayDecimals))}`;
-                            break;
-                    }
-
-                    let uiEtiquetaDescuentoSkuMaximo = $('#UiEtiquetaDescuentoSkuMaximo');
-                    uiEtiquetaDescuentoSkuMaximo.text(textoAMostrar);
-                    uiEtiquetaDescuentoSkuMaximo = null;
-
-
-                    let uiDivIngresoDescuentoSku = $('#UiDivIngresoDescuentoSku');
-                    uiDivIngresoDescuentoSku.css("display", "none");
-
-                    if (this.usuarioPuedeModificarDescuentos) {
-                        uiDivIngresoDescuentoSku.css("display", "block");
-                        if (localStorage.getItem("USE_MAX_DISCOUNT") === SiNo.Si.toString()) {
-                            if (resultadoDeDescuento.qty === -1) {
-                                resultadoDeDescuento.qty = ((paquete.appliedDiscount > 0) ? paquete.appliedDiscount : resultadoDeDescuento.discount);
-                            }
+    
+                        if (resultadoListaDeDescuento && resultadoListaDeDescuento.length > 0) {
+                            resultadoListaDeDescuento.map((descuento: DescuentoPorEscalaSku) => {
+                                descuento.qty = -1;
+                            });
                         }
-                        let uiTextoDescuentoSku = $('#UiTextoDescuentoSku');
-                        uiTextoDescuentoSku.val((resultadoDeDescuento.qty > 0) ? resultadoDeDescuento.qty : "");
-                        uiTextoDescuentoSku = null;
-                    } else {
-                        resultadoDeDescuento.qty = resultadoDeDescuento.discount;
-                    }
+                        resultadoListaDeDescuento = null;
+    
+                        let uiListViewDescuento = $('#UiLiDescuentoSkuMaximo');
+                        uiListViewDescuento.css("display", "block");
+                        uiListViewDescuento = null;
+    
+                        let textoAMostrar = "";
+    
+                        switch (resultadoDeDescuento.discountType.toString()) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                textoAMostrar = `Descuento: ${resultadoDeDescuento.discount}%`;
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                textoAMostrar = `Descuento: ${DarFormatoAlMonto(format_number(resultadoDeDescuento.discount, this.configuracionDeDecimales.defaultDisplayDecimals))}`;
+                                break;
+                        }
+    
+                        let uiEtiquetaDescuentoSkuMaximo = $('#UiEtiquetaDescuentoSkuMaximo');
+                        uiEtiquetaDescuentoSkuMaximo.text(textoAMostrar);
+                        uiEtiquetaDescuentoSkuMaximo = null;
+    
+    
+                        let uiDivIngresoDescuentoSku = $('#UiDivIngresoDescuentoSku');
+                        uiDivIngresoDescuentoSku.css("display", "none");
+    
+                        if (this.usuarioPuedeModificarDescuentos) {
+                            uiDivIngresoDescuentoSku.css("display", "block");
+                            if (localStorage.getItem("USE_MAX_DISCOUNT") === SiNo.Si.toString()) {
+                                if (resultadoDeDescuento.qty === -1) {
+                                    resultadoDeDescuento.qty = ((paquete.appliedDiscount > 0) ? paquete.appliedDiscount : resultadoDeDescuento.discount);
+                                }
+                            }
+                            let uiTextoDescuentoSku = $('#UiTextoDescuentoSku');
+                            uiTextoDescuentoSku.val((resultadoDeDescuento.qty > 0) ? resultadoDeDescuento.qty : "");
+                            uiTextoDescuentoSku = null;
+                        } else {
+                            resultadoDeDescuento.qty = resultadoDeDescuento.discount;
+                        }
+    
+                        let totalDescuento: number = (paquete.qty * paquete.price);
+                        
 
-                    let totalDescuento = 0;
-                    switch (resultadoDeDescuento.discountType) {
-                        case TiposDeDescuento.Porcentaje.toString():
-                            totalDescuento = trunc_number(((paquete.qty * paquete.price) - ((resultadoDeDescuento.qty * (paquete.qty * paquete.price)) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
-                        case TiposDeDescuento.Monetario.toString():
-                            totalDescuento = (trunc_number((paquete.qty * paquete.price), this.configuracionDeDecimales.defaultCalculationsDecimals) < resultadoDeDescuento.qty) ? 0 : trunc_number((paquete.qty * paquete.price) - resultadoDeDescuento.qty, this.configuracionDeDecimales.defaultCalculationsDecimals);
-                            break;
-                    }
-                    let uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
-                    uiEtiquetaTotalCdUnidadMedida.css("display", "block");
-                    uiEtiquetaTotalCdUnidadMedida.css("display", "inline");
-                    uiEtiquetaTotalCdUnidadMedida.text(`Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}`);
-                    uiEtiquetaTotalCdUnidadMedida = null;
-                    totalDescuento = null;
+                        switch (paquete.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():                                
+                                totalDescuento = trunc_number((totalDescuento - ((resultadoDeDescuento.qty * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():                                
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < resultadoDeDescuento.qty) ? 0 : trunc_number(totalDescuento - resultadoDeDescuento.qty, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        //-----Aplicamos el descuento por monto general y familia                        
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorMontoGeneralYFamilia.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                        }
+                        
+                        /*//-----Aplicamos el descuento por monto general y familia                        
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorMontoGeneralYFamilia.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                        }*/
+                        
+                        //-----Aplicamos el descuento por monto familia y tipo pago                        
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorFamiliaYTipoPago.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorFamiliaYTipoPago.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                        }                        
 
-                    uiDivIngresoDescuentoSku = null;
-                }
-                resultadoDeDescuento = null;
-                callBack();
-            }, (resultado: Operacion) => {
+                        let uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "block");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "inline");
+                        uiEtiquetaTotalCdUnidadMedida.text(`Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}`);
+                        uiEtiquetaTotalCdUnidadMedida = null;                         
+    
+                        uiDivIngresoDescuentoSku = null;
+                    }
+                    else {                    
+                        let totalDescuento = (paquete.qty * paquete.price);
+                        //-----Aplicamos el descuento por monto general y familia                        
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorMontoGeneralYFamilia.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorMontoGeneralYFamilia.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorMontoGeneralYFamilia.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                        //-----Aplicamos el descuento por monto familia y tipo pago
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalDescuento = trunc_number((totalDescuento - ((this.descuentoPorFamiliaYTipoPago.discount * totalDescuento) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalDescuento = (trunc_number(totalDescuento, this.configuracionDeDecimales.defaultCalculationsDecimals) < this.descuentoPorFamiliaYTipoPago.discount) ? 0 : trunc_number(totalDescuento - this.descuentoPorFamiliaYTipoPago.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);                                
+                                break;
+                        }  
+
+                        let uiEtiquetaTotalCdUnidadMedida = $("#UiEtiquetaTotalCDUnidadMedida");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "block");
+                        uiEtiquetaTotalCdUnidadMedida.css("display", "inline");
+                        uiEtiquetaTotalCdUnidadMedida.text(`Total CD: ${DarFormatoAlMonto(format_number((totalDescuento), this.configuracionDeDecimales.defaultDisplayDecimals))}`);
+                        uiEtiquetaTotalCdUnidadMedida = null;
+                        totalDescuento = null;
+                    }
+                    resultadoDeDescuento = null;
+                    callBack();
+                }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });
+            }, (resultado: Operacion)=>{
                 errCallback(resultado);
-            });
+            });            
         } catch (ex) {
             errCallback(<Operacion>{
                 codigo: -1,
@@ -1836,5 +2192,153 @@
     listaDeDescuentoTerminoDeIterar(listaDeDescuento: DescuentoPorEscalaSku[], indiceDeListaDeDescuento: number): boolean {
         return (listaDeDescuento.length > 0 && listaDeDescuento.length > indiceDeListaDeDescuento);
     }
+
+    validarSiAplicaElDescuentoPorMontoGeneralYFamilia(descuentoAValidar: DescuentoPorMontoGeneralYFamilia, indiceDeListaDeDescuento: number, callBack: (descuento: DescuentoPorMontoGeneralYFamilia) => void, errCallback: (resultado: Operacion) => void) {
+        try {
+            if (this.listaHistoricoDePromos.length > 0) {
+                let resultadoDePromoHistorico = this.listaHistoricoDePromos.find((promo: Promo) => {
+                    return promo.promoId === descuentoAValidar.promoId;
+                });
+                if (resultadoDePromoHistorico) {
+                    let promoDeDescuento: Promo = new Promo();
+                    promoDeDescuento.promoId = descuentoAValidar.promoId;
+                    promoDeDescuento.promoName = descuentoAValidar.promoName;
+                    promoDeDescuento.frequency = descuentoAValidar.frequency;
+
+                    this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico, (aplicaDescuento: boolean) => {
+                        if (!aplicaDescuento) {
+                            descuentoAValidar = new DescuentoPorMontoGeneralYFamilia();
+                            
+                        }
+                        callBack(descuentoAValidar);
+                    }, (resultado: Operacion) => {
+                        errCallback(resultado);
+                    });
+                }
+                else{
+                    callBack(descuentoAValidar);
+                }                
+            } else {
+                callBack(descuentoAValidar);
+            }
+        } catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: `Error al validar la si aplica el descuento por monto general y familia: ${ex.message}`
+            } as Operacion);
+        }
+    }
+
+    validarSiAplicaElDescuentoPorFamiliaYTipoPago(descuentoAValidar: DescuentoPorFamiliaYTipoPago, indiceDeListaDeDescuento: number, callBack: (descuento: DescuentoPorFamiliaYTipoPago) => void, errCallback: (resultado: Operacion) => void) {
+        try {
+            if (this.listaHistoricoDePromos.length > 0) {
+                let resultadoDePromoHistorico = this.listaHistoricoDePromos.find((promo: Promo) => {
+                    return promo.promoId === descuentoAValidar.promoId;
+                });
+                if (resultadoDePromoHistorico) {
+                    let promoDeDescuento: Promo = new Promo();
+                    promoDeDescuento.promoId = descuentoAValidar.promoId;
+                    promoDeDescuento.promoName = descuentoAValidar.promoName;
+                    promoDeDescuento.frequency = descuentoAValidar.frequency;
+
+                    this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico, (aplicaDescuento: boolean) => {
+                        if (!aplicaDescuento) {
+                            descuentoAValidar = new DescuentoPorFamiliaYTipoPago();
+                            
+                        }
+                        callBack(descuentoAValidar);
+                    }, (resultado: Operacion) => {
+                        errCallback(resultado);
+                    });
+                }
+                else{
+                    callBack(descuentoAValidar);
+                }                
+            } else {
+                callBack(descuentoAValidar);
+            }
+        } catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: `Error al validar la si aplica el descuento por familia y tipo pago: ${ex.message}`
+            } as Operacion);
+        }
+    }
+    
+    ObtenerTotalDeLaOrden(callBack: (total: number) => void, errCallback: (resultado: Operacion) => void) {
+        try {
+            let totalOrden : number = this.tarea.salesOrderTotal;
+            let total : number = 0;
+            this.listaDeSkuOrdenDeVenta.forEach((sku:Sku)=>{                    
+                if(sku.sku != this.sku.sku && sku.codeFamilySku == this.sku.codeFamilySku){
+                    if (sku.discount !== 0) {
+                        switch (sku.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                total += trunc_number((sku.total - ((sku.discount * sku.total) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                total += trunc_number(sku.total - sku.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;                            
+                        }
+                    }
+                    else{
+                        total += trunc_number(sku.total, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                    }
+                }
+            })
+            totalOrden = totalOrden - total;            
+            let totalConDescuento : number = 0;
+            this.listaDeSkuOrdenDeVenta.forEach((sku:Sku)=>{
+                if(sku.sku != this.sku.sku && sku.codeFamilySku == this.sku.codeFamilySku){
+                    let totalPaquete : number = sku.total
+                    if (sku.discount !== 0) {
+                        switch (sku.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = trunc_number((sku.total - ((sku.discount * sku.total) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = trunc_number(sku.total - sku.discount, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+
+                    let descuentoPorFamilia: number = this.descuentoPorMontoGeneralYFamilia.discount;
+                    let descuentoPorTipoPago: number = this.descuentoPorFamiliaYTipoPago.discount;
+
+                    if(descuentoPorFamilia > 0){
+                        switch (this.descuentoPorMontoGeneralYFamilia.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = trunc_number((totalPaquete - ((descuentoPorFamilia * totalPaquete) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = trunc_number(totalPaquete - descuentoPorFamilia, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+
+                    if(descuentoPorTipoPago > 0){
+                        switch (this.descuentoPorFamiliaYTipoPago.discountType) {
+                            case TiposDeDescuento.Porcentaje.toString():
+                                totalPaquete = trunc_number((totalPaquete - ((descuentoPorTipoPago * totalPaquete) / 100)), this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                            case TiposDeDescuento.Monetario.toString():
+                                totalPaquete = trunc_number(totalPaquete - descuentoPorTipoPago, this.configuracionDeDecimales.defaultCalculationsDecimals);
+                                break;
+                        }
+                    }
+                    totalConDescuento += totalPaquete;
+                    //total += sku.total                        
+                }
+            })
+            totalOrden = totalOrden + totalConDescuento;
+            callBack(totalOrden)
+        } catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: `Error al obtener el total: ${ex.message}`
+            } as Operacion);
+        }
+    }
+
     //----------Fin Promociones----------//
 }  

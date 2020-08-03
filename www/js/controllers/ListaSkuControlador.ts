@@ -3,6 +3,7 @@
     tokenTarea: SubscriptionToken;
     tokenCargarPorPrimeraVezListaSkuMensaje: SubscriptionToken;
     tokenAgregarOQuitarDeListaSkuMensaje: SubscriptionToken;
+    tokenListaSku: SubscriptionToken;
 
     skuServicio = new SkuServicio();
     decimalesServicio = new ManejoDeDecimalesServicio();
@@ -27,9 +28,13 @@
     currentLimit = 0; // limite maximo que se extrae del arreglo de skus
     lastLowLimit = 0; // ultimo limite inferior en el que se posiciono
     esPrimeraVez = true;
+    listaDeSkuOrdenDeVenta: Sku[] = [];
+    listaDeDescuentoPorMontoGeneralYFamilia :DescuentoPorMontoGeneralYFamilia[]=[];
+    listaDeDescuentoPorFamiliaYTipoPago : DescuentoPorFamiliaYTipoPago [] = [];
 
     constructor(public mensajero: Messenger) {
         this.tokenAgregarOQuitarDeListaSkuMensaje = mensajero.subscribe<AgregarOQuitarDeListaSkuMensaje>(this.agregarOQuitarDeListaSkuMensajeEntregado, getType(AgregarOQuitarDeListaSkuMensaje), this);
+        this.tokenListaSku = mensajero.subscribe<ListaSkuMensaje>(this.listaSkuEntregado, getType(ListaSkuMensaje), this);
     }
 
     delegadoListaSkuControlador() {
@@ -42,17 +47,25 @@
                     este.tarea = data.options.data.tarea;
                     este.configuracionDecimales = data.options.data.configuracionDecimales;
                     este.esPrimeraVez = data.options.data.esPrimeraVez;
-
-                    if (este.esPrimeraVez) {
-                        este.publicarEsPrimeraVez(este);
-                    }
-
-                    $.mobile.changePage("#skus_list_page");
+                    este.listaDeSkuOrdenDeVenta = data.options.data.listaDeSkuOrdenDeVenta
+                    este.obtenerDescuentosPorMontoYFamiliaYTipoPago(()=>{
+                        if (este.esPrimeraVez) {
+                            este.publicarEsPrimeraVez(este);
+                        }    
+                        $.mobile.changePage("#skus_list_page");
+                    }, (resultado: Operacion) => {
+                        notify(resultado.mensaje);
+                    });                    
                 }
                 if (data.toPage === "pos_skus_page") {
                     este.cliente = data.options.data.cliente;
                     este.tarea = data.options.data.tarea;
                     este.configuracionDecimales = data.options.data.configuracionDecimales;
+                    este.obtenerDescuentosPorMontoYFamiliaYTipoPago(()=>{                        
+                        //--
+                    }, (resultado: Operacion) => {
+                        notify(resultado.mensaje);
+                    });
                     //este.esPrimeraVez = data.options.data.esPrimeraVez;
                 }
             });
@@ -66,12 +79,20 @@
             if (este.configuracionDecimales == undefined || este.configuracionDecimales == null || !este.configuracionDecimales) {
                 this.decimalesServicio.obtenerInformacionDeManejoDeDecimales((decimales: ManejoDeDecimales) => {
                     este.configuracionDecimales = decimales;
-                    este.cargarPantalla(este);
+                    este.obtenerDescuentosPorMontoYFamiliaYTipoPago(()=>{
+                        este.cargarPantalla(este);
+                    }, (resultado: Operacion) => {
+                        notify(resultado.mensaje);
+                    });                    
                 }, (resultado: Operacion) => {
                     notify(resultado.mensaje);
                 });
             } else {
-                este.cargarPantalla(este);
+                este.obtenerDescuentosPorMontoYFamiliaYTipoPago(()=>{
+                    este.cargarPantalla(este);
+                }, (resultado: Operacion) => {
+                    notify(resultado.mensaje);
+                }); 
             }
             
         });
@@ -159,13 +180,8 @@
                     this.currentLimit = this.pivotLimit;
 
                 }
-            } else {
-                return true;
             }
-        });
-
-        $("#uiTxtFilterListSkusPage").on("keyup", e => {
-            if (e.keyCode === 8 && (e.target as any).value === "") {
+            else if (e.keyCode === 8 && (e.target as any).value === "") {
                 e.preventDefault();
 
                 this.listaSku = this.listaSkuOriginal;
@@ -173,13 +189,53 @@
                 this.lastLowLimit = 0;
                 this.currentLimit = this.pivotLimit;
 
-            } else {
+            }
+            else {
                 return true;
             }
+            
         });
 
         $("#UiBotonOrdenarLisadoDeSkus").on("click", () => {
             este.usuarioDeseaCambiarElOrdenDelListado();
+        });
+    }
+
+    listaSkuEntregado(mensaje: ListaSkuMensaje, subcriber: any): void {        
+
+        //-----Validar si exite para su actualizacion o eliminacion
+        subcriber.listaDeSkuOrdenDeVenta.map((skuFiltrado: Sku) => {
+            if (skuFiltrado.sku === mensaje.listaSku[0].sku) {
+                skuFiltrado.deleted = true;
+                let resultadoDeBusqueda = mensaje.listaSku.filter((sku: Sku) => {
+                    return sku.codePackUnit === skuFiltrado.codePackUnit;
+                });
+                if (resultadoDeBusqueda && resultadoDeBusqueda.length > 0) {
+                    if (resultadoDeBusqueda[0].qty > 0 && !(isNaN(resultadoDeBusqueda[0].qty))) {
+                        skuFiltrado.qty = trunc_number(resultadoDeBusqueda[0].qty, subcriber.configuracionDecimales.defaultCalculationsDecimals);
+                        skuFiltrado.total = trunc_number((resultadoDeBusqueda[0].qty * resultadoDeBusqueda[0].cost), subcriber.configuracionDecimales.defaultCalculationsDecimals);
+                        skuFiltrado.appliedDiscount = resultadoDeBusqueda[0].appliedDiscount;
+                        skuFiltrado.discount = resultadoDeBusqueda[0].discount;
+                        skuFiltrado.discountType = resultadoDeBusqueda[0].discountType;
+                        skuFiltrado.cost = resultadoDeBusqueda[0].cost;
+                        skuFiltrado.listPromo = resultadoDeBusqueda[0].listPromo;
+                        skuFiltrado.deleted = false;
+                    }
+                }
+                resultadoDeBusqueda = null;
+            }
+        });
+
+        mensaje.listaSku.map((skuFiltrado: Sku) => {
+            let seAgregarSku = true;
+            for (let sku of subcriber.listaDeSkuOrdenDeVenta as Array<Sku>) {
+                if (sku.sku === skuFiltrado.sku && sku.codePackUnit === skuFiltrado.codePackUnit) {
+                    seAgregarSku = false;
+                }
+            }
+            if (seAgregarSku) {
+                subcriber.listaDeSkuOrdenDeVenta.push(skuFiltrado);
+            }
         });
     }
 
@@ -254,6 +310,10 @@
                     }, callback);
                 } else if (this.tarea.taskType === TareaTipo.Preventa) {
                     this.skuServicio.obtenerSkuParaPreVenta(this.cliente, sku, decimales, localStorage.getItem("SORT_BY"), localStorage.getItem("SORT_OPTION"), (listaSku: Sku[]) => {
+                        this.listaSkuOriginal = listaSku;
+                        this.listaSku = listaSku;
+                        this.lastLowLimit = 0;
+                        this.currentLimit = this.pivotLimit;
                         this.cargarListaSku(listaSku, decimales);
                     }, callback);
                 }
@@ -345,6 +405,8 @@
             let sku = _this.listaSku[i];
             if (sku.sku === idSku.replace("_", " ").substr(6)) {
                 sku.qty = 1;
+                
+                _this.tarea.salesOrderTotal = this.obtenerTotalParaEnviar(this.listaDeSkuOrdenDeVenta, sku.codeFamilySku);
 
                 //this.limpiarListaDeSku(() => {
                     $.mobile.changePage("skucant_page", {
@@ -360,6 +422,7 @@
                             , "estaAgregando": true
                             , "listaDeSkuParaBonificacion": new Array<Sku>()
                             , "listaSku": new Array<Sku>()
+                            , "listaDeSkuOrdenDeVenta": this.listaDeSkuOrdenDeVenta
                         }
                     });
                 //},
@@ -486,7 +549,7 @@
         try {
             this.descuentoServicio.obtenerDescuentoPorMontoGeneral(this.cliente, total, (descuentoPorMontoGeneral) => {
                 this.obtenerHistoricodePromo((listaHistoricoDePromos: Promo[]) => {
-                    let resultadoDePromoHistorico = listaHistoricoDePromos.find((promo: Promo) => {
+                    let resultadoDePromoHistorico = (listaHistoricoDePromos as any).find((promo: Promo) => {
                         return promo.promoId === descuentoPorMontoGeneral.promoId;
                     });
                     if (resultadoDePromoHistorico) {
@@ -756,6 +819,7 @@
         }
 
         let lblTotal = $("#UiTotalListadoSkus");
+        _this.tarea.salesOrderTotal = this.obtenerTotalParaEnviar(this.listaDeSkuOrdenDeVenta, "");
         if (_this.tarea.salesOrderTotal > 0) {
             if (_this.tarea.salesOrderTotal >= _this.tarea.discountPerGeneralAmountLowLimit &&
                 _this.tarea.discountPerGeneralAmountHighLimit >= _this.tarea.salesOrderTotal) {
@@ -818,6 +882,90 @@
         
     }
 
+    //----------Inicio Descuento---------//
+
+    obtenerDescuentosPorMontoYFamiliaYTipoPago(callback: () => void, errCallback: (resultado: Operacion) => void){
+        try{
+            this.descuentoServicio.obtenerListaDeDescuentoPorMontoGeneralYFamilia(this.cliente,(listaDeDescuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia[])=>{
+                this.obtenerHistoricodePromo((listaHistoricoDePromos: Promo[]) => {
+                    this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuentoPorMontoGeneralYFamilia,0,listaHistoricoDePromos, (listaDeDescuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia[])=>{
+                        this.descuentoServicio.obtenerDescuentoPorFamiliaYTipoPago(this.cliente, this.tarea, (listaDeDescuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago[])=>{
+                            this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuentoPorFamiliaYTipoPago,0,listaHistoricoDePromos, (listaDeDescuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago[])=>{
+                                this.listaDeDescuentoPorFamiliaYTipoPago = listaDeDescuentoPorFamiliaYTipoPago;
+                                if(listaDeDescuentoPorMontoGeneralYFamilia.length > 0){
+                                    let listaDeSku: Sku[] = [];                
+                                    this.listaDeSkuOrdenDeVenta.forEach((skuOrden: Sku)=>{                                        
+                                        
+                                        //Obtemos el monto toal con el descuento aplicado de otras promociones
+                                        let total = 0;
+                                        if (skuOrden.discount !== 0) {                        
+                                            switch (skuOrden.discountType) {
+                                                case TiposDeDescuento.Porcentaje.toString():
+                                                    total = trunc_number((skuOrden.total - ((skuOrden.appliedDiscount * skuOrden.total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
+                                                    break;
+                                                case TiposDeDescuento.Monetario.toString():
+                                                    total = trunc_number(skuOrden.total - skuOrden.appliedDiscount, this.configuracionDecimales.defaultCalculationsDecimals);
+                                                    break;
+                                            }                        
+                                        }
+                                        else{
+                                            total  += trunc_number(skuOrden.total, this.configuracionDecimales.defaultCalculationsDecimals);
+                                        }
+        
+                                        //Validamos que si exite el sku de lo contrario lo agregamos
+                                        let resultadoSku: Sku = (listaDeSku as any).find((sku: Sku) => {
+                                            return (skuOrden.codeFamilySku === sku.codeFamilySku);
+                                        });
+        
+                                        if (resultadoSku) {
+                                            resultadoSku.total += trunc_number(total, this.configuracionDecimales.defaultCalculationsDecimals);
+                                        }
+                                        else{
+                                            let skuAAgregar: Sku = new Sku();                                    
+                                            skuAAgregar.codeFamilySku = skuOrden.codeFamilySku
+                                            skuAAgregar.total = trunc_number(total, this.configuracionDecimales.defaultCalculationsDecimals);
+                                            listaDeSku.push(skuAAgregar);
+                                        }
+                                    })
+        
+                                    let listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer :DescuentoPorMontoGeneralYFamilia[]=[];
+        
+                                    listaDeSku.forEach((sku: Sku) => {
+                                        let resultadoDescuento: DescuentoPorMontoGeneralYFamilia = (listaDeDescuentoPorMontoGeneralYFamilia as any).find((descuento: DescuentoPorMontoGeneralYFamilia) => {
+                                            return (sku.codeFamilySku === descuento.codeFamily) && (descuento.lowAmount <= sku.total && sku.total <= descuento.highAmount);                                    
+                                        });
+                                        if(resultadoDescuento){
+                                            listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer.push(resultadoDescuento)
+                                        }
+                                    });
+        
+                                    this.listaDeDescuentoPorMontoGeneralYFamilia = listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer;                                    
+                                    callback();
+                                }else{
+                                    callback();
+                                }     
+                            }, (resultado: Operacion) => {
+                                errCallback(resultado);
+                            }); 
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });                        
+                    }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });
+                }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });                              
+            }, (resultado: Operacion) => {
+                errCallback(resultado);
+            });
+        } catch (ex) {
+            errCallback({ codigo: -1, mensaje: "Error al cargar bonificaciones por monto general: " + ex.message } as Operacion);
+        }
+    }
+
+    //----------Fin Descuento---------//
+
     obtenerHistoricodePromo(callBack: (listaHistoricoDePromos: Promo[]) => void, errCallback: (resultado: Operacion) => void) {
         try {
             this.promoServicio.obtenerHistoricoDePromosParaCliente(this.cliente, (listaHistoricoDePromos: Promo[]) => {
@@ -836,4 +984,242 @@
     seAplicaElDescuentoModificado(descuentoOriginalDeModificacion: number, descuentoModificado: number, descuentoNuevo: number): boolean {
         return (descuentoOriginalDeModificacion !== 0 && descuentoModificado <= descuentoNuevo);
     }
+
+    obtenerTotalParaEnviar(listaDeSku: Array<Sku>, codeFamily: string): number {
+        let total = 0;
+        listaDeSku.map((skuParaTotal:Sku) => {
+            let totalPaquete: number = skuParaTotal.total;                    
+            switch (skuParaTotal.discountType) {
+                
+                case TiposDeDescuento.Porcentaje.toString():
+                    totalPaquete = (parseFloat(skuParaTotal.discount.toString()) !== 0 ? (skuParaTotal.total - ((parseFloat(skuParaTotal.appliedDiscount.toString()) * skuParaTotal.total) / 100)) : skuParaTotal.total);
+                    break;
+                case TiposDeDescuento.Monetario.toString():
+                    totalPaquete = (parseFloat(skuParaTotal.discount.toString()) !== 0 ? (skuParaTotal.total - (parseFloat(skuParaTotal.appliedDiscount.toString()))) : skuParaTotal.total);
+                    break;                
+            }
+
+            if(codeFamily !== skuParaTotal.codeFamilySku){
+                let resultadoDescuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia = (this.listaDeDescuentoPorMontoGeneralYFamilia as any).find((descuentoABuscar : DescuentoPorMontoGeneralYFamilia)=> {
+                    return descuentoABuscar.codeFamily === skuParaTotal.codeFamilySku;
+                });
+    
+                if(resultadoDescuentoPorMontoGeneralYFamilia){
+                    switch (resultadoDescuentoPorMontoGeneralYFamilia.discountType) {
+                        case TiposDeDescuento.Porcentaje.toString():
+                        totalPaquete = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                            break;
+                        case TiposDeDescuento.Monetario.toString():
+                        totalPaquete  = (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(resultadoDescuentoPorMontoGeneralYFamilia.discount.toString()))) : totalPaquete);
+                            break;
+                    }
+                }
+                //-----Verificamos si el producto tiene un descuento por familia y tipo pago-----//                        
+                let resultadoDescuentoPorFamiliaYTipoPago: DescuentoPorFamiliaYTipoPago = (this.listaDeDescuentoPorFamiliaYTipoPago as any).find((descuentoABuscar : DescuentoPorFamiliaYTipoPago)=> {
+                    return descuentoABuscar.codeFamily === skuParaTotal.codeFamilySku;
+                });     
+                if(resultadoDescuentoPorFamiliaYTipoPago){
+                    //-----Aplicamos el descuento por familia y tipo pago
+                    switch (resultadoDescuentoPorFamiliaYTipoPago.discountType) {
+                        case TiposDeDescuento.Porcentaje.toString():
+                            totalPaquete = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - ((parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) * totalPaquete) / 100)) : totalPaquete);
+                            break;
+                        case TiposDeDescuento.Monetario.toString():
+                            totalPaquete  = (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()) !== 0 ? (totalPaquete - (parseFloat(resultadoDescuentoPorFamiliaYTipoPago.discount.toString()))) : totalPaquete);
+                            break;
+                    }
+                }
+            }            
+            total += totalPaquete;
+            totalPaquete = null;
+        });
+        return total;
+    }
+
+
+    //----------Inicio Descuento---------//
+
+    obtenerDescuentosPorMontoYFamilia(callback: () => void, errCallback: (resultado: Operacion) => void){
+        try{
+            this.descuentoServicio.obtenerListaDeDescuentoPorMontoGeneralYFamilia(this.cliente,(listaDeDescuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia[])=>{
+                this.obtenerHistoricodePromo((listaHistoricoDePromos: Promo[]) => {
+                    this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuentoPorMontoGeneralYFamilia,0,listaHistoricoDePromos, (listaDeDescuentoPorMontoGeneralYFamilia: DescuentoPorMontoGeneralYFamilia[])=>{
+                        if(listaDeDescuentoPorMontoGeneralYFamilia.length > 0){
+                            let listaDeSku: Sku[] = [];                
+                            this.listaDeSkuOrdenDeVenta.forEach((skuOrden: Sku)=>{                                        
+                                
+                                //Obtemos el monto toal con el descuento aplicado de otras promociones
+                                let total = 0;
+                                if (skuOrden.discount !== 0) {                        
+                                    switch (skuOrden.discountType) {
+                                        case TiposDeDescuento.Porcentaje.toString():
+                                            total = trunc_number((skuOrden.total - ((skuOrden.appliedDiscount * skuOrden.total) / 100)), this.configuracionDecimales.defaultCalculationsDecimals);
+                                            break;
+                                        case TiposDeDescuento.Monetario.toString():
+                                            total = trunc_number(skuOrden.total - skuOrden.appliedDiscount, this.configuracionDecimales.defaultCalculationsDecimals);
+                                            break;
+                                    }                        
+                                }
+                                else{
+                                    total  += trunc_number(skuOrden.total, this.configuracionDecimales.defaultCalculationsDecimals);
+                                }
+
+                                //Validamos que si exite el sku de lo contrario lo agregamos
+                                let resultadoSku: Sku = (listaDeSku as any).find((sku: Sku) => {
+                                    return (skuOrden.sku === sku.sku);
+                                });
+
+                                if (resultadoSku) {
+                                    resultadoSku.total += trunc_number(total, this.configuracionDecimales.defaultCalculationsDecimals);
+                                }
+                                else{
+                                    let skuAAgregar: Sku = new Sku();                                    
+                                    skuAAgregar.codeFamilySku = skuOrden.codeFamilySku
+                                    skuAAgregar.total = trunc_number(total, this.configuracionDecimales.defaultCalculationsDecimals);
+                                    listaDeSku.push(skuAAgregar);
+                                }
+                            })
+
+                            let listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer :DescuentoPorMontoGeneralYFamilia[]=[];
+
+                            listaDeSku.forEach((sku: Sku) => {
+                                let resultadoDescuento: DescuentoPorMontoGeneralYFamilia = (listaDeDescuentoPorMontoGeneralYFamilia as any).find((descuento: DescuentoPorMontoGeneralYFamilia) => {
+                                    return (sku.codeFamilySku === descuento.codeFamily) && (descuento.lowAmount <= sku.total && sku.total <= descuento.highAmount);                                    
+                                });
+                                if(resultadoDescuento) {
+                                    listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer.push(resultadoDescuento);
+                                }
+                            });
+
+                            this.listaDeDescuentoPorMontoGeneralYFamilia = listaDeDescuentoPorMontoGeneralYFamiliaAEstablecer;
+                            callback();
+                        }else{
+                            callback();
+                        }
+                    }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });
+                }, (resultado: Operacion) => {
+                    errCallback(resultado);
+                });                              
+            }, (resultado: Operacion) => {
+                errCallback(resultado);
+            });
+        } catch (ex) {
+            errCallback({ codigo: -1, mensaje: "Error al cargar bonificaciones por monto general: " + ex.message } as Operacion);
+        }
+    }
+
+    //----------Fin Descuento---------//
+
+    //----------Promo---------//
+    //--Descuentos por monto general y familia
+    validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuento: DescuentoPorMontoGeneralYFamilia[], indiceDeListaDeDescuento: number, listaHistoricoDePromos: Promo[],callBack: (listaDeDescuento: DescuentoPorMontoGeneralYFamilia[]) => void, errCallback: (resultado: Operacion) => void) {
+        try {
+            if (listaHistoricoDePromos.length > 0) {
+                if (this.listaDeDescuentoPorMontoGeneralYFamiliaTerminoDeIterar(listaDeDescuento, indiceDeListaDeDescuento)) {
+                    let descuentoAValidar: DescuentoPorMontoGeneralYFamilia = listaDeDescuento[indiceDeListaDeDescuento];
+                    let resultadoDePromoHistorico = (listaHistoricoDePromos as any).find((promo: Promo) => {
+                        return promo.promoId === descuentoAValidar.promoId;
+                    });
+                    if (resultadoDePromoHistorico) {
+                        let promoDeDescuento: Promo = new Promo();
+                        promoDeDescuento.promoId = descuentoAValidar.promoId;
+                        promoDeDescuento.promoName = descuentoAValidar.promoName;
+                        promoDeDescuento.frequency = descuentoAValidar.frequency;
+                        this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico, (aplicaDescuento: boolean) => {
+                            if (!aplicaDescuento) {
+                                listaDeDescuento = listaDeDescuento.filter((descuento: DescuentoPorMontoGeneralYFamilia) => {
+                                    return resultadoDePromoHistorico.promoId !== descuento.promoId;
+                                });
+                            }
+                            this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuento, indiceDeListaDeDescuento + (aplicaDescuento ? 1 : 0), listaHistoricoDePromos,(listaDeDescuento: DescuentoPorMontoGeneralYFamilia[]) => {
+                                callBack(listaDeDescuento);
+                            }, (resultado: Operacion) => {
+                                errCallback(resultado);
+                            });
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });
+                        promoDeDescuento = null;
+                    } else {
+                        this.validarSiAplicaElDescuentoPorMontoGeneralYFamilia(listaDeDescuento, indiceDeListaDeDescuento + 1, listaHistoricoDePromos, (listaDeDescuento: DescuentoPorMontoGeneralYFamilia[]) => {
+                            callBack(listaDeDescuento);
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });
+                    }
+                } else {
+                    callBack(listaDeDescuento);
+                }
+            } else {
+                callBack(listaDeDescuento);
+            }
+        } catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: `Error al validar la si aplica el descuento por monto general y familia: ${ex.message}`
+            } as Operacion);
+        }
+    }
+
+    listaDeDescuentoPorMontoGeneralYFamiliaTerminoDeIterar(listaDeDescuento: DescuentoPorMontoGeneralYFamilia[], indiceDeListaDeDescuento: number): boolean {
+        return (listaDeDescuento.length > 0 && listaDeDescuento.length > indiceDeListaDeDescuento);
+    }
+    
+    //--Descuentos por familia y tipo pago
+    validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuento: DescuentoPorFamiliaYTipoPago[], indiceDeListaDeDescuento: number, listaHistoricoDePromos: Promo[],callBack: (listaDeDescuento: DescuentoPorFamiliaYTipoPago[]) => void, errCallback: (resultado: Operacion) => void) {
+        try {
+            if (listaHistoricoDePromos.length > 0) {
+                if (this.listaDeDescuentoPorFamiliaYTipoPagoTerminoDeIterar(listaDeDescuento, indiceDeListaDeDescuento)) {
+                    let descuentoAValidar: DescuentoPorFamiliaYTipoPago = listaDeDescuento[indiceDeListaDeDescuento];
+                    let resultadoDePromoHistorico = (listaHistoricoDePromos as any).find((promo: Promo) => {
+                        return promo.promoId === descuentoAValidar.promoId;
+                    });
+                    if (resultadoDePromoHistorico) {
+                        let promoDeDescuento: Promo = new Promo();
+                        promoDeDescuento.promoId = descuentoAValidar.promoId;
+                        promoDeDescuento.promoName = descuentoAValidar.promoName;
+                        promoDeDescuento.frequency = descuentoAValidar.frequency;
+                        this.promoServicio.validarSiAplicaPromo(promoDeDescuento, resultadoDePromoHistorico, (aplicaDescuento: boolean) => {
+                            if (!aplicaDescuento) {
+                                listaDeDescuento = listaDeDescuento.filter((descuento: DescuentoPorFamiliaYTipoPago) => {
+                                    return resultadoDePromoHistorico.promoId !== descuento.promoId;
+                                });
+                            }
+                            this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuento, indiceDeListaDeDescuento + (aplicaDescuento ? 1 : 0), listaHistoricoDePromos,(listaDeDescuento: DescuentoPorFamiliaYTipoPago[]) => {
+                                callBack(listaDeDescuento);
+                            }, (resultado: Operacion) => {
+                                errCallback(resultado);
+                            });
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });
+                        promoDeDescuento = null;
+                    } else {
+                        this.validarSiAplicaElDescuentoPorFamiliaYTipoPago(listaDeDescuento, indiceDeListaDeDescuento + 1, listaHistoricoDePromos, (listaDeDescuento: DescuentoPorFamiliaYTipoPago[]) => {
+                            callBack(listaDeDescuento);
+                        }, (resultado: Operacion) => {
+                            errCallback(resultado);
+                        });
+                    }
+                } else {
+                    callBack(listaDeDescuento);
+                }
+            } else {
+                callBack(listaDeDescuento);
+            }
+        } catch (ex) {
+            errCallback({
+                codigo: -1,
+                mensaje: `Error al validar la si aplica el descuento por monto general y familia: ${ex.message}`
+            } as Operacion);
+        }
+    }
+
+    listaDeDescuentoPorFamiliaYTipoPagoTerminoDeIterar(listaDeDescuento: DescuentoPorFamiliaYTipoPago[], indiceDeListaDeDescuento: number): boolean {
+        return (listaDeDescuento.length > 0 && listaDeDescuento.length > indiceDeListaDeDescuento);
+    }
+
+    //----------Promo---------//
 }

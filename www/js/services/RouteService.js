@@ -2167,7 +2167,7 @@ function AddDiscountListByGeneralAmount(data) {
     listaParaEjecucion.push(" AND LOW_AMOUNT = " + data.row.LOW_AMOUNT + " ");
     listaParaEjecucion.push(" AND HIGH_AMOUNT = " + data.row.HIGH_AMOUNT + " ");
     
-    window.gInsertsInitialRoute.push(listaParaEjecucion.join(''));0
+    window.gInsertsInitialRoute.push(listaParaEjecucion.join(''));
 
     listaParaEjecucion = [];
 
@@ -2325,3 +2325,69 @@ function AgregarHistoricoPorPromo(row) {
 
 
 //----------Fin de Historico por promo---------//
+
+//----------Inicia Parametro para aplicar el descuento---------//
+
+function SetApplyDiscountParameter(value) {
+    try {
+        localStorage.setItem("APPLY_DISCOUNT_PERCENTAGE_AND_THEN_THE_MONETARY", value);
+    } catch (e) {
+        notify(e.message);
+    }
+}
+
+//----------Fin Parametro para aplicar el descuento---------//
+
+//----------Inicio de Descuentos por monto general y familia---------//
+
+function DiscountListByGeneralAmountAndFamilyNotFound(data) {
+    ToastThis("No se encontraron Listas de descuentos por monto general y familia para la Ruta: " + data.routeid);
+}
+
+
+function AddDiscountListByGeneralAmountAndFamily(row){
+    var listLi = [];
+    listLi.push("INSERT INTO DISCOUNT_LIST_BY_GENERAL_AMOUNT_AND_FAMILY(DISCOUNT_LIST_ID, CODE_FAMILY, LOW_AMOUNT, HIGH_AMOUNT, DISCOUNT_TYPE, DISCOUNT, PROMO_ID, PROMO_NAME, PROMO_TYPE, FREQUENCY) VALUES");
+    listLi.push("(" + row.DISCOUNT_LIST_ID + "");
+    listLi.push(",'" + row.CODE_FAMILY+ "'");
+    listLi.push("," + row.LOW_AMOUNT);
+    listLi.push("," + row.HIGH_AMOUNT);
+    listLi.push(",'" + row.DISCOUNT_TYPE + "'");
+    listLi.push("," + row.DISCOUNT);
+    listLi.push("," + row.PROMO_ID);
+    listLi.push(",'" + row.PROMO_NAME + "'");
+    listLi.push(",'" + row.PROMO_TYPE + "'");
+    listLi.push(",'" + row.FREQUENCY + "'");    
+    listLi.push(")");
+    gInsertsInitialRoute.push(listLi.join(''));
+    listLi = null;
+}
+
+//----------Fin de Historico por monto general y familia---------//
+
+//----------Inicio de Descuentos por familia y tipo de pago---------//
+
+function DiscountListByFamilyAndPaymentTypeNotFound(data) {
+    ToastThis("No se encontraron Listas de descuentos por familia y tipo pago: " + data.routeid);
+}
+
+function AddDiscountListByFamilyAndPaymentType(row){
+    var listLi = [];
+    listLi.push("INSERT INTO DISCOUNT_LIST_BY_FAMILY_AND_PAYMENT_TYPE(DISCOUNT_LIST_ID, PAYMENT_TYPE, CODE_FAMILY, DISCOUNT_TYPE, DISCOUNT, PROMO_ID, PROMO_NAME, PROMO_TYPE, FREQUENCY) VALUES");
+    listLi.push("(" + row.DISCOUNT_LIST_ID);
+    listLi.push(",'" + row.PAYMENT_TYPE+ "'");
+    listLi.push(",'" + row.CODE_FAMILY+ "'");    
+    listLi.push(",'" + row.DISCOUNT_TYPE + "'");
+    listLi.push("," + row.DISCOUNT);
+    listLi.push("," + row.PROMO_ID);
+    listLi.push(",'" + row.PROMO_NAME + "'");
+    listLi.push(",'" + row.PROMO_TYPE + "'");
+    listLi.push(",'" + row.FREQUENCY + "'");    
+    listLi.push(")");
+    gInsertsInitialRoute.push(listLi.join(''));
+    listLi = null;
+}
+
+//----------Fin de Descuentos por familia y tipo de pago---------//
+
+

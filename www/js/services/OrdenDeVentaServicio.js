@@ -241,7 +241,7 @@ var OrdenDeVentaServicio = (function () {
         }
         sql += ",'" + tipoDeRedALaQueEstaConectadoElDispositivo + "'";
         sql += "," + (gIsOnline === SiNo.Si ? 0 : 1);
-        sql += "," + ordenDeVenta.totalAmountDisplay;
+        sql += ", " + ordenDeVenta.totalAmountDisplay;
         sql += ");";
         return sql;
     };
@@ -274,6 +274,12 @@ var OrdenDeVentaServicio = (function () {
         listaDeLi.push(" , OWNER");
         listaDeLi.push(" , OWNER_ID");
         listaDeLi.push(" , DISCOUNT_TYPE");
+        listaDeLi.push(" , DISCOUNT_BY_FAMILY");
+        listaDeLi.push(" , DISCOUNT_BY_GENERAL_AMOUNT");
+        listaDeLi.push(" , DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE");
+        listaDeLi.push(" , TYPE_OF_DISCOUNT_BY_FAMILY");
+        listaDeLi.push(" , TYPE_OF_DISCOUNT_BY_GENERAL_AMOUNT");
+        listaDeLi.push(" , TYPE_OF_DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE");
         listaDeLi.push(") VALUES(");
         listaDeLi.push("" + ordenDeVentaDetalle.salesOrderId);
         listaDeLi.push(",'" + ordenDeVentaDetalle.sku + "'");
@@ -316,6 +322,12 @@ var OrdenDeVentaServicio = (function () {
         else {
             listaDeLi.push(",null");
         }
+        listaDeLi.push("," + ordenDeVentaDetalle.discountByFamily);
+        listaDeLi.push("," + ordenDeVentaDetalle.discountByGeneralAmount);
+        listaDeLi.push("," + ordenDeVentaDetalle.discountByFamilyAndPaymentType);
+        listaDeLi.push(",'" + ordenDeVentaDetalle.typeOfDiscountByFamily + "'");
+        listaDeLi.push(",'" + ordenDeVentaDetalle.typeOfDiscountByGeneralAmount + "'");
+        listaDeLi.push(",'" + ordenDeVentaDetalle.typeOfDiscountByFamilyAndPaymentType + "'");
         listaDeLi.push(");");
         return listaDeLi.join('');
     };
@@ -375,31 +387,19 @@ var OrdenDeVentaServicio = (function () {
             var ldetail = "";
             var lfooter = "";
             var imprimirUM = localStorage.getItem("SALE_ORDER_PRINT_UM").toString() === "1" ? 1 : 0;
-            var printDocLen = 0;
-            printDocLen = 350;
-            if (ordenDeVenta.ordenDeVentaDetalle.length === 1) {
-                printDocLen += ordenDeVenta.ordenDeVentaDetalle.length * 200;
-            }
-            else {
-                printDocLen += ordenDeVenta.ordenDeVentaDetalle.length * 150;
-            }
-            lheader = "! 0 50 50 " + printDocLen + " 1\r\n";
-            lheader += "! U1 LMARGIN 10\r\n! U\r\n! U1 PAGE-WIDTH 1400\r\nON-FEED IGNORE\r\n";
-            lheader += "CENTER 550 T 1 2 0 10 " + nameEnterprise + "\r\n";
-            lheader += "L 5  50 570 50 1\r\n";
-            if (cliente.clientName.length < 21) {
-                lheader += "CENTER 550 T 1 2 0 60  " + cliente.clientName + "\r\n";
-            }
-            else {
-                lheader += "CENTER 550 T 0 2 0 60  " + cliente.clientName + "\r\n";
-            }
-            lheader += "CENTER 550 T 0 2 0 100 " + cliente.address + "\r\n";
+            var nameUser = localStorage.getItem("LAST_LOGIN_NAME");
             var serie = ordenDeVenta.docSerie;
             var docNum = ordenDeVenta.docNum;
-            lheader += "CENTER 550 T 0 3 0 130 Orden de Venta Serie " + serie + "\r\n";
-            lheader += "CENTER 550 T 0 3 0 160 No." + docNum + "\r\n";
-            lheader += "CENTER 550 T 0 3 0 190 ***** ORIGINAL ***** \r\n";
-            var pRow = 220;
+            lheader += "! U1 LMARGIN 10\r\n! U\r\n! U1 PAGE-WIDTH 1400\r\nON-FEED IGNORE\r\n";
+            lheader += "CENTER 550 T 0 3 0 10 " + nameEnterprise + "\r\n";
+            lheader += "L 5  50 570 50 1\r\n";
+            lheader += "CENTER 550 T 0 3 0 60 Orden de Venta Serie " + serie + "\r\n";
+            lheader += "CENTER 550 T 0 3 0 90 No." + docNum + "\r\n";
+            lheader += "LEFT 550 T 0 2 0 130 Cliente: " + cliente.clientId + "-" + cliente.clientName + "\r\n";
+            lheader += "LEFT 550 T 0 2 0 160 " + cliente.address + "\r\n";
+            lfooter += "LEFT 550 T 0 2 0 190 Fecha de entrega: " + ordenDeVenta.deliveryDate + " \r\n";
+            lheader += "CENTER 550 T 0 3 0 220 ***** ORIGINAL ***** \r\n";
+            var pRow = 250;
             ldetail = "";
             var i = 0;
             var item = new OrdenDeVentaDetalle();
@@ -476,10 +476,11 @@ var OrdenDeVentaServicio = (function () {
                 }
             }
             pRow += 30;
-            lfooter += "CENTER 550 T 0 2 0 " + pRow + " " + getDateTime() + " / RUTA " + gCurrentRoute + " \r\n";
+            lfooter += "CENTER 550 T 0 2 0 " + pRow + " " + getDateTime() + " / " + gCurrentRoute + "-" + nameUser + " \r\n";
             pRow += 30;
             lfooter += "L 5  120 570 120 1\r\n";
             lfooter += "PRINT\r\n";
+            lheader = "! 0 50 50 " + (pRow + 40) + " 1\r\n" + lheader;
             var pCpCl = (lheader + ldetail + lfooter);
             callback(pCpCl);
         }
@@ -595,6 +596,10 @@ var OrdenDeVentaServicio = (function () {
             listaDeLi.push(" , D.DISCOUNT");
             listaDeLi.push(" , D.LONG");
             listaDeLi.push(" , D.DISCOUNT_TYPE");
+            listaDeLi.push(" , D.DISCOUNT_BY_FAMILY");
+            listaDeLi.push(" , D.DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE");
+            listaDeLi.push(" , D.TYPE_OF_DISCOUNT_BY_FAMILY");
+            listaDeLi.push(" , D.TYPE_OF_DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE");
             listaDeLi.push(" FROM SALES_ORDER_HEADER H");
             listaDeLi.push(" INNER JOIN SALES_ORDER_DETAIL D ON (H.SALES_ORDER_ID = D.SALES_ORDER_ID AND H.DOC_SERIE = D.DOC_SERIE AND H.DOC_NUM = D.DOC_NUM)");
             listaDeLi.push(" INNER JOIN SKU_PRESALE S ON (S.SKU = D.SKU)");
@@ -606,7 +611,6 @@ var OrdenDeVentaServicio = (function () {
                 listaDeLi.push(" AND H.DOC_SERIE = '" + ordenDeVenta.docSerie + "'");
                 listaDeLi.push(" AND H.DOC_NUM = " + ordenDeVenta.docNum);
             }
-            listaDeLi.push(" AND S.WAREHOUSE = '" + gDefaultWhs + "'");
             listaDeLi.push(" GROUP BY D.SKU, D.CODE_PACK_UNIT, D.IS_BONUS,D.LONG");
             tx.executeSql(listaDeLi.join(''), [], function (tx, results) {
                 if (results.rows.length >= 1) {
@@ -626,6 +630,10 @@ var OrdenDeVentaServicio = (function () {
                         ordenDeVentaDetalle.discount = detalleTemp.DISCOUNT;
                         ordenDeVentaDetalle.long = detalleTemp.LONG;
                         ordenDeVentaDetalle.discountType = detalleTemp.DISCOUNT_TYPE;
+                        ordenDeVentaDetalle.discountByFamily = detalleTemp.DISCOUNT_BY_FAMILY;
+                        ordenDeVentaDetalle.discountByFamilyAndPaymentType = detalleTemp.DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE;
+                        ordenDeVentaDetalle.typeOfDiscountByFamily = detalleTemp.TYPE_OF_DISCOUNT_BY_FAMILY;
+                        ordenDeVentaDetalle.typeOfDiscountByFamilyAndPaymentType = detalleTemp.TYPE_OF_DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE;
                         ordenDeVenta.ordenDeVentaDetalle.push(ordenDeVentaDetalle);
                     }
                     callback(ordenDeVenta);
@@ -855,21 +863,19 @@ var OrdenDeVentaServicio = (function () {
         listaDeLaCadena.push(" FROM SALES_ORDER_HEADER ");
         return listaDeLaCadena.join('');
     };
+    OrdenDeVentaServicio.prototype.ObtenerTotalDeClientesAVisitar = function () {
+        var listaDeLaCadena = [];
+        listaDeLaCadena.push(" SELECT ");
+        listaDeLaCadena.push(" COUNT(TASK_ID) AS TOTAL");
+        listaDeLaCadena.push(" FROM TASK ");
+        return listaDeLaCadena.join('');
+    };
     OrdenDeVentaServicio.prototype.ObtenerTotalDeClientesConVisitados = function () {
         var listaDeLaCadena = [];
         listaDeLaCadena.push(" SELECT ");
         listaDeLaCadena.push(" COUNT(TASK_ID) AS TOTAL");
         listaDeLaCadena.push(" FROM TASK ");
         listaDeLaCadena.push(" WHERE TASK_STATUS = 'COMPLETED' ");
-        listaDeLaCadena.push(" AND TASK_TYPE = 'PRESALE'");
-        return listaDeLaCadena.join('');
-    };
-    OrdenDeVentaServicio.prototype.ObtenerTotalDeClientesAVisitar = function () {
-        var listaDeLaCadena = [];
-        listaDeLaCadena.push(" SELECT ");
-        listaDeLaCadena.push(" COUNT(TASK_ID) AS TOTAL");
-        listaDeLaCadena.push(" FROM TASK ");
-        listaDeLaCadena.push(" WHERE TASK_TYPE = 'PRESALE'");
         return listaDeLaCadena.join('');
     };
     OrdenDeVentaServicio.prototype.ObtenerTotalDeTareasSinGestion = function () {
@@ -877,7 +883,7 @@ var OrdenDeVentaServicio = (function () {
         listaDeLaCadena.push(" SELECT ");
         listaDeLaCadena.push(" COUNT(TASK_ID) AS TOTAL");
         listaDeLaCadena.push(" FROM TASK ");
-        listaDeLaCadena.push(" WHERE COMPLETED_SUCCESSFULLY = 0 ");
+        listaDeLaCadena.push(" WHERE TASK_STATUS <> 'COMPLETED' ");
         return listaDeLaCadena.join('');
     };
     OrdenDeVentaServicio.prototype.ObtenerTotalDeTareasFueraPlanDeRuta = function () {

@@ -12,6 +12,8 @@ var Promo = (function () {
         this.isPosted = 0;
         this.deviceNetworkType = "";
         this.isPostedOffLine = "";
+        this.salesOrderDocumentNumber = 0;
+        this.salesOrderDocumentSeries = "";
         this.apply = false;
     }
     return Promo;

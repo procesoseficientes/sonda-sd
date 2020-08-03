@@ -775,7 +775,13 @@ function ActualizarEtiqutaPorClienteHandHeld(etiquetaPorCliente) {
                                 IsBonus: results.rows.item(j).IS_BONUS,
                                 IsPostedVoid: results.rows.item(j).IS_POSTED_VOID,
                                 Long: results.rows.item(j).LONG,
-                                DiscountType: results.rows.item(j).DISCOUNT_TYPE
+                                DiscountType: results.rows.item(j).DISCOUNT_TYPE,
+                                DiscountByFamily: results.rows.item(j).DISCOUNT_BY_FAMILY,
+                                DiscountByGeneralAmount: results.rows.item(j).DISCOUNT_BY_GENERAL_AMOUNT,
+                                DiscountByFamilyAndPaymentType: results.rows.item(j).DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE,
+                                TypeOfDiscountByFamily: results.rows.item(j).TYPE_OF_DISCOUNT_BY_FAMILY,
+                                TypeOfDiscountByGeneralAmount: results.rows.item(j).TYPE_OF_DISCOUNT_BY_GENERAL_AMOUNT,
+                                TypeOfDiscountByFamilyAndPaymentType: results.rows.item(j).TYPE_OF_DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE
                                 
                             };
                             ordenDeCompra.SaleDetails.push(detOrdenDeCompra);
@@ -2169,7 +2175,7 @@ function ObtenerBroadcastPerdidos() {
         var historialDePromociones = [];
         SONDA_DB_Session.readTransaction(function (tx) {
             var sql = [];
-            sql.push("SELECT DOC_SERIE, DOC_NUM, CODE_ROUTE, CODE_CUSTOMER, HISTORY_DATETIME, PROMO_ID, PROMO_NAME, FREQUENCY ");
+            sql.push("SELECT DOC_SERIE, DOC_NUM, CODE_ROUTE, CODE_CUSTOMER, HISTORY_DATETIME, PROMO_ID, PROMO_NAME, FREQUENCY, SALES_ORDER_DOCUMENT_NUMBER, SALES_ORDER_DOCUMENT_SERIES ");
             sql.push(" FROM HISTORY_BY_PROMO WHERE IS_POSTED = 1");
 
             tx.executeSql(sql.join(""),
@@ -2187,7 +2193,9 @@ function ObtenerBroadcastPerdidos() {
                             historyDateTime: cadenaFecha,
                             promoId: recordset.rows.item(i).PROMO_ID,
                             promoName: recordset.rows.item(i).PROMO_NAME,
-                            frequency: recordset.rows.item(i).FREQUENCY
+                            frequency: recordset.rows.item(i).FREQUENCY,
+                            salesOrderDocumentNumber: recordset.rows.item(i).SALES_ORDER_DOCUMENT_NUMBER,
+                            salesOrderDocumentSeries: recordset.rows.item(i).SALES_ORDER_DOCUMENT_SERIES
                         }
                         historialDePromociones.push(promo);
                     }

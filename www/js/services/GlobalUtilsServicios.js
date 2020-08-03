@@ -1162,6 +1162,24 @@ var GlobalUtilsServicio = (function () {
                     case "AddHistoryByPromoForRoute":
                         AgregarHistoricoPorPromo(data.row);
                         break;
+                    case "not_discount_by_general_amount_and_family_list_found":
+                        DiscountListByGeneralAmountAndFamilyNotFound(data);
+                        break;
+                    case "add_discount_by_general_amount_and_family_list":
+                        AddDiscountListByGeneralAmountAndFamily(data.row);
+                        break;
+                    case "not_discount_by_family_and_payment_type_list_found":
+                        DiscountListByFamilyAndPaymentTypeNotFound(data);
+                        break;
+                    case "add_discount_by_family_and_payment_type_list":
+                        AddDiscountListByFamilyAndPaymentType(data.row);
+                        break;
+                    case "not_found_GetApplyDiscountParameter":
+                        SetApplyDiscountParameter(0);
+                        break;
+                    case "add_GetApplyDiscountParameter":
+                        SetApplyDiscountParameter(data.row.Value);
+                        break;
                 }
             });
             socketIo.on("auth_not_found", function (data) {

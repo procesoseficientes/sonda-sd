@@ -596,6 +596,7 @@ class TareaDetalleControlador {
                     , "configuracionDecimales": this.configuracionDecimales
                     , "listaSku": new Array<Sku>()
                     , "esPrimeraVez": true
+                    , "listaDeSkuOrdenDeVenta" : new Array<Sku>()
                 }
             });
             my_dialog("", "", "closed");
@@ -760,6 +761,8 @@ class TareaDetalleControlador {
         sku.sku = "";
         sku.onHand = 0;
         var lstSku: Sku[] = [];
+
+        localStorage.setItem("LISTA_TIPO_FAMILIA_SKU", "ALL");
 
         this.clienteServicio.obtenerCuentaCorriente(cliente, tareaDetalleControlador.configuracionDecimales, (cliente: Cliente) => {
             this.tareaServicio.obtenerRegla("tipoOrdenDeVenta", (listaDeReglasTipoOrdenDeVenta: Regla[]) => {

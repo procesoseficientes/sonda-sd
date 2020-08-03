@@ -11,5 +11,7 @@
     isPosted: number = 0;
     deviceNetworkType: string = "";
     isPostedOffLine: string = "";
+    salesOrderDocumentNumber: number = 0;
+    salesOrderDocumentSeries: string = ""    
     apply: boolean = false;
 }

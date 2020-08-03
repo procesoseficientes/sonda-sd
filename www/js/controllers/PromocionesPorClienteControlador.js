@@ -396,7 +396,7 @@ var PromocionesPorClienteControlador = (function () {
                         listaBonificacion.map(function (bonificacion) {
                             listaAcordion_6.push("<tr class=\"filaCambioDeColor\">");
                             listaAcordion_6.push("<td class=\"filaPromo\">");
-                            listaAcordion_6.push(format_number(bonificacion.lowLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals) + "-" + DarFormatoAlMonto(format_number(bonificacion.highLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals)) + "-" + bonificacion.codePackUnit + " " + bonificacion.codeSku);
+                            listaAcordion_6.push(format_number(bonificacion.lowLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals) + "-" + (format_number(bonificacion.highLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals)) + "-" + bonificacion.codePackUnit + " " + bonificacion.codeSku);
                             listaAcordion_6.push("</td>");
                             listaAcordion_6.push("<td class=\"filaPromo\">");
                             listaAcordion_6.push(format_number(bonificacion.bonusQtyTemp, _this.configuracionDeDecimales.defaultDisplayDecimals) + "-" + bonificacion.codePackUnitBonues + "-" + bonificacion.codeSkuBonus);
