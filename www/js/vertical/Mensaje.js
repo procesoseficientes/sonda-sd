@@ -4,4 +4,4 @@ var Mensaje = (function () {
     }
     return Mensaje;
 }());
-//# sourceMappingURL=mensaje.js.map
+//# sourceMappingURL=Mensaje.js.map

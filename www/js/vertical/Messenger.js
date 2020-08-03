@@ -47,7 +47,7 @@ var Messenger = (function () {
         }
     };
     Messenger.prototype.subscribeInternal = function (deliveryCallback, messageType, subscriber) {
-        var _this = this;
+        var _this_1 = this;
         if (deliveryCallback == null) {
             throw new Error("Not Delivery Callback");
         }
@@ -62,7 +62,7 @@ var Messenger = (function () {
         }
         messageSubscriptions.setValue(subscription.id, subscription);
         this.publishSubscriberChangeMessage(messageSubscriptions, messageType);
-        return new SubscriptionToken(subscription.id, function () { return _this.internalUnsubscribe(subscription.id, messageType); }, deliveryCallback);
+        return new SubscriptionToken(subscription.id, function () { return _this_1.internalUnsubscribe(subscription.id, messageType); }, deliveryCallback);
     };
     Messenger.prototype.internalUnsubscribe = function (subscriptionId, messageType) {
         var messageSubscriptions;
@@ -81,4 +81,4 @@ var Messenger = (function () {
     };
     return Messenger;
 }());
-//# sourceMappingURL=messenger.js.map
+//# sourceMappingURL=Messenger.js.map

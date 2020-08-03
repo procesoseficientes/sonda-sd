@@ -1,0 +1,3 @@
+interface IControlDeSecuenciaServicio {
+  inicializarControlDeSequencias(): void;
+}

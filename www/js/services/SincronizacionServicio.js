@@ -1,1085 +1,146 @@
-﻿var _enviandoClientes = false;
-var _enviandoFacturas = false;
-var _enviandoPagos = false;
-var _enviandoConsignaciones = false;
-var _enviandoTareas = false;
-var _enviandoEtiquetasPorCliente = false;
-var _enviandoOrdenesDeCompra = false;
-var _enviandoNumeroDeImprecionesDeOrdenesDeVenta = false;
+﻿var _enviandoValidacionDeFacturas = false;
+var _enviandoValidacionDeClientes = false;
+var _enviandoScouting = false;
 var _enviandoNumeroDeSecuenciaDeDocumentos = false;
-var _enviandoOrdenesDeVentaAnuladas = false;
-var _enviandoInventarioReservadoPorOrdenesDeVentaAnuladas = false;
-var _enviandoBorradoresDeOrdenesDeCompra = true;
-var _enviandoActualizacionesBorradoresDeOrdenesDeCompra = false;
-var _enviandoTomaDeInventario = false;
-var _enviandoCambiosDeClientes = false;
-var _enviandoValidacionDeOrdenesDeVenta = false;
-var _enviandoHistoricoDePromociones = false;
-var _enviandoEncuestasDeCliente = false;
+var _enviandoNumerosDeTelefonoAsociadosAFactura = false;
+var _enviandoNotasDeEntrega = false;
+var _enviandoNotasDeEntregaCanceladas = false;
+var _enviandoRazonesDeNoEntrega = false;
+var _enviandoDemandasDeDespachoPorTarea = false;
+var _marcandoManifiestos3Pl = false;
+var _enviandoNotasDeEntregaAnuladas = false;
+var _enviandoTareas = false;
 var _enviandoDocumentosDePagoDeFacturasVencidas = false;
 
-function DelegarASincronizacion() {
-  $("#UiBtnEnviarDatos").bind("touchstart", function() {
-    ToastThis("Se enviaran todos los datos");
-    EnviarDatosBajoDemanda(
-      function() {
-        ToastThis("Se han enviado todos los datos");
-      },
-      function(err) {
-        notify("Error al enviar datos: " + err.message);
-      }
-    );
-  });
-}
+function EnviarData() {
+  try {
+    if (gIsOnline) {
+      setTimeout(EnviarScouting(), 100);
 
-function ActualizarClienteNuevoHandHeld(clienteNuevo, callback, errCallback) {
-  if (gClientID === clienteNuevo.client.CodigoHH) {
-    gClientID = clienteNuevo.client.CodigoBo;
-  }
-  if (
-    _preSalesControllerCustomer != undefined &&
-    _preSalesControllerCustomer.CustomerId ===
-      delete clienteNuevo.client.CodigoHH
-  ) {
-    _preSalesControllerCustomer.CustomerId = clienteNuevo.client.CodigoBo;
-  }
-
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      //ACTUALIZA EN BASE DE DATOS LOCAL EL CLIENTE NUEVO
-      var sql =
-        "UPDATE CLIENTS SET IS_POSTED = 2 " +
-        ",CLIENT_ID = '" +
-        clienteNuevo.client.CodigoBo +
-        "' " +
-        ", SERVER_POSTED_DATETIME = '" +
-        clienteNuevo.client.ServerPostedDateTime +
-        "' " +
-        ",SYNC_ID = NULL WHERE CLIENT_ID = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sql);
-
-      sql =
-        "UPDATE CLIENTS_FREQUENCY SET CODE_CUSTOMER = '" +
-        clienteNuevo.client.CodigoBo +
-        "'  WHERE CODE_CUSTOMER = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sql);
-
-      sql =
-        "UPDATE TAGS_X_CUSTOMER SET CUSTOMER_SYNC = 1, CUSTOMER = '" +
-        clienteNuevo.client.CodigoBo +
-        "' WHERE CUSTOMER = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sql);
-
-      //ACTUALIZA EN BASE DE DATOS LOCAL LAS TAREAS ASIGNADAS A ESE CLIENTE
-
-      sql =
-        "UPDATE SALES_ORDER_HEADER SET CLIENT_ID = '" +
-        clienteNuevo.client.CodigoBo +
-        "'  WHERE CLIENT_ID = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sql);
-
-      var sqltask =
-        "UPDATE PRESALES_ROUTE SET RELATED_CLIENT_CODE = '" +
-        clienteNuevo.client.CodigoBo +
-        "'  WHERE RELATED_CLIENT_CODE = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sqltask);
-
-      sql =
-        "UPDATE PAYMENT_HEADER SET CLIENT_ID = '" +
-        clienteNuevo.client.CodigoBo +
-        "'  WHERE CLIENT_ID = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sql);
-
-      sql =
-        "UPDATE TASK SET RELATED_CLIENT_CODE = '" +
-        clienteNuevo.client.CodigoBo +
-        "'  WHERE RELATED_CLIENT_CODE = '" +
-        clienteNuevo.client.CodigoHH +
-        "'";
-      tx.executeSql(sql);
-
-      callback();
-    },
-    function(err) {
-      if (err.code !== 0) errCallback(err);
-    }
-  );
-}
-
-function ObtenerPagosNoPosteados(callback, errCallBack, pagos) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "SELECT *  ";
-      sql += " FROM PAYMENT_HEADER ";
-      sql += " WHERE IS_POSTED IN (0,1)";
-      sql += " AND substr(CLIENT_ID,1,1 ) <> '-'";
-      sql += " ORDER BY POSTED_DATETIME";
-
-      tx.executeSql(
-        sql,
-        [],
-        function(tx, results) {
-          for (var i = 0; i < results.rows.length; i++) {
-            var pago = {
-              PaymentNum: results.rows.item(i).PAYMENT_NUM,
-              PostedDatetime: results.rows.item(i).POSTED_DATETIME,
-              ClientId: results.rows.item(i).CLIENT_ID,
-              ClientName: results.rows.item(i).CLIENT_NAME,
-              PosTerminal: results.rows.item(i).POS_TERMINAL,
-              Gps: results.rows.item(i).GPS,
-              DocDate: results.rows.item(i).DOC_DATE,
-              DepositToDate: results.rows.item(i).DEPOSIT_TO_DATE,
-              TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
-              IsPosted: results.rows.item(i).IS_POSTED,
-              Status: results.rows.item(i).STATUS,
-              DocSerie: results.rows.item(i).DOC_SERIE,
-              DocNum: results.rows.item(i).DOC_NUM,
-              PaymentRows: Array()
-            };
-            pagos.push(pago);
-          }
-          callback(pagos);
-        },
-        function(tx, err) {
-          if (err.code !== 0) errCallBack(err);
-        }
+      setTimeout(
+        EnviarValidacionDeClientes(
+          function() {},
+          function(err) {}
+        ),
+        100
       );
-    },
-    function(err) {
-      errCallBack(err);
-    }
-  );
-}
 
-function ObtenerLineasDePagosNoPosteados(
-  pago,
-  errCallBack,
-  pagos,
-  i,
-  callback,
-  returncallBack
-) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "SELECT * ";
-      sql += " FROM PAYMENT_DETAIL ";
-      sql += " WHERE PAYMENT_NUM=" + pago.PaymentNum + "";
-      tx.executeSql(
-        sql,
-        [],
-        function(tx, results) {
-          for (var j = 0; j < results.rows.length; j++) {
-            var detPago = {
-              PaymentNum: results.rows.item(j).PAYMENT_NUM,
-              LineNum: results.rows.item(j).LINE_NUM,
-              InvoiceNum: results.rows.item(j).INVOICE_NUM,
-              SatSerie: results.rows.item(j).INVOICE_SERIE,
-              PaymentType: results.rows.item(j).PAYMENT_TYPE,
-              DocDate: results.rows.item(j).DOC_DATE,
-              DocNum: results.rows.item(j).DOC_NUM,
-              Image: results.rows.item(j).IMAGE,
-              BankId: results.rows.item(j).BANK_ID,
-              AccountNum: results.rows.item(j).ACCOUNT_NUM,
-              AmountPaid: results.rows.item(j).AMOUNT_PAID,
-              PaymentId: results.rows.item(j).ID,
-              DocumentNumber: results.rows.item(j).DOCUMENT_NUMBER,
-              SourceDocType: results.rows.item(j).SOURCE_DOC_TYPE,
-              SourceDocSerie: results.rows.item(j).SOURCE_DOC_SERIE,
-              SourceDocNum: results.rows.item(j).SOURCE_DOC_NUM,
-              Image1: results.rows.item(j).IMAGE_1,
-              Image2: results.rows.item(j).IMAGE_2
-            };
-            pago.PaymentRows.push(detPago);
-          }
-          pagos = callback(pagos, i, pago);
-
-          if (pagos.length - 1 === i) {
-            returncallBack(pagos);
-          }
-        },
-        function(tx, err) {
-          if (err.code !== 0) errCallBack(err);
-        }
+      setTimeout(
+        EnviarFacturas(
+          function() {},
+          function(err) {}
+        ),
+        100
       );
-    },
-    function(err) {
-      errCallBack(err);
-    }
-  );
-}
 
-function ObtenerDetalleDePagosNoPosteados(callback, errCallBack, pagos) {
-  var i;
-  for (i = 0; i < pagos.length; i++) {
-    ObtenerLineasDePagosNoPosteados(
-      pagos[i],
-      errCallBack,
-      pagos,
-      i,
-      function(pagosm, index, pago) {
-        pagosm[index] = pago;
-        return pagosm;
-      },
-      callback
-    );
-  }
-  if (i === 0) {
-    callback(pagos);
-  }
-}
-
-function ActualizarEnvioPagos(data, callback, errCallBack) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "UPDATE PAYMENT_HEADER";
-      sql += " SET IS_POSTED=1";
-      sql += " WHERE";
-      sql += " PAYMENT_NUM =" + data.PaymentNum;
-      console.log(sql);
-      tx.executeSql(sql);
-    },
-    function(err) {
-      errCallBack(err);
-    },
-    function() {
-      callback(data);
-    }
-  );
-}
-
-function EnviarPagos(callback, errCallback) {
-  if (_enviandoPagos) {
-    callback();
-    return;
-  }
-  _enviandoPagos = true;
-  var pagos = Array();
-  ObtenerPagosNoPosteados(
-    function(pagos) {
-      ObtenerDetalleDePagosNoPosteados(
-        function(pagos) {
-          for (var i = 0; i < pagos.length; i++) {
-            var data = {
-              payment: pagos[i],
-              dbuser: gdbuser,
-              dbuserpass: gdbuserpass,
-              battery: gBatteryLevel,
-              routeid: gCurrentRoute
-            };
-            socket.emit("SendPayment", data);
-          }
-          _enviandoPagos = false;
-        },
-        errCallback,
-        pagos
+      setTimeout(
+        EnviarConsignaciones(
+          function() {},
+          function(err) {}
+        ),
+        100
       );
-    },
-    errCallback,
-    pagos
-  );
-}
 
-function ObtenerClientessNoPosteados(callback, errCallBack, clientes) {
-  var fecha = getDateTime().split(" ");
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "SELECT * ";
-      sql += " FROM CLIENTS ";
-      sql += " WHERE IS_POSTED IN (0,1)";
-
-      tx.executeSql(
-        sql,
-        [],
-        function(tx, results) {
-          for (var i = 0; i < results.rows.length; i++) {
-            var cliente = {
-              CodigoHH: results.rows.item(i).CLIENT_ID,
-              CodigoBo: null,
-              Nombre: results.rows.item(i).CLIENT_NAME,
-              Telefono: results.rows.item(i).PHONE,
-              Direccion: results.rows.item(i).ADDRESS,
-              Ruta: gCurrentRoute,
-              Seller_code: gLoggedUser,
-              loginid: gLoggedUser,
-              PostedDatetime: getDateTime(),
-              ContactCustomer: results.rows.item(i).CONTACT_CUSTOMER,
-              Sign: results.rows.item(i).SIGN,
-              Photo: results.rows.item(i).PHOTO,
-              Status: results.rows.item(i).STATUS,
-              New: results.rows.item(i).NEW,
-              Gps: results.rows.item(i).GPS,
-              Reference: results.rows.item(i).REFERENCE,
-              PostDateTime: results.rows.item(i).POST_DATETIME,
-              PosSaleName: results.rows.item(i).POS_SALE_NAME,
-              InvoiceName: results.rows.item(i).INVOICE_NAME,
-              InvoiceAddress: results.rows.item(i).INVOICE_ADDRESS,
-              Nit: results.rows.item(i).NIT,
-              ContactId: results.rows.item(i).CONTACT_ID,
-              DiasVisita: Array(),
-              UpdatedFromBo: results.rows.item(i).UPDATED_FROM_BO,
-              OwnerId: results.rows.item(i).OWNER_ID,
-              SyncId:
-                results.rows.item(i).SYNC_ID === "null" ||
-                results.rows.item(i).SYNC_ID === null ||
-                results.rows.item(i).SYNC_ID === "undefined"
-                  ? gCurrentRoute +
-                    fecha[0] +
-                    fecha[1] +
-                    results.rows.item(i).CLIENT_ID
-                  : results.rows.item(i).SYNC_ID,
-              ServerPostedDateTime: "",
-              DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-              IsPostedOffLine: results.rows.item(i).IS_POSTED_OFFLINE
-            };
-            clientes.push(cliente);
-          }
-          callback(clientes);
-        },
-        function(tx, err) {
-          if (err.code !== 0) errCallBack(err);
-        }
+      setTimeout(
+        EnviarConsignacionesPagadas(
+          function() {},
+          function(err) {}
+        ),
+        100
       );
-    },
-    function(err) {
-      errCallBack(err);
-    }
-  );
-}
 
-function ObtenerLineasDeFrecuencioasNoPosteados(
-  cliente,
-  errCallBack,
-  clientes,
-  i,
-  callback,
-  returncallBack
-) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "SELECT *";
-      sql += " FROM CLIENTS_FREQUENCY";
-      sql += " WHERE CODE_CUSTOMER='" + cliente.CodigoHH + "'";
-      tx.executeSql(
-        sql,
-        [],
-        function(tx, results) {
-          for (var j = 0; j < results.rows.length; j++) {
-            var frecuencia = {
-              CodeCustiner: results.rows.item(j).CODE_CUSTOMER,
-              Sunday: results.rows.item(j).SUNDAY,
-              Monday: results.rows.item(j).MONDAY,
-              Tuesday: results.rows.item(j).TUESDAY,
-              Wednesday: results.rows.item(j).WEDNESDAY,
-              Thursday: results.rows.item(j).THURSDAY,
-              Friday: results.rows.item(j).FRIDAY,
-              Saturday: results.rows.item(j).SATURDAY,
-              FrequencyWeeks: results.rows.item(j).FREQUENCY_WEEKS,
-              LastDateVisited: results.rows.item(j).LAST_DATE_VISITED
-            };
-            cliente.DiasVisita.push(frecuencia);
-          }
-          clientes = callback(clientes, i, cliente);
-
-          if (clientes.length - 1 === i) {
-            returncallBack(clientes);
-          }
-        },
-        function(tx, err) {
-          if (err.code !== 0) errCallBack(err);
-        }
+      setTimeout(
+        EnviarDocumentosDeDevolucionDeInventarioRecogidoDeConsignacion(
+          function() {},
+          function() {}
+        ),
+        100
       );
-    },
-    function(err) {
-      errCallBack(err);
-    }
-  );
-}
 
-function ObtenerFrecuenciaDeClientesNoPosteados(
-  callback,
-  errCallBack,
-  clientes
-) {
-  var i;
-  for (i = 0; i < clientes.length; i++) {
-    ObtenerLineasDeFrecuencioasNoPosteados(
-      clientes[i],
-      errCallBack,
-      clientes,
-      i,
-      function(clientesN1, index, cliente) {
-        clientesN1[index] = cliente;
-        return clientesN1;
-      },
-      callback
-    );
-  }
-  if (i === 0) {
-    callback(clientes);
-  }
-}
-
-function ActualizarEnvioCliente(pData, callback, errCallBack) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "UPDATE CLIENTS";
-      sql += " SET IS_POSTED=1, SYNC_ID = NULL ";
-      sql += " WHERE";
-      sql += " CLIENT_ID ='" + pData.client.CodigoHH + "'";
-      console.log(sql);
-      tx.executeSql(sql);
-    },
-    function(err) {
-      errCallBack(err);
-    },
-    function() {
-      callback(pData);
-    }
-  );
-}
-
-function EnviarClientesNoPosteados(callback, errCallback) {
-  if (_enviandoClientes) {
-    callback();
-    return;
-  }
-  _enviandoClientes = true;
-  var clientes = Array();
-  ObtenerClientessNoPosteados(
-    function(clientesN1) {
-      ObtenerFrecuenciaDeClientesNoPosteados(
-        function(clientesN2) {
-          for (var i = 0; i < clientesN2.length; i++) {
-            var data = {
-              client: clientesN2[i],
-              dbuser: gdbuser,
-              dbuserpass: gdbuserpass,
-              battery: gBatteryLevel,
-              routeid: gCurrentRoute,
-              uuid: device.uuid
-            };
-            ActualizarEnvioCliente(
-              data,
-              function(pData) {
-                socket.emit("insert_new_client", pData);
-              },
-              function(err) {
-                ToastThis(err.message);
-              }
-            );
-          }
-          _enviandoClientes = false;
-        },
-        errCallback,
-        clientesN1
+      setTimeout(
+        EnviarRegistroDeTrazabilidadDeConsignacion(
+          function() {},
+          function() {}
+        ),
+        100
       );
-    },
-    errCallback,
-    clientes
-  );
-}
 
-function EnviarClientes(callback, errCallback) {
-  EnviarClientesNoPosteados(callback, errCallback);
-}
-
-///*********************ENVIO DE ETIQUETAS POR CLIENTE *********************/
-
-function EnviarEtiquetas(callback, errCallback) {
-  EnviarEtiquetasNoPosteados(callback, errCallback);
-}
-
-function EnviarEtiquetasNoPosteados(callback, errCallback) {
-  if (_enviandoEtiquetasPorCliente) {
-    callback();
-    return;
-  }
-  _enviandoEtiquetasPorCliente = true;
-
-  ObtenerEtiquetasPorClienteNoPosteados(function(etiquetasPoCliente) {
-    for (var i = 0; i < etiquetasPoCliente.length; i++) {
-      var data = {
-        tagscolor: etiquetasPoCliente[i].TAG_COLOR,
-        customer: etiquetasPoCliente[i].CUSTOMER,
-        deviceNetworkType: etiquetasPoCliente[i].DEVICE_NETWORK_TYPE,
-        isPostedOffLine: etiquetasPoCliente[i].IS_POSTED_OFFLINE,
-        dbuser: gdbuser,
-        dbuserpass: gdbuserpass,
-        battery: gBatteryLevel,
-        routeid: gCurrentRoute
-      };
-      console.log(data.toString());
-      socket.emit("insert_tags_x_client", data);
-    }
-    _enviandoEtiquetasPorCliente = false;
-  }, errCallback);
-}
-
-function ActualizarEnvioEtiquetaClienteError(pData) {
-  SONDA_DB_Session.transaction(function(tx) {
-    var sql = "UPDATE TAGS_X_CUSTOMER";
-    sql += " SET IS_POSTED=1";
-    sql += " WHERE CLIENT_ID ='" + pData.data.CUSTOMER + "'";
-    sql += " AND TAG_COLOR ='" + pData.data.TAG_COLOR + "'";
-    console.log(sql);
-    tx.executeSql(sql);
-  });
-}
-
-function ObtenerEtiquetasPorClienteNoPosteados(callback, errCallBack) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "SELECT ";
-      sql += " TAG_COLOR ";
-      sql += " , CUSTOMER" + ", DEVICE_NETWORK_TYPE" + ", IS_POSTED_OFFLINE";
-      sql += " FROM TAGS_X_CUSTOMER ";
-      sql += " WHERE IS_POSTED IN (0,1)";
-      sql += " AND CUSTOMER_SYNC = 1";
-
-      tx.executeSql(
-        sql,
-        [],
-        function(tx, results) {
-          var etiquetasPorCliente = Array();
-          for (var i = 0; i < results.rows.length; i++) {
-            var item = {
-              TAG_COLOR: results.rows.item(i).TAG_COLOR,
-              CUSTOMER: results.rows.item(i).CUSTOMER,
-              DEVICE_NETWORK_TYPE: results.rows.item(i).DEVICE_NETWORK_TYPE,
-              IS_POSTED_OFFLINE: results.rows.item(i).IS_POSTED_OFFLINE
-            };
-            etiquetasPorCliente.push(item);
-          }
-          callback(etiquetasPorCliente);
-        },
-        function(tx, err) {
-          if (err.code !== 0) errCallBack(err);
-        }
+      setTimeout(
+        EvniarTareas(
+          function() {},
+          function(error) {}
+        ),
+        100
       );
-    },
-    function(err) {
-      errCallBack(err);
-    }
-  );
-}
 
-function ActualizarEtiqutaPorClienteHandHeld(etiquetaPorCliente) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql =
-        "UPDATE TAGS_X_CUSTOMER SET IS_POSTED = 2 WHERE TAG_COLOR = '" +
-        etiquetaPorCliente.tagscolor +
-        "' AND CUSTOMER = '" +
-        etiquetaPorCliente.customer +
-        "'";
-      tx.executeSql(sql);
-    },
-    function(err) {
-      if (err.code !== 0) notify(err.message);
-    }
-  );
-}
+      setTimeout(
+        EnviarConsignacionesAnuladas(
+          function() {},
+          function(error) {}
+        ),
+        100
+      );
 
-///*********************ENVIO DE TAREAS *********************/
-{
-  function MarcarTareasComoSincronizada(task) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE TASK";
-        sql += " SET IS_POSTED=2";
-        sql += ", TASK_BO_ID = " + task.TaskBoId;
-        sql += " WHERE";
-        sql += " TASK_ID =" + task.TaskId;
-        console.log(sql);
-        tx.executeSql(sql);
+      setTimeout(
+        EnviarEncuestasDeCompraDeCompetencia(
+          function() {},
+          function(error) {}
+        ),
+        100
+      );
 
-        sql = "UPDATE SALES_ORDER_HEADER";
-        sql += " SET";
-        sql += " TASK_ID_BO = " + task.TaskBoId;
-        sql += " WHERE";
-        sql += " TASK_ID =" + task.TaskId;
-        console.log(sql);
-        tx.executeSql(sql);
+      setTimeout(
+        EnviarDepositosNoPosteados(
+          function() {},
+          function() {}
+        ),
+        100
+      );
 
-        EnviarDataSinClientes();
-      },
-      function(err) {
-        ToastThis(err.message);
-      },
-      function() {}
-    );
-  }
+      setTimeout(EnviarResolucion("SendInvoice"), 100);
 
-  function ObtenerTareasNoPosteados(callback, errCallBack, tareas) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT DISTINCT *  ";
-        sql += " FROM TASK ";
-        sql += " WHERE IS_POSTED IN (0,1)";
-        sql += " AND substr(RELATED_CLIENT_CODE,1,1 ) <> '-'";
-        sql += " AND TASK_TYPE <> 'DELIVERY'";
-        sql += " ORDER BY CREATED_STAMP";
+      setTimeout(
+        EnviarValidacionDeFactura(
+          function() {},
+          function(err) {}
+        ),
+        200
+      );
 
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var tarea = {
-                TaskId: results.rows.item(i).TASK_ID,
-                TaskType: results.rows.item(i).TASK_TYPE,
-                TaskDate: results.rows.item(i).TASK_DATE,
-                ScheduleFor: results.rows.item(i).SCHEDULE_FOR,
-                CreatedStamp: results.rows.item(i).CREATED_STAMP,
-                AssigendTo: results.rows.item(i).ASSIGEND_TO,
-                AssignedBy: results.rows.item(i).ASSIGNED_BY,
-                AcceptedStamp: results.rows.item(i).ACCEPTED_STAMP,
-                CompletedStamp: results.rows.item(i).COMPLETED_STAMP,
-                ExpectedGps: results.rows.item(i).EXPECTED_GPS,
-                PostedGps: results.rows.item(i).POSTED_GPS,
-                TaskComments: results.rows.item(i).TASK_COMMENTS,
-                TaskSeq: results.rows.item(i).TASK_SEQ,
-                TaskAddress: results.rows.item(i).TASK_ADDRESS,
-                RelatedClientCode: results.rows.item(i).RELATED_CLIENT_CODE,
-                RelatedClientName: results.rows.item(i).RELATED_CLIENT_NAME,
-                TaskStatus: results.rows.item(i).TASK_STATUS,
-                IsPosted: results.rows.item(i).IS_POSTED,
-                TaskBoId: results.rows.item(i).TASK_BO_ID,
-                CreateBy: results.rows.item(i).CREATE_BY,
-                CompletedSuccessfully: results.rows.item(i)
-                  .COMPLETED_SUCCESSFULLY,
-                Reason: results.rows.item(i).REASON,
-                InPlanRoute: results.rows.item(i).IN_PLAN_ROUTE,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffLine: results.rows.item(i).IS_POSTED_OFFLINE
-              };
-              tareas.push(tarea);
-            }
-            callback(tareas);
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
+      setTimeout(ObtenerBroadcastPerdidos(), 2000);
 
-  function EnviarTareas(callback, errCallback) {
-    if (_enviandoTareas) {
-      callback();
-      return;
-    }
-    _enviandoTareas = true;
-    var tareas = Array();
-    ObtenerTareasNoPosteados(
-      function(tareasN1) {
-        for (var i = 0; i < tareasN1.length; i++) {
-          var data = {
-            task: tareasN1[i],
-            dbuser: gdbuser,
-            dbuserpass: gdbuserpass,
-            battery: gBatteryLevel,
-            routeid: gCurrentRoute
-          };
-          socket.emit("SendTask", data);
-        }
-        _enviandoTareas = false;
-      },
-      errCallback,
-      tareas
-    );
-  }
+      setTimeout(EnviarNumeroDeSecuenciaDeDocumentos(), 100);
 
-  function ActualizarEnvioTarea(data, callback, errCallback) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE TASK ";
-        sql += "SET IS_POSTED=1 ";
-        sql += "WHERE ";
-        sql += " TASK_ID =" + data.TaskId;
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallback(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-}
+      setTimeout(
+        EnviarFacturasConNumeroDeTelefonoAsociado(
+          function() {},
+          function() {}
+        ),
+        100
+      );
 
-///*********************ENVIO DE ORDES DE COMPRA *********************/
-{
-  function ObtenerOrdernesDeCompraNoPosteados(
-    callback,
-    errCallBack,
-    ordenesDeCompra,
-    usaFiltro
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT DISTINCT *";
-        sql += " FROM SALES_ORDER_HEADER ";
-        if (usaFiltro) {
-          sql += " WHERE IS_POSTED IN (0,1)";
-          sql += " AND substr(CLIENT_ID,1,1 ) <> '-'";
-          sql += " AND IFNULL(TASK_ID_BO,0) > 0";
-          //sql += " AND IS_DRAFT = 0";
-        }
-        sql += " ORDER BY POSTED_DATETIME";
+      setTimeout(EnviarNotasDeEntrega(), 500);
 
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var ordenDeCompra = {
-                SalesOrderId: results.rows.item(i).SALES_ORDER_ID,
-                Terms: results.rows.item(i).TERMS,
-                PostedDatetime: results.rows.item(i).POSTED_DATETIME,
-                ClientId: results.rows.item(i).CLIENT_ID,
-                PosTerminal: results.rows.item(i).POS_TERMINAL,
-                GpsUrl: results.rows.item(i).GPS_URL,
-                TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
-                Status: results.rows.item(i).STATUS,
-                PostedBy: results.rows.item(i).POSTED_BY,
-                Image1: results.rows.item(i).IMAGE_1,
-                Image2: results.rows.item(i).IMAGE_2,
-                Image3: results.rows.item(i).IMAGE_3,
-                DeviceBatteryFactor: results.rows.item(i).DEVICE_BATTERY_FACTOR,
-                VoidDatetime: results.rows.item(i).VOID_DATETIME,
-                VoidReason: results.rows.item(i).VOID_REASON,
-                VoidNotes: results.rows.item(i).VOID_NOTES,
-                Voided: results.rows.item(i).VOIDED,
-                ClosedRouteDatetime: results.rows.item(i).CLOSED_ROUTE_DATETIME,
-                IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
-                GpsExpected: results.rows.item(i).GPS_EXPECTED,
-                SalesOrderIdBo: results.rows.item(i).SALES_ORDER_ID_BO,
-                DeliveryDate: results.rows.item(i).DELIVERY_DATE,
-                IsParent: results.rows.item(i).IS_PARENT,
-                ReferenceId: results.rows.item(i).REFERENCE_ID,
-                TimesPrinted: results.rows.item(i).TIMES_PRINTED,
-                DocSerie: results.rows.item(i).DOC_SERIE,
-                DocNum: results.rows.item(i).DOC_NUM,
-                IsVoid: results.rows.item(i).IS_VOID,
-                SalesOrderType: results.rows.item(i).SALES_ORDER_TYPE,
-                Discount: results.rows.item(i).DISCOUNT_BY_GENERAL_AMOUNT,
-                IsDraft: results.rows.item(i).IS_DRAFT,
-                TaskId: results.rows.item(i).TASK_ID_BO,
-                Comment: results.rows.item(i).COMMENT,
-                IsPosted: results.rows.item(i).IS_POSTED,
-                Sinc: results.rows.item(i).SINC,
-                IsPostedVoid: results.rows.item(i).IS_POSTED_VOID,
-                IsUpdated: results.rows.item(i).IS_UPDATED,
-                PaymentTimesPrinted: results.rows.item(i).PAYMENT_TIMES_PRINTED,
-                PaidToDate: results.rows.item(i).PAID_TO_DATE,
-                ToBill: results.rows.item(i).TO_BILL || 0,
-                Authorized: results.rows.item(i).AUTHORIZED,
-                DetailQty: results.rows.item(i).DETAIL_QTY,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffline: results.rows.item(i).IS_POSTED_OFFLINE,
-                GoalHeaderId: results.rows.item(i).GOAL_HEADER_ID,
-                TotalAmountDisplay: results.rows.item(i).TOTAL_AMOUNT_DISPLAY,
-                PurchaseOrderNumber: results.rows.item(i).PURCHASE_ORDER_NUMBER,
-                SaleDetails: []
-              };
-              ordenesDeCompra.push(ordenDeCompra);
-            }
-            callback(ordenesDeCompra);
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
+      setTimeout(EnviarEntregasCanceladas(), 500);
 
-  function ObtenerLineasDeOrdernesDeCompraNoPosteados(
-    ordenDeCompra,
-    errCallBack,
-    ordenesDeCompra,
-    i,
-    callback,
-    returncallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT * ";
-        sql += " FROM SALES_ORDER_DETAIL ";
-        sql += " WHERE SALES_ORDER_ID=" + ordenDeCompra.SalesOrderId + "";
-        sql += " AND DOC_SERIE = '" + ordenDeCompra.DocSerie + "'";
-        sql += " AND DOC_NUM =" + ordenDeCompra.DocNum + "";
-        tx.executeSql(
-          sql,
-          [],
-          function(_tx, results) {
-            for (var j = 0; j < results.rows.length; j++) {
-              var detOrdenDeCompra = {
-                SalesOrderId: results.rows.item(j).SALES_ORDER_ID,
-                Sku: results.rows.item(j).SKU,
-                LineSeq: results.rows.item(j).LINE_SEQ,
-                Qty: results.rows.item(j).QTY,
-                Price: results.rows.item(j).PRICE,
-                Discount: results.rows.item(j).DISCOUNT,
-                TotalLine: results.rows.item(j).TOTAL_LINE,
-                PostedDatetime: results.rows.item(j).POSTED_DATETIME,
-                Serie: results.rows.item(j).SERIE,
-                Serie2: results.rows.item(j).SERIE_2,
-                RequeriesSerie: results.rows.item(j).REQUERIES_SERIE,
-                ComboReference: results.rows.item(j).COMBO_REFERENCE,
-                ParentSeq: results.rows.item(j).PARENT_SEQ,
-                IsActiveRoute: results.rows.item(j).IS_ACTIVE_ROUTE,
-                CodePackUnit: results.rows.item(j).CODE_PACK_UNIT,
-                IsBonus: results.rows.item(j).IS_BONUS,
-                IsPostedVoid: results.rows.item(j).IS_POSTED_VOID,
-                Long: results.rows.item(j).LONG,
-                DiscountType: results.rows.item(j).DISCOUNT_TYPE,
-                DiscountByFamily: results.rows.item(j).DISCOUNT_BY_FAMILY,
-                DiscountByGeneralAmount: results.rows.item(j)
-                  .DISCOUNT_BY_GENERAL_AMOUNT,
-                DiscountByFamilyAndPaymentType: results.rows.item(j)
-                  .DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE,
-                TypeOfDiscountByFamily: results.rows.item(j)
-                  .TYPE_OF_DISCOUNT_BY_FAMILY,
-                TypeOfDiscountByGeneralAmount: results.rows.item(j)
-                  .TYPE_OF_DISCOUNT_BY_GENERAL_AMOUNT,
-                TypeOfDiscountByFamilyAndPaymentType: results.rows.item(j)
-                  .TYPE_OF_DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE,
-                BasePrice: results.rows.item(j).BASE_PRICE,
-                CodeFamily: results.rows.item(j).CODE_FAMILY,
-                UniqueDiscountByScaleApplied: results.rows.item(j)
-                  .UNIQUE_DISCOUNT_BY_SCALE_APPLIED,
-                TotalAmountDisplay: results.rows.item(j).TOTAL_AMOUNT_DISPLAY
-              };
-              ordenDeCompra.SaleDetails.push(detOrdenDeCompra);
-            }
-            ordenesDeCompra = callback(ordenesDeCompra, i, ordenDeCompra);
+      setTimeout(EnviarDemandasDeDespachoPorTarea(), 500);
 
-            if (ordenesDeCompra.length - 1 === i) {
-              returncallBack(ordenesDeCompra);
-            }
-          },
-          function(_tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
+      setTimeout(MarcarManifiestos3PlComoCompletos(), 500);
 
-  function ObtenerDetalleDeOrdernesDeCompraNoPosteados(
-    callback,
-    errCallBack,
-    ordenesDeCompra
-  ) {
-    var i;
-    for (i = 0; i < ordenesDeCompra.length; i++) {
-      ObtenerLineasDeOrdernesDeCompraNoPosteados(
-        ordenesDeCompra[i],
-        errCallBack,
-        ordenesDeCompra,
-        i,
-        function(ordenesDeCompraN1, index, ordenDeCompra) {
-          ordenesDeCompraN1[index] = ordenDeCompra;
-          return ordenesDeCompraN1;
-        },
-        callback
+      setTimeout(EnviarNotasDeEntregaAnuladas(), 500);
+
+      setTimeout(EnviarDocumentosDePagoDeFacturasVencidas(), 500);
+
+      setTimeout(
+        EnviarNuevasTareas(
+          () => {},
+          error => {}
+        ),
+        100
       );
     }
-    if (i === 0) {
-      callback(ordenesDeCompra);
-    }
-  }
-
-  function ActualizarEnvioDeOrdernesDeCompra(data, callback, errCallBack) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE SALES_ORDER_HEADER";
-        sql += " SET IS_POSTED=1";
-        sql += " WHERE";
-        sql += " SALES_ORDER_ID =" + data.SalesOrderId;
-        sql += " AND DOC_SERIE ='" + data.DocSerie + "'";
-        sql += " AND DOC_NUM =" + data.DocNum;
-
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallBack(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-
-  function EnviarOrdenDeVenta(ordenesdeCompra, index, esUltimo) {
-    var data = {
-      salesOrder: ordenesdeCompra[index],
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass,
-      battery: gBatteryLevel,
-      routeid: gCurrentRoute,
-      warehouse: gPreSaleWhs,
-      uuid: device.uuid
-    };
-    socket.emit("SendSalesOrder", data);
-    if (esUltimo) return;
-    setTimeout(function() {
-      var actual = index + 1;
-      EnviarOrdenDeVenta(
-        ordenesdeCompra,
-        actual,
-        ordenesdeCompra.length - 1 === actual
-      );
-    }, 5000);
-  }
-
-  function EnviarOrdenesDeVenta(callback, errCallback) {
-    if (_enviandoOrdenesDeCompra) {
-      callback();
-      return;
-    }
-    _enviandoOrdenesDeCompra = true;
-    var ordenesDeCompra = Array();
-    ObtenerOrdernesDeCompraNoPosteados(
-      function(ordenesDeCompraN1) {
-        ObtenerDetalleDeOrdernesDeCompraNoPosteados(
-          function(ordenesDeCompraN2) {
-            if (ordenesDeCompraN2.length > 0)
-              EnviarOrdenDeVenta(
-                ordenesDeCompraN2,
-                0,
-                ordenesDeCompraN2.length - 1 === 0
-              );
-            _enviandoOrdenesDeCompra = false;
-          },
-          errCallback,
-          ordenesDeCompraN1
-        );
-      },
-      errCallback,
-      ordenesDeCompra,
-      true
-    );
-  }
-}
-
-///*********************ENVIO DE NUMERO DE IMPRECIONES ORDES DE COMPRA *********************/
-{
-  function ObtenerNumeroDeImprecionesDeOrdernesDeCompraNoPosteados(
-    callback,
-    errCallBack,
-    ordenesDeCompra
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *";
-        sql += " FROM SALES_ORDER_HEADER ";
-        sql += " WHERE IS_POSTED = 2";
-        sql += " AND substr(CLIENT_ID,1,1 ) <> '-'";
-        sql += " AND SINC IN (0,1)";
-        sql += " ORDER BY POSTED_DATETIME";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var ordenDeCompra = {
-                SalesOrderId: results.rows.item(i).SALES_ORDER_ID_BO,
-                DocSerie: results.rows.item(i).DOC_SERIE,
-                DocNum: results.rows.item(i).DOC_NUM,
-                TimesPrinted: results.rows.item(i).TIMES_PRINTED,
-                PaymentTimesPrinted: results.rows.item(i).PAYMENT_TIMES_PRINTED
-              };
-              ordenesDeCompra.push(ordenDeCompra);
-            }
-            callback(ordenesDeCompra);
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ActualizarEnvioDeNumeroDeImprecionesDeOrdenesDeVenta(
-    data,
-    callback,
-    errCallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE SALES_ORDER_HEADER";
-        sql += " SET SINC = " + data.estado;
-        sql += " WHERE";
-        sql += " SALES_ORDER_ID_BO =" + data.SalesOrderId;
-        sql += " AND DOC_SERIE ='" + data.DocSerie + "'";
-        sql += " AND DOC_NUM =" + data.DocNum;
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallBack(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-
-  function EnviarNumeroDeImprecionesDeOrdenesDeVenta(callback, errCallback) {
-    if (_enviandoNumeroDeImprecionesDeOrdenesDeVenta) {
-      callback();
-      return;
-    }
-    _enviandoNumeroDeImprecionesDeOrdenesDeVenta = true;
-    var ordenesDeCompra = Array();
-    ObtenerNumeroDeImprecionesDeOrdernesDeCompraNoPosteados(
-      function(ordenesDeCompraN1) {
-        for (var i = 0; i < ordenesDeCompraN1.length; i++) {
-          var data = {
-            salesOrder: ordenesDeCompraN1[i],
-            dbuser: gdbuser,
-            dbuserpass: gdbuserpass,
-            battery: gBatteryLevel,
-            routeid: gCurrentRoute,
-            warehouse: gPreSaleWhs
-          };
-          socket.emit("SendSalesOrderTimesPrinted", data);
-        }
-        _enviandoNumeroDeImprecionesDeOrdenesDeVenta = false;
-      },
-      errCallback,
-      ordenesDeCompra
-    );
+  } catch (e) {
+    /* empty */
   }
 }
 
@@ -1137,7 +198,7 @@ function ActualizarEtiqutaPorClienteHandHeld(etiquetaPorCliente) {
             dbuserpass: gdbuserpass,
             routeid: gCurrentRoute
           };
-          socket.emit("SendDocumentSecuence", data);
+          SocketControlador.socketIo.emit("SendDocumentSecuence", data);
         }
         _enviandoNumeroDeSecuenciaDeDocumentos = false;
       },
@@ -1151,1439 +212,1120 @@ function ActualizarEtiqutaPorClienteHandHeld(etiquetaPorCliente) {
   }
 }
 
-///*********************ENVIO DE INVENTARIO ANULADO POR ORDENES DE VENTA ANULADAS *********************/
-{
-  function ActualizarInventarioReservadoPorOrdenesDeVentaAnuladas(
-    data,
-    estado,
-    callback,
-    errCallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE SALES_ORDER_DETAIL";
-        sql += " SET IS_POSTED_VOID = " + estado;
-        sql += " WHERE SALES_ORDER_ID = " + data.data.SalesOrderId;
-        sql += " AND DOC_SERIE  = '" + data.data.DocSerie + "'";
-        sql += " AND DOC_NUM = " + data.data.DocNum;
-        sql += " AND SKU = '" + data.data.CodeSku + "'";
-        sql += " AND QTY = " + data.data.Qty;
+//-------- INICIA ENVIO DE NUEVAS CONSIGNACIONES----------------------------
+var _enviandoConsignaciones = false;
 
-        tx.executeSql(sql);
-      },
+function EnviarConsignaciones(callback, errCallback) {
+  if (_enviandoConsignaciones) {
+    callback();
+    return;
+  }
+  _enviandoConsignaciones = true;
+  var consignaciones = Array();
+  ObtenerConsignacionesNoPosteadas(
+    function(consignacionesN1) {
+      ObtenerDetalleDeConsignaciones(
+        function(consignacionesN2) {
+          if (consignacionesN2.length > 0) {
+            var intervaloDeEnvioDeConsignaciones = setInterval(function() {
+              consignaciones = consignacionesN2.splice(0, 5); //Se envian los clientes de 5 en 5
+              var data = {
+                consignment: consignaciones,
+                dbuser: gdbuser,
+                dbuserpass: gdbuserpass,
+                battery: gBatteryLevel,
+                routeid: gCurrentRoute,
+                default_warehouse: gDefaultWhs,
+                deviceId: device.uuid
+              };
+
+              SocketControlador.socketIo.emit("SendConsignment", data);
+              if (consignacionesN2.length === 0) {
+                consignaciones = null;
+                clearInterval(intervaloDeEnvioDeConsignaciones);
+                _enviandoConsignaciones = false;
+              }
+            }, 3000);
+          } else {
+            _enviandoConsignaciones = false;
+          }
+        },
+        function(error) {
+          notify("Error al obtener detalle de consignaciones " + error.mensaje);
+        },
+        consignacionesN1
+      );
+    },
+    function(error) {
+      notify("Error al obtener consignaciones " + error.mensaje);
+    },
+    consignaciones
+  );
+}
+
+function ObtenerConsignacionesNoPosteadas(
+  callback,
+  errCallback,
+  consignaciones
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT *";
+      sql += " FROM CONSIGNMENT_HEADER ";
+      sql += " WHERE IS_POSTED IN (0,-1) ";
+      sql += " ORDER BY DATE_CREATE ";
+
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var consignacion = {
+              ConsignmentId: results.rows.item(i).CONSIGNMENT_ID,
+              CustomerId: results.rows.item(i).CUSTOMER_ID,
+              DateCreate: results.rows.item(i).DATE_CREATE,
+              DateUpdate: results.rows.item(i).DATE_UPDATE,
+              Status: results.rows.item(i).STATUS,
+              PostedBy: results.rows.item(i).POSTED_BY,
+              IsPosted: results.rows.item(i).IS_POSTED,
+              PosTerminal: results.rows.item(i).POS_TERMINAL,
+              GpsUrl: results.rows.item(i).GPS_URL,
+              DocDate: results.rows.item(i).DOC_DATE,
+              ClosedRouteDatetime: results.rows.item(i).CLOSED_ROUTE_DATETIME,
+              IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
+              DueDate: results.rows.item(i).DUE_DATE,
+              ConsignmentBoNum: results.rows.item(i).CONSIGNMENT_BO_NUM,
+              DocSerie: results.rows.item(i).DOC_SERIE,
+              DocNum: results.rows.item(i).DOC_NUM,
+              TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
+              Image: results.rows.item(i).IMG,
+              IsReconsign: results.rows.item(i).IS_RECONSIGN,
+              ConsignmentType: results.rows.item(i).CONSIGNMENT_TYPE,
+              InvoiceSerie: results.rows.item(i).INVOICE_SERIE,
+              InvoiceNum: results.rows.item(i).INVOICE_NUM,
+              ConsignmentRows: Array()
+            };
+            consignaciones.push(consignacion);
+          }
+          callback(consignaciones);
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+function ObtenerDetalleDeConsignaciones(callback, errCallback, consignaciones) {
+  var i;
+  for (i = 0; i < consignaciones.length; i++) {
+    ObtenerDetalleDeConsignacionesNoPosteados(
+      consignaciones[i],
       function(err) {
         errCallBack(err);
       },
-      function() {
-        callback(data);
-      }
+      consignaciones,
+      i,
+      function(consignacionesN1, index, consignacion) {
+        consignacionesN1[index] = consignacion;
+        return consignacionesN1;
+      },
+      callback
     );
   }
+  if (i === 0) {
+    callback(consignaciones);
+  }
+}
 
-  function ObtenerInventarioReservadoPorOrdenesDeVentaAnuladas(
-    callback,
-    errCallBack,
-    ordenesDeVenta
-  ) {
+function ObtenerDetalleDeConsignacionesNoPosteados(
+  consignacion,
+  errCallBack,
+  consignaciones,
+  i,
+  callback,
+  returncallBack
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT *  ";
+      sql += " FROM CONSIGNMENT_DETAIL ";
+      sql += " WHERE CONSIGNMENT_ID= " + consignacion.ConsignmentId;
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var j = 0; j < results.rows.length; j++) {
+            var detalleConsignacion = {
+              ConsignmentId: results.rows.item(j).CONSIGNMENT_ID,
+              Sku: results.rows.item(j).SKU,
+              LineNum: results.rows.item(j).LINE_NUM,
+              Qty: results.rows.item(j).QTY,
+              Price: results.rows.item(j).PRICE,
+              Discount: results.rows.item(j).DISCOUNT,
+              TotalLine: results.rows.item(j).TOTAL_LINE,
+              PostedDateTime: results.rows.item(j).POSTED_DATETIME,
+              PaymentId: results.rows.item(j).PAYMENT_ID,
+              HandleSerial: results.rows.item(j).HANDLE_SERIAL,
+              SerialNumber: results.rows.item(j).SERIAL_NUMBER
+            };
+            consignacion.ConsignmentRows.push(detalleConsignacion);
+          }
+          callback(consignaciones, i, consignacion);
+
+          if (consignaciones.length - 1 === i) {
+            returncallBack(consignaciones);
+          }
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+//------ FINALIZA ENVIO DE NUEVAS CONSIGNACIONES -----------------------------------------------
+
+//----------- INICIA ENVIO DE CONSIGNACIONES PAGADAS -----------------------------------------------
+var _enviandoConsignacionesPagadas = false;
+
+function EnviarConsignacionesPagadas(callback, errCallback) {
+  if (_enviandoConsignacionesPagadas) {
+    callback();
+    return;
+  }
+  _enviandoConsignacionesPagadas = true;
+  var consignaciones = Array();
+  ObtenerConsignacionesPagadasNoPosteadas(
+    function(consignacionesN1) {
+      if (consignacionesN1.length > 0) {
+        var intervaloDeEnvioDeConsignacionesPagadas = setInterval(function() {
+          consignaciones = consignacionesN1.splice(0, 5); //Se envian los clientes de 5 en 5
+          var data = {
+            consignment: consignaciones,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            battery: gBatteryLevel,
+            routeid: gCurrentRoute,
+            default_warehouse: gDefaultWhs,
+            deviceId: device.uuid
+          };
+          SocketControlador.socketIo.emit("SendConsignmentPaid", data);
+          if (consignacionesN1.length === 0) {
+            consignaciones = null;
+            clearInterval(intervaloDeEnvioDeConsignacionesPagadas);
+            _enviandoConsignacionesPagadas = false;
+          }
+        }, 3000);
+      } else {
+        _enviandoConsignacionesPagadas = false;
+      }
+    },
+    function(error) {
+      notify(
+        "Error al ObtenerConsignacionesPagadasNoPosteadas " + error.mensaje
+      );
+    },
+    consignaciones
+  );
+}
+
+function ObtenerConsignacionesPagadasNoPosteadas(
+  callback,
+  errCallback,
+  consignaciones
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT * ";
+      sql += " FROM CONSIGNMENT_HEADER ";
+      sql += " WHERE IS_POSTED = 3 AND STATUS = 'CANCELLED' ";
+      sql += " ORDER BY DATE_CREATE ";
+
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var consignacion = {
+              ConsignmentId: results.rows.item(i).CONSIGNMENT_ID,
+              CustomerId: results.rows.item(i).CUSTOMER_ID,
+              DateCreate: results.rows.item(i).DATE_CREATE,
+              DateUpdate: results.rows.item(i).DATE_UPDATE,
+              Status: results.rows.item(i).STATUS,
+              PostedBy: results.rows.item(i).POSTED_BY,
+              IsPosted: results.rows.item(i).IS_POSTED,
+              PosTerminal: results.rows.item(i).POS_TERMINAL,
+              GpsUrl: results.rows.item(i).GPS_URL,
+              DocDate: results.rows.item(i).DOC_DATE,
+              ClosedRouteDatetime: results.rows.item(i).CLOSED_ROUTE_DATETIME,
+              IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
+              DueDate: results.rows.item(i).DUE_DATE,
+              ConsignmentBoNum: results.rows.item(i).CONSIGNMENT_BO_NUM,
+              DocSerie: results.rows.item(i).DOC_SERIE,
+              DocNum: results.rows.item(i).DOC_NUM,
+              TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
+              ConsignmentRows: Array()
+            };
+
+            consignaciones.push(consignacion);
+          }
+          callback(consignaciones);
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallback(err);
+        }
+      );
+    },
+    function(err) {
+      errCallback(err);
+    }
+  );
+}
+
+function ObtenerDetalleDeConsignacionesPagadas(
+  callback,
+  errCallback,
+  consignaciones
+) {
+  var i;
+  for (i = 0; i < consignaciones.length; i++) {
+    ObtenerDetalleDeConsignacionesPagadasNoPosteados(
+      consignaciones[i],
+      function(err) {
+        errCallback(err);
+      },
+      consignaciones,
+      i,
+      function(consignacionesN1, index, consignacion) {
+        consignacionesN1[index] = consignacion;
+        return consignacionesN1;
+      },
+      callback
+    );
+  }
+  if (i === 0) {
+    callback(consignaciones);
+  }
+}
+
+function ObtenerDetalleDeConsignacionesPagadasNoPosteados(
+  consignacion,
+  errCallBack,
+  consignaciones,
+  i,
+  callback,
+  returncallBack
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT *  ";
+      sql += " FROM CONSIGNMENT_DETAIL ";
+      sql += " WHERE CONSIGNMENT_ID= " + consignacion.ConsignmentId;
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var j = 0; j < results.rows.length; j++) {
+            var detalleConsignacion = {
+              ConsignmentId: results.rows.item(j).CONSIGNMENT_ID,
+              Sku: results.rows.item(j).SKU,
+              LineNum: results.rows.item(j).LINE_NUM,
+              Qty: results.rows.item(j).QTY,
+              Price: results.rows.item(j).PRICE,
+              Discount: results.rows.item(j).DISCOUNT,
+              TotalLine: results.rows.item(j).TOTAL_LINE,
+              PostedDateTime: results.rows.item(j).POSTED_DATETIME,
+              PaymentId: results.rows.item(j).PAYMENT_ID
+            };
+            consignacion.ConsignmentRows.push(detalleConsignacion);
+          }
+          callback(consignaciones, i, consignacion);
+
+          if (consignaciones.length - 1 === i) {
+            returncallBack(consignaciones);
+          }
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+function ActualizarConsignaciones(consignaciones) {
+  try {
+    SONDA_DB_Session.transaction(
+      function(tx) {
+        consignaciones.map(function(consignacion) {
+          var sql = [];
+          sql.push("UPDATE CONSIGNMENT_HEADER");
+          sql.push(" SET IS_POSTED = 4");
+          sql.push(" WHERE");
+          sql.push(" DOC_SERIE = '" + consignacion.DOC_SERIE + "'");
+          sql.push(" AND DOC_NUM =" + consignacion.DOC_NUM);
+          tx.executeSql(sql.join(""));
+        });
+      },
+      function(err) {
+        ToastThis(
+          "No se pudo actualizar la informacion de la consignacion: " +
+            consignacion.CONSIGNMENT_ID.toString() +
+            " debido a: " +
+            err.message
+        );
+      },
+      function() {}
+    );
+  } catch (e) {
+    notify(
+      "No se pudo actulizar la informacion de la consignacion enviada desde el servidor debido a: " +
+        e.message
+    );
+  }
+}
+//----------- FINALIZA ENVIO DE CONSIGNACIONES PAGADAS -----------------------------------------------
+
+//----------- INICIA ENVIO DE DOCUMENTOS DE DEVOLUCION (RECOGER INVENTARIO EN CONSIGNACION) -----------------------------------------
+var _enviandoDocumentosDeDevolucionDeInventario = false;
+function EnviarDocumentosDeDevolucionDeInventarioRecogidoDeConsignacion(
+  callBack,
+  errorCallBack
+) {
+  if (_enviandoDocumentosDeDevolucionDeInventario) {
+    callBack();
+    return;
+  }
+  _enviandoDocumentosDeDevolucionDeInventario = true;
+
+  var documentosDeDevolucion = Array();
+  ObtenerDocumentosDeDevolucionDeInventarioNoPosteados(
+    function(documentos) {
+      ObtenerDetalleDeDocumentoDeDevolucion(
+        function(documentosCompletos) {
+          if (documentosCompletos.length > 0)
+            EnviarDocumentosDeDevolucionDeInventario(
+              documentosCompletos,
+              0,
+              documentosCompletos.length - 1 === 0
+            );
+          _enviandoDocumentosDeDevolucionDeInventario = false;
+        },
+        function(err) {
+          errorCallBack(err);
+        },
+        documentos
+      );
+    },
+    function(error) {
+      errorCallBack(error);
+    },
+    documentosDeDevolucion
+  );
+}
+
+function ObtenerDocumentosDeDevolucionDeInventarioNoPosteados(
+  callBack,
+  errorCallBack,
+  documentosDeDevolucion
+) {
+  try {
     SONDA_DB_Session.transaction(
       function(tx) {
         var sql =
-          "SELECT D.SKU, D.QTY, D.SALES_ORDER_ID, D.DOC_NUM, D.DOC_SERIE";
-        sql += " FROM SALES_ORDER_DETAIL D";
-        sql += " WHERE D.IS_POSTED_VOID IN (0,1)";
+          "SELECT SKU_COLLECTED_ID" +
+          ", CUSTOMER_ID" +
+          ", DOC_SERIE" +
+          ", DOC_NUM" +
+          ", CODE_ROUTE" +
+          ", GPS_URL" +
+          ", POSTED_DATETIME" +
+          ", POSTED_BY" +
+          ", LAST_UPDATE" +
+          ", LAST_UPDATE_BY" +
+          ", TOTAL_AMOUNT" +
+          ", IS_POSTED" +
+          ", IMG_1" +
+          ", IMG_2" +
+          ", IMG_3" +
+          ", SKU_COLLECTED_BO_ID" +
+          "  FROM SKU_COLLECTED_HEADER WHERE IS_POSTED = 0";
 
         tx.executeSql(
           sql,
           [],
-          function(tx, results) {
+          function(tx2, results) {
             for (var i = 0; i < results.rows.length; i++) {
-              var ordenDeVenta = {
-                Qty: results.rows.item(i).QTY,
-                CodeSku: results.rows.item(i).SKU,
-                SalesOrderId: results.rows.item(i).SALES_ORDER_ID,
-                DocSerie: results.rows.item(i).DOC_SERIE,
-                DocNum: results.rows.item(i).DOC_NUM
+              var documentoDevolucion = {
+                SKU_COLLECTED_ID: results.rows.item(i).SKU_COLLECTED_ID,
+                CUSTOMER_ID: results.rows.item(i).CUSTOMER_ID,
+                DOC_SERIE: results.rows.item(i).DOC_SERIE,
+                DOC_NUM: results.rows.item(i).DOC_NUM,
+                CODE_ROUTE: results.rows.item(i).CODE_ROUTE,
+                GPS_URL: results.rows.item(i).GPS_URL,
+                POSTED_DATETIME: results.rows.item(i).POSTED_DATETIME,
+                POSTED_BY: results.rows.item(i).POSTED_BY,
+                LAST_UPDATE: results.rows.item(i).LAST_UPDATE,
+                LAST_UPDATE_BY: results.rows.item(i).LAST_UPDATE_BY,
+                TOTAL_AMOUNT: results.rows.item(i).TOTAL_AMOUNT,
+                IS_POSTED: results.rows.item(i).IS_POSTED,
+                IMG_1: results.rows.item(i).IMG_1,
+                IMG_2: results.rows.item(i).IMG_2,
+                IMG_3: results.rows.item(i).IMG_3,
+                SKU_COLLECTED_BO_ID: results.rows.item(i).SKU_COLLECTED_BO_ID,
+                DEVOLUTION_DETAIL: new Array()
               };
-              ordenesDeVenta.push(ordenDeVenta);
+              documentosDeDevolucion.push(documentoDevolucion);
             }
-            callback(ordenesDeVenta);
+            callBack(documentosDeDevolucion);
           },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
+          function(tx2, err) {
+            if (err.code !== 0) {
+              errorCallBack(
+                "Error al obtener los Documentos de Devolución de Inventario Recogido de Consignación debido a: " +
+                  err.message
+              );
+            }
           }
         );
       },
       function(err) {
-        errCallBack(err);
+        if (err.code !== 0) {
+          errorCallBack(
+            "No se pudieron obtener los Documentos de Devolución de Inventario Recogido de Consignación debido a: " +
+              err.message
+          );
+        }
       }
     );
-  }
-
-  function EnviarInventarioReservadoPorOrdenesDeVentaAnuladas() {
-    if (_enviandoInventarioReservadoPorOrdenesDeVentaAnuladas) {
-      return;
-    }
-    _enviandoInventarioReservadoPorOrdenesDeVentaAnuladas = true;
-    var ordenesDeVenta = Array();
-    ObtenerInventarioReservadoPorOrdenesDeVentaAnuladas(
-      function(ordenesDeVentaN1) {
-        for (var i = 0; i < ordenesDeVentaN1.length; i++) {
-          var data = {
-            Qty: ordenesDeVentaN1[i].Qty,
-            CodeSku: ordenesDeVentaN1[i].CodeSku,
-            SalesOrderId: ordenesDeVentaN1[i].SalesOrderId,
-            DocSerie: ordenesDeVentaN1[i].DocSerie,
-            DocNum: ordenesDeVentaN1[i].DocNum,
-            warehouse: gPreSaleWhs,
-            dbuser: gdbuser,
-            dbuserpass: gdbuserpass,
-            routeid: gCurrentRoute
-          };
-          socket.emit("SendCommitedInventoryVoid", data);
-        }
-        _enviandoInventarioReservadoPorOrdenesDeVentaAnuladas = false;
-      },
-      function(err) {
-        ToastThis(
-          "Error al devolver el invetario reservado por ordenes de venta anuladas: " +
-            err.message
-        );
-      },
-      ordenesDeVenta
+  } catch (e) {
+    errorCallBack(
+      "Error al intentar obtener los Documentos de Devolución de Inventario Recogido De Consignación debido a: " +
+        e.message
     );
   }
 }
 
-function ObtenerBroadCastPendientes() {
+function ObtenerDetalleDeDocumentoDeDevolucion(
+  callBack,
+  errorCallBack,
+  documentos
+) {
+  var i;
+  for (i = 0; i < documentos.length; i++) {
+    ObtenerDetalleDeDevolucionesNoPosteadas(
+      documentos[i],
+      function(err) {
+        errorCallBack(err);
+      },
+      documentos,
+      i,
+      function(documentos2, index, documento) {
+        documentos2[index] = documento;
+        return documentos2;
+      },
+      callBack
+    );
+  }
+  if (i === 0) {
+    callBack(documentos);
+  }
+}
+
+function ObtenerDetalleDeDevolucionesNoPosteadas(
+  documento,
+  errorCallBack,
+  documentos,
+  indice,
+  callBack,
+  returnCallBack
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql =
+        "SELECT " +
+        "SKU_COLLECTED_ID" +
+        ", CODE_SKU" +
+        ", QTY_SKU" +
+        ", IS_GOOD_STATE" +
+        ", LAST_UPDATE" +
+        ", LAST_UPDATE_BY" +
+        ", SOURCE_DOC_TYPE" +
+        ", SOURCE_DOC_NUM" +
+        ", TOTAL_AMOUNT, HANDLE_SERIAL, SERIAL_NUMBER " +
+        " FROM SKU_COLLECTED_DETAIL WHERE SKU_COLLECTED_ID =" +
+        parseInt(documento.SKU_COLLECTED_ID);
+      tx.executeSql(
+        sql,
+        [],
+        function(tx2, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var skuDetalle = {
+              SKU_COLLECTED_ID: results.rows.item(i).SKU_COLLECTED_ID,
+              CODE_SKU: results.rows.item(i).CODE_SKU,
+              QTY_SKU: results.rows.item(i).QTY_SKU,
+              IS_GOOD_STATE: results.rows.item(i).IS_GOOD_STATE,
+              LAST_UPDATE: results.rows.item(i).LAST_UPDATE,
+              LAST_UPDATE_BY: results.rows.item(i).LAST_UPDATE_BY,
+              SOURCE_DOC_TYPE: results.rows.item(i).SOURCE_DOC_TYPE,
+              SOURCE_DOC_NUM: results.rows.item(i).SOURCE_DOC_NUM,
+              TOTAL_AMOUNT: results.rows.item(i).TOTAL_AMOUNT,
+              HANDLE_SERIAL: results.rows.item(i).HANDLE_SERIAL,
+              SERIAL_NUMBER: results.rows.item(i).SERIAL_NUMBER
+            };
+            documento.DEVOLUTION_DETAIL.push(skuDetalle);
+          }
+          callBack(documentos, indice, documento);
+          if (documentos.length - 1 === indice) {
+            returnCallBack(documentos);
+          }
+        },
+        function(tx2, err) {
+          if (err.code !== 0) {
+            errorCallBack(
+              "No se pudo obtener el Detalle de Devolución de Inventario Recogido en Consignación debido a: " +
+                err.message
+            );
+          }
+        }
+      );
+    },
+    function(err) {
+      if (err.code !== 0) {
+        errorCallBack(
+          "No se pudo obtener el Detalle de Devolución de Inventario Recogido en Consignación debido a: " +
+            err.message
+        );
+      }
+    }
+  );
+}
+
+function EnviarDocumentosDeDevolucionDeInventario(documentos, index, esUltimo) {
   var data = {
+    documentoDeDevolucion: documentos[index],
     dbuser: gdbuser,
     dbuserpass: gdbuserpass,
     battery: gBatteryLevel,
     routeid: gCurrentRoute,
-    warehouse: gPreSaleWhs
+    default_warehouse: gDefaultWhs,
+    deviceId: device.uuid
   };
-  socket.emit("ObtenerBroadCastPendientes", data);
+  SocketControlador.socketIo.emit("SendDevolutionInventoryDocuments", data);
+  if (esUltimo) return;
+  setTimeout(function() {
+    var actual = index + 1;
+    EnviarDocumentosDeDevolucionDeInventario(
+      documentos,
+      actual,
+      documentos.length - 1 === actual
+    );
+  }, 5000);
 }
 
-function EnviarData() {
-  try {
-    if (gIsOnline === 1 && socket.sendBuffer.length === 0) {
-      EnviarClientes(function() {}, function() {});
-
-      EnviarDataSinClientes();
-
-      ObtenerBroadcastPerdidos();
-    }
-  } catch (e) {
-    /* empty */
-  }
-}
-
-function EnviarDataSinClientes() {
-  if (gIsOnline) {
-    setTimeout(EnviarCambiosDeClientes(function() {}, function(err) {}), 100);
-
-    setTimeout(EnviarPagos(function() {}, function(err) {}), 100);
-
-    setTimeout(EnviarTareas(function() {}, function(err) {}), 100);
-
-    setTimeout(EnviarEtiquetas(function() {}, function(err) {}), 100);
-
-    setTimeout(EnviarOrdenesDeVenta(function() {}, function(err) {}), 100);
-
-    setTimeout(
-      EnviarNumeroDeImprecionesDeOrdenesDeVenta(
-        function() {},
-        function(err) {}
-      ),
-      100
-    );
-
-    setTimeout(EnviarNumeroDeSecuenciaDeDocumentos(), 100);
-
-    setTimeout(EnviarInventarioReservadoPorOrdenesDeVentaAnuladas(), 100);
-
-    // setTimeout(
-    //   EnviarBorradoresDeOrdenesDeCompra(function() {}, function(err) {}),
-    //   100
-    // );
-
-    // setTimeout(
-    //   EnviarActualizacionesDeBorradoresDeOrdenesDeCompra(
-    //     function() {},
-    //     function(err) {}
-    //   ),
-    //   100
-    // );
-
-    setTimeout(EnviarTomasDeInventario(function() {}, function(err) {}), 100);
-
-    setTimeout(function() {
-      if (_enviandoHistoricoDePromociones) return;
-      enviarHistoricoDePromocionesNoPosteadas();
-    }, 200);
-
-    setTimeout(EnviarEncuestasDeClienteNoPosteadas(), 200);
-
-    setTimeout(EnviarDocumentosDePagoDeFacturasVencidas(), 500);
-  }
-}
-
-///*********************Metodos de Broadcast*********************/
-
-function InsertarNuevaEtiqueta(data, callback, errCallBack) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql =
-        "INSERT INTO TAGS(TAG_COLOR,TAG_VALUE_TEXT,TAG_PRIORITY,TAG_COMMENTS)";
-      sql += " VALUES (";
-      sql += " '" + data.TagColor + "'";
-      sql += " ,'" + data.TagValueText + "'";
-      sql += " ," + data.TagPriority;
-      sql += " ,'" + data.TagComments + "'";
-      sql += ");";
-      console.log(sql);
-      tx.executeSql(sql);
-    },
-    function(err) {
-      errCallBack(err);
-    },
-    function() {
-      callback(data);
-    }
-  );
-}
-
-function ActualizarNuevaEtiqueta(data, callback, errCallBack) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "UPDATE TAGS";
-      sql += " SET";
-      sql += " TAG_VALUE_TEXT = '" + data.TagValueText + "'";
-      sql += " ,TAG_PRIORITY = " + data.TagPriority;
-      sql += " ,TAG_COMMENTS = '" + data.TagComments + "'";
-      sql += " WHERE TAG_COLOR = '" + data.TagColor + "'";
-      console.log(sql);
-      tx.executeSql(sql);
-    },
-    function(err) {
-      errCallBack(err);
-    },
-    function() {
-      callback(data);
-    }
-  );
-}
-
-function BroadcastRecivido(id, borrar) {
-  console.log("actualizacion de broadcast");
-  var data = {
-    Id: id,
-    Status: "RECEIVED",
-    dbuser: gdbuser,
-    dbuserpass: gdbuserpass,
-    battery: gBatteryLevel,
-    routeid: gCurrentRoute
-  };
-  if (borrar === 1) {
-    socket.emit("DeleteBroadcast", data);
-  } else {
-    socket.emit("UpdateBroadcast", data);
-  }
-}
-
-function EliminarEtiqueta(data, callback, errCallBack) {
-  SONDA_DB_Session.transaction(
-    function(tx) {
-      var sql = "DELETE FROM TAGS";
-      sql += " WHERE TAG_COLOR = '" + data.TagColor + "'";
-      console.log(sql);
-      tx.executeSql(sql);
-    },
-    function(err) {
-      errCallBack(err);
-    },
-    function() {
-      callback(data);
-    }
-  );
-}
-
-function ObtenerBroadcastPerdidos() {
-  var data = {
-    dbuser: gdbuser,
-    dbuserpass: gdbuserpass,
-    battery: gBatteryLevel,
-    routeid: gCurrentRoute
-  };
-  socket.emit("GetBroadcastLost", data);
-  console.log("ObtenerBroadcastPerdidos");
-}
-
-///*********************ENVIO DE BORRADORES DE ORDES DE COMPRA *********************/
-{
-  //Nuevos Borradores
-
-  function ObtenerBorradoresDeOrdernesDeCompraNoPosteados(
-    callback,
-    errCallBack,
-    ordenesDeCompra
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *";
-        sql += " FROM SALES_ORDER_HEADER ";
-        sql += " WHERE IS_POSTED IN (0,1)";
-        sql += " AND substr(CLIENT_ID,1,1 ) <> '-'";
-        sql += " AND IS_DRAFT = 1";
-        sql += " AND IFNULL(TASK_ID_BO,0) > 0";
-        sql += " ORDER BY POSTED_DATETIME";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(_tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var ordenDeCompra = {
-                SalesOrderId: results.rows.item(i).SALES_ORDER_ID,
-                Terms: results.rows.item(i).TERMS,
-                PostedDatetime: results.rows.item(i).POSTED_DATETIME,
-                ClientId: results.rows.item(i).CLIENT_ID,
-                PosTerminal: results.rows.item(i).POS_TERMINAL,
-                GpsUrl: results.rows.item(i).GPS_URL,
-                TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
-                Status: results.rows.item(i).STATUS,
-                PostedBy: results.rows.item(i).POSTED_BY,
-                Image1: results.rows.item(i).IMAGE_1,
-                Image2: results.rows.item(i).IMAGE_2,
-                Image3: results.rows.item(i).IMAGE_3,
-                DeviceBatteryFactor: results.rows.item(i).DEVICE_BATTERY_FACTOR,
-                VoidDatetime: results.rows.item(i).VOID_DATETIME,
-                VoidReason: results.rows.item(i).VOID_REASON,
-                VoidNotes: results.rows.item(i).VOID_NOTES,
-                Voided: results.rows.item(i).VOIDED,
-                ClosedRouteDatetime: results.rows.item(i).CLOSED_ROUTE_DATETIME,
-                IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
-                GpsExpected: results.rows.item(i).GPS_EXPECTED,
-                SalesOrderIdBo: results.rows.item(i).SALES_ORDER_ID_BO,
-                DeliveryDate: results.rows.item(i).DELIVERY_DATE,
-                IsParent: results.rows.item(i).IS_PARENT,
-                ReferenceId: results.rows.item(i).REFERENCE_ID,
-                TimesPrinted: results.rows.item(i).TIMES_PRINTED,
-                DocSerie: results.rows.item(i).DOC_SERIE,
-                DocNum: results.rows.item(i).DOC_NUM,
-                IsVoid: results.rows.item(i).IS_VOID,
-                SalesOrderType: results.rows.item(i).SALES_ORDER_TYPE,
-                Discount: results.rows.item(i).DISCOUNT_BY_GENERAL_AMOUNT,
-                IsDraft: results.rows.item(i).IS_DRAFT,
-                TaskId: results.rows.item(i).TASK_ID_BO,
-                Comment: results.rows.item(i).COMMENT,
-                IsPosted: results.rows.item(i).IS_POSTED,
-                Sinc: results.rows.item(i).SINC,
-                IsPostedVoid: results.rows.item(i).IS_POSTED_VOID,
-                IsUpdated: results.rows.item(i).IS_UPDATED,
-                PaymentTimesPrinted: results.rows.item(i).PAYMENT_TIMES_PRINTED,
-                PaidToDate: results.rows.item(i).PAID_TO_DATE,
-                ToBill: results.rows.item(i).TO_BILL,
-                Authorized: results.rows.item(i).AUTHORIZED,
-                DetailQty: results.rows.item(i).DETAIL_QTY,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffline: results.rows.item(i).IS_POSTED_OFFLINE,
-                GoalHeaderId: results.rows.item(i).GOAL_HEADER_ID,
-                TotalAmountDisplay: results.rows.item(i).TOTAL_AMOUNT_DISPLAY,
-                SaleDetails: []
-              };
-              ordenesDeCompra.push(ordenDeCompra);
-            }
-            callback(ordenesDeCompra);
-          },
-          function(_tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
+//-------------INICIA ENVIO DE REGISTROS DE TRAZABILIDAD DE CONSIGNACION-----------------------------
+var _enviandoRegistrosDeTrazabilidad = false;
+function EnviarRegistroDeTrazabilidadDeConsignacion(callBack, errorCallBack) {
+  if (_enviandoRegistrosDeTrazabilidad) {
+    callBack();
+    return;
   }
 
-  function ObtenerLineasDeBorradoresDeOrdernesDeCompraNoPosteados(
-    ordenDeCompra,
-    errCallBack,
-    ordenesDeCompra,
-    i,
-    callback,
-    returncallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT * ";
-        sql += " FROM SALES_ORDER_DETAIL ";
-        sql += " WHERE SALES_ORDER_ID=" + ordenDeCompra.SalesOrderId + "";
-        sql += " AND DOC_SERIE='" + ordenDeCompra.DocSerie + "'";
-        sql += " AND DOC_NUM=" + ordenDeCompra.DocNum + "";
-        tx.executeSql(
-          sql,
-          [],
-          function(_tx, results) {
-            for (var j = 0; j < results.rows.length; j++) {
-              var detOrdenDeCompra = {
-                SalesOrderId: results.rows.item(j).SALES_ORDER_ID,
-                Sku: results.rows.item(j).SKU,
-                LineSeq: results.rows.item(j).LINE_SEQ,
-                Qty: results.rows.item(j).QTY,
-                Price: results.rows.item(j).PRICE,
-                Discount: results.rows.item(j).DISCOUNT,
-                TotalLine: results.rows.item(j).TOTAL_LINE,
-                PostedDatetime: results.rows.item(j).POSTED_DATETIME,
-                Serie: results.rows.item(j).SERIE,
-                Serie2: results.rows.item(j).SERIE_2,
-                RequeriesSerie: results.rows.item(j).REQUERIES_SERIE,
-                ComboReference: results.rows.item(j).COMBO_REFERENCE,
-                ParentSeq: results.rows.item(j).PARENT_SEQ,
-                IsActiveRoute: results.rows.item(j).IS_ACTIVE_ROUTE,
-                CodePackUnit: results.rows.item(j).CODE_PACK_UNIT,
-                IsBonus: results.rows.item(j).IS_BONUS,
-                IsPostedVoid: results.rows.item(j).IS_POSTED_VOID,
-                Long: results.rows.item(j).LONG,
-                DiscountType: results.rows.item(j).DISCOUNT_TYPE,
-                DiscountByFamily: results.rows.item(j).DISCOUNT_BY_FAMILY,
-                DiscountByGeneralAmount: results.rows.item(j)
-                  .DISCOUNT_BY_GENERAL_AMOUNT,
-                DiscountByFamilyAndPaymentType: results.rows.item(j)
-                  .DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE,
-                TypeOfDiscountByFamily: results.rows.item(j)
-                  .TYPE_OF_DISCOUNT_BY_FAMILY,
-                TypeOfDiscountByGeneralAmount: results.rows.item(j)
-                  .TYPE_OF_DISCOUNT_BY_GENERAL_AMOUNT,
-                TypeOfDiscountByFamilyAndPaymentType: results.rows.item(j)
-                  .TYPE_OF_DISCOUNT_BY_FAMILY_AND_PAYMENT_TYPE,
-                BasePrice: results.rows.item(j).BASE_PRICE,
-                CodeFamily: results.rows.item(j).CODE_FAMILY,
-                UniqueDiscountByScaleApplied: results.rows.item(j)
-                  .UNIQUE_DISCOUNT_BY_SCALE_APPLIED,
-                TotalAmountDisplay: results.rows.item(j).TOTAL_AMOUNT_DISPLAY
-              };
-              ordenDeCompra.SaleDetails.push(detOrdenDeCompra);
-            }
-            ordenesDeCompra = callback(ordenesDeCompra, i, ordenDeCompra);
-
-            if (ordenesDeCompra.length - 1 === i) {
-              returncallBack(ordenesDeCompra);
-            }
-          },
-          function(_tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ObtenerDetalleDeBorradoresDeOrdernesDeCompraNoPosteados(
-    callback,
-    errCallBack,
-    ordenesDeCompra
-  ) {
-    var i;
-    for (i = 0; i < ordenesDeCompra.length; i++) {
-      ObtenerLineasDeBorradoresDeOrdernesDeCompraNoPosteados(
-        ordenesDeCompra[i],
-        errCallBack,
-        ordenesDeCompra,
-        i,
-        function(ordenesDeCompraN1, index, ordenDeCompra) {
-          ordenesDeCompraN1[index] = ordenDeCompra;
-          return ordenesDeCompraN1;
-        },
-        callback
-      );
-    }
-    if (i === 0) {
-      callback(ordenesDeCompra);
-    }
-  }
-
-  function ActualizarEnvioDeBorradoresDeOrdernesDeCompra(
-    data,
-    callback,
-    errCallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE SALES_ORDER_HEADER";
-        sql += " SET IS_POSTED = 2";
-        sql += " , IS_UPDATED = 1 ";
-        sql += " , IS_POSTED_VALIDATED = 2 ";
-        sql +=
-          " , SERVER_POSTED_DATETIME = '" + data.ServerPostedDateTime + "'";
-        sql += " , SALES_ORDER_ID_BO =  " + data.SalesOrderIdBo;
-        sql += " WHERE";
-        sql += " SALES_ORDER_ID =" + data.SalesOrderId;
-        sql += " AND IS_DRAFT = 1";
-        sql += " AND DOC_SERIE ='" + data.DocSerie + "'";
-        sql += " AND DOC_NUM =" + data.DocNum;
-        tx.executeSql(sql);
-
-        sql = "UPDATE SALES_ORDER_DETAIL";
-        sql += " SET IS_POSTED_VOID = 2";
-        sql += " WHERE SALES_ORDER_ID =" + data.SalesOrderId;
-        sql += " AND DOC_SERIE ='" + data.DocSerie + "'";
-        sql += " AND DOC_NUM =" + data.DocNum;
-
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallBack(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-
-  function EnviarBorradorDeOnrdeDeVenta(ordenesdeCompra, index, esUltimo) {
-    var data = {
-      salesOrder: ordenesdeCompra[index],
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass,
-      battery: gBatteryLevel,
-      routeid: gCurrentRoute,
-      warehouse: gPreSaleWhs
-    };
-    socket.emit("SendInsertSalesOrderDraft", data);
-    if (esUltimo) return;
-    setTimeout(function() {
-      var actual = index + 1;
-      EnviarOrdenDeVenta(
-        ordenesdeCompra,
-        actual,
-        ordenesdeCompra.length - 1 === actual
-      );
-    }, 5000);
-  }
-
-  function EnviarBorradoresDeOrdenesDeCompra(callback, errCallback) {
-    if (_enviandoBorradoresDeOrdenesDeCompra) {
-      callback();
-      return;
-    }
-    _enviandoBorradoresDeOrdenesDeCompra = true;
-    var ordenesDeCompra = Array();
-    ObtenerBorradoresDeOrdernesDeCompraNoPosteados(
-      function(ordenesDeCompraN1) {
-        ObtenerDetalleDeBorradoresDeOrdernesDeCompraNoPosteados(
-          function(ordenesDeCompraN2) {
-            if (ordenesDeCompraN2.length > 0)
-              EnviarBorradorDeOnrdeDeVenta(
-                ordenesDeCompraN2,
-                0,
-                ordenesDeCompraN2.length - 1 === 0
-              );
-            _enviandoBorradoresDeOrdenesDeCompra = false;
-          },
-          errCallback,
-          ordenesDeCompraN1
-        );
-      },
-      errCallback,
-      ordenesDeCompra
-    );
-  }
-
-  //Actualizaciones de Borradores
-
-  function ObtenerActualizacionesDeBorradoresDeOrdernesDeCompraNoPosteados(
-    callback,
-    errCallBack,
-    ordenesDeCompra
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *";
-        sql += " FROM SALES_ORDER_HEADER ";
-        sql += " WHERE IS_POSTED = 2";
-        sql += " AND IS_UPDATED = 0";
-        sql += " AND substr(CLIENT_ID,1,1 ) <> '-'";
-        sql += " AND IS_DRAFT = 1";
-        sql += " ORDER BY POSTED_DATETIME";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var ordenDeCompra = {
-                SalesOrderId: results.rows.item(i).SALES_ORDER_ID,
-                Terms: results.rows.item(i).TERMS,
-                PostedDatetime: results.rows.item(i).POSTED_DATETIME,
-                ClientId: results.rows.item(i).CLIENT_ID,
-                PosTerminal: results.rows.item(i).POS_TERMINAL,
-                GpsUrl: results.rows.item(i).GPS_URL,
-                TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
-                Status: results.rows.item(i).STATUS,
-                PostedBy: results.rows.item(i).POSTED_BY,
-                Image1: results.rows.item(i).IMAGE_1,
-                Image2: results.rows.item(i).IMAGE_2,
-                Image3: results.rows.item(i).IMAGE_3,
-                DeviceBatteryFactor: results.rows.item(i).DEVICE_BATTERY_FACTOR,
-                VoidDatetime: results.rows.item(i).VOID_DATETIME,
-                VoidReason: results.rows.item(i).VOID_REASON,
-                VoidNotes: results.rows.item(i).VOID_NOTES,
-                Voided: results.rows.item(i).VOIDED,
-                ClosedRouteDatetime: results.rows.item(i).CLOSED_ROUTE_DATETIME,
-                IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
-                GpsExpected: results.rows.item(i).GPS_EXPECTED,
-                SalesOrderIdBo: results.rows.item(i).SALES_ORDER_ID_BO,
-                DeliveryDate: results.rows.item(i).DELIVERY_DATE,
-                IsParent: results.rows.item(i).IS_PARENT,
-                ReferenceId: results.rows.item(i).REFERENCE_ID,
-                TimesPrinted: results.rows.item(i).TIMES_PRINTED,
-                DocSerie: results.rows.item(i).DOC_SERIE,
-                DocNum: results.rows.item(i).DOC_NUM,
-                IsVoid: results.rows.item(i).IS_VOID,
-                SalesOrderType: results.rows.item(i).SALES_ORDER_TYPE,
-                Discount: results.rows.item(i).DISCOUNT_BY_GENERAL_AMOUNT,
-                IsDraft: results.rows.item(i).IS_DRAFT,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffLine: results.rows.item(i).IS_POSTED_OFFLINE,
-                SaleDetails: Array()
-              };
-              ordenesDeCompra.push(ordenDeCompra);
-            }
-            callback(ordenesDeCompra);
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ActualizarEnvioDeActualizacionDeBorradoresDeOrdernesDeCompra(
-    data,
-    callback,
-    errCallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE SALES_ORDER_HEADER";
-        sql += " SET IS_UPDATED = 1 ";
-        sql += " WHERE";
-        sql += " SALES_ORDER_ID =" + data.SalesOrderId;
-        sql += " AND IS_DRAFT = 1";
-        sql += " AND DOC_SERIE = '" + data.DocSerie + "'";
-        sql += " AND DOC_NUM = " + data.DocNum;
-        tx.executeSql(sql);
-        sql = "UPDATE SALES_ORDER_DETAIL";
-        sql += " SET IS_POSTED_VOID = 2";
-        sql += " WHERE SALES_ORDER_ID =" + data.SalesOrderId;
-        sql += " AND DOC_SERIE = '" + data.DocSerie + "'";
-        sql += " AND DOC_NUM = " + data.DocNum;
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallBack(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-
-  function EnviarActualizacionDeBorradorDeOnrdeDeVenta(
-    ordenesdeCompra,
-    index,
-    esUltimo
-  ) {
-    var data = {
-      salesOrder: ordenesdeCompra[index],
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass,
-      battery: gBatteryLevel,
-      routeid: gCurrentRoute,
-      warehouse: gPreSaleWhs
-    };
-    socket.emit("SendUpdateSalesOrderDraft", data);
-    if (esUltimo) return;
-    setTimeout(function() {
-      var actual = index + 1;
-      EnviarOrdenDeVenta(
-        ordenesdeCompra,
-        actual,
-        ordenesdeCompra.length - 1 === actual
-      );
-    }, 5000);
-  }
-
-  function EnviarActualizacionesDeBorradoresDeOrdenesDeCompra(
-    callback,
-    errCallback
-  ) {
-    if (_enviandoActualizacionesBorradoresDeOrdenesDeCompra) {
-      callback();
-      return;
-    }
-    _enviandoActualizacionesBorradoresDeOrdenesDeCompra = true;
-    var ordenesDeCompra = Array();
-    ObtenerActualizacionesDeBorradoresDeOrdernesDeCompraNoPosteados(
-      function(ordenesDeCompraN1) {
-        ObtenerDetalleDeBorradoresDeOrdernesDeCompraNoPosteados(
-          function(ordenesDeCompraN2) {
-            if (ordenesDeCompraN2.length > 0)
-              EnviarActualizacionDeBorradorDeOnrdeDeVenta(
-                ordenesDeCompraN2,
-                0,
-                ordenesDeCompraN2.length - 1 === 0
-              );
-            _enviandoActualizacionesBorradoresDeOrdenesDeCompra = false;
-          },
-          errCallback,
-          ordenesDeCompraN1
-        );
-      },
-      errCallback,
-      ordenesDeCompra
-    );
-  }
-
-  ///*********************ENVIO DE TOMAS DE INVENTARIO *********************/
-
-  function ObtenerTomasDeInventarioNoPosteados(
-    callback,
-    errCallBack,
-    tomasDeInventario
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *";
-        sql += " FROM TAKE_INVENTORY_HEADER ";
-        sql += " WHERE IS_POSTED IN (0,1)";
-        sql += " AND substr(CLIENT_ID,1,1 ) <> '-'";
-        sql += " ORDER BY POSTED_DATETIME";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var tomaDeInventario = {
-                TakeInventoryId: results.rows.item(i).TAKE_INVENTORY_ID,
-                PostedDatetime: results.rows.item(i).POSTED_DATETIME,
-                ClientId: results.rows.item(i).CLIENT_ID,
-                CodeRoute: results.rows.item(i).CODE_ROUTE,
-                GpsUrl: results.rows.item(i).GPS_URL,
-                PostedBy: results.rows.item(i).POSTED_BY,
-                DeviceBatteryFactor: results.rows.item(i).DEVICE_BATERY_FACTOR,
-                IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
-                GpsExpected: results.rows.item(i).GPS_EXPECTED,
-                TakeInventoryIdBo: results.rows.item(i).TAKE_INVENTORY_ID_BO,
-                DocSerie: results.rows.item(i).DOC_SERIE,
-                DocNum: results.rows.item(i).DOC_NUM,
-                IsVoid: results.rows.item(i).IS_VOID,
-                TaskId: results.rows.item(i).TASK_ID,
-                IsPosted: results.rows.item(i).IS_POSTED,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffLine: results.rows.item(i).IS_POSTED_OFFLINE,
-                TakeInventoryDetails: Array()
-              };
-              tomasDeInventario.push(tomaDeInventario);
-            }
-            callback(tomasDeInventario);
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ObtenerLineasDeTomasDeInventarioNoPosteados(
-    tomaDeInventario,
-    errCallBack,
-    tomasDeInventario,
-    i,
-    callback,
-    returncallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT * ";
-        sql += " FROM TAKE_INVENTORY_DETAIL ";
-        sql +=
-          " WHERE TAKE_INVENTORY_ID=" + tomaDeInventario.TakeInventoryId + "";
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var j = 0; j < results.rows.length; j++) {
-              var detTomaDeInventario = {
-                TakeInventoryId: results.rows.item(j).TAKE_INVENTORY_ID,
-                CodeSku: results.rows.item(j).CODE_SKU,
-                Qty: results.rows.item(j).QTY,
-                CodePackUnit: results.rows.item(j).CODE_PACK_UNIT,
-                LastQty: results.rows.item(j).LAST_QTY
-              };
-              tomaDeInventario.TakeInventoryDetails.push(detTomaDeInventario);
-            }
-            tomasDeInventario = callback(
-              tomasDeInventario,
-              i,
-              tomaDeInventario
+  _enviandoRegistrosDeTrazabilidad = true;
+  var registros = Array();
+  ObtenerRegistrosDeTrazabilidadDeConsignacionNoPosteados(
+    function(registrosDeTrazabilidad) {
+      if (registrosDeTrazabilidad.length > 0) {
+        var intervaloDeEnvioDeRegistroDeTrazabilidadDeConsignacion = setInterval(
+          function() {
+            registros = registrosDeTrazabilidad.splice(0, 5); //Se envian los clientes de 5 en 5
+            var data = {
+              documentoDeTrazabilidad: registros,
+              dbuser: gdbuser,
+              dbuserpass: gdbuserpass,
+              battery: gBatteryLevel,
+              routeid: gCurrentRoute,
+              default_warehouse: gDefaultWhs
+            };
+            SocketControlador.socketIo.emit(
+              "InsertTraceabilityConsignments",
+              data
             );
-
-            if (tomasDeInventario.length - 1 === i) {
-              returncallBack(tomasDeInventario);
-            }
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ObtenerDetalleDeTomasDeInventarioNoPosteados(
-    callback,
-    errCallBack,
-    tomasDeInventario
-  ) {
-    var i;
-    for (i = 0; i < tomasDeInventario.length; i++) {
-      ObtenerLineasDeTomasDeInventarioNoPosteados(
-        tomasDeInventario[i],
-        errCallBack,
-        tomasDeInventario,
-        i,
-        function(tomasDeInventarioN1, index, tomaDeInventario) {
-          tomasDeInventarioN1[index] = tomaDeInventario;
-          return tomasDeInventarioN1;
-        },
-        callback
-      );
-    }
-    if (i === 0) {
-      callback(tomasDeInventario);
-    }
-  }
-
-  function EnviarTomaDeInventario(tomasDeInventario, index, esUltimo) {
-    var data = {
-      takeInventory: tomasDeInventario[index],
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass,
-      battery: gBatteryLevel,
-      routeid: gCurrentRoute
-    };
-    socket.emit("SendTakesInventory", data);
-    if (esUltimo) return;
-    setTimeout(function() {
-      var actual = index + 1;
-      EnviarTomaDeInventario(
-        tomasDeInventario,
-        actual,
-        tomasDeInventario.length - 1 === actual
-      );
-    }, 5000);
-  }
-
-  function EnviarTomasDeInventario(callback, errCallback) {
-    if (_enviandoTomaDeInventario) {
-      callback();
-      return;
-    }
-    _enviandoTomaDeInventario = true;
-    var tomasDeInventario = Array();
-    ObtenerTomasDeInventarioNoPosteados(
-      function(tomasDeInventarioN1) {
-        ObtenerDetalleDeTomasDeInventarioNoPosteados(
-          function(tomasDeInventarioN2) {
-            if (tomasDeInventarioN2.length > 0)
-              EnviarTomaDeInventario(
-                tomasDeInventarioN2,
-                0,
-                tomasDeInventarioN2.length - 1 === 0
+            if (registrosDeTrazabilidad.length === 0) {
+              registros = null;
+              clearInterval(
+                intervaloDeEnvioDeRegistroDeTrazabilidadDeConsignacion
               );
-            _enviandoTomaDeInventario = false;
-          },
-          errCallback,
-          tomasDeInventarioN1
-        );
-      },
-      errCallback,
-      tomasDeInventario
-    );
-  }
-
-  function ActualizarEnvioDeTomasDeInventario(data, callback, errCallBack) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE TAKE_INVENTORY_HEADER";
-        sql += " SET IS_POSTED=2";
-        sql += " WHERE";
-        sql += " SALES_ORDER_ID =" + data.TakeInventoryId;
-        sql += " AND DOC_SERIE ='" + data.DocSerie + "'";
-        sql += " AND DOC_NUM =" + data.DocNum;
-
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallBack(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-
-  ///*********************ENVIO DE CAMBIOS DE CLIENTES *********************/
-
-  function EnviarCambiosDeClientes(callback, errCallback) {
-    if (_enviandoCambiosDeClientes) {
-      callback();
-      return;
-    }
-    _enviandoCambiosDeClientes = true;
-    var cambiosDeClientes = Array();
-    ObtenerCambiosDeClientes(
-      function(clientesN1) {
-        ObtenerEtiquetasDeCambiosDeClientes(
-          function(clientesN2) {
-            if (clientesN2.length > 0)
-              EnviarCambioCliente(clientesN2, 0, clientesN2.length - 1 === 0);
-            _enviandoCambiosDeClientes = false;
-          },
-          errCallback,
-          clientesN1
-        );
-      },
-      errCallback,
-      cambiosDeClientes
-    );
-  }
-
-  function ObtenerCambiosDeClientes(callback, errCallback, clientes) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *";
-        sql += " FROM CUSTOMER_CHANGE ";
-        sql += " WHERE IS_POSTED IN (0,1)";
-        sql += " ORDER BY POSTED_DATETIME";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var cambioCliente = {
-                CustomerChangeId: results.rows.item(i).CUSTOMER_CHANGE_ID,
-                ClientId: results.rows.item(i).CODE_CUSTOMER,
-                PhoneCustomer: results.rows.item(i).PHONE_CUSTOMER,
-                AddressCustomer: results.rows.item(i).ADRESS_CUSTOMER,
-                ContactCustomer: results.rows.item(i).CONTACT_CUSTOMER,
-                Gps: results.rows.item(i).GPS,
-                PostedDatetime: results.rows.item(i).POSTED_DATETIME,
-                PostedBy: results.rows.item(i).POSTED_BY,
-                CodeRoute: results.rows.item(i).CODE_ROUTE,
-                IsPosted: results.rows.item(i).IS_POSTED,
-                TaxId: results.rows.item(i).TAX_ID,
-                InvoiceName: results.rows.item(i).INVOICE_NAME,
-                CustomerName: results.rows.item(i).CUSTOMER_NAME,
-                CustomerNewName: results.rows.item(i).NEW_CUSTOMER_NAME,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffLine: results.rows.item(i).IS_POSTED_OFFLINE,
-                TagsByCustomer: Array()
-              };
-              clientes.push(cambioCliente);
+              _enviandoRegistrosDeTrazabilidad = false;
             }
-            callback(clientes);
           },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
+          3000
         );
-      },
-      function(err) {
-        errCallBack(err);
+      } else {
+        _enviandoRegistrosDeTrazabilidad = false;
       }
-    );
-  }
+    },
+    errorCallBack,
+    registros
+  );
+}
 
-  function ObtenerEtiquetasDeCambiosDeClientes(
-    callback,
-    errCallback,
-    clientes
-  ) {
-    var i;
-    for (i = 0; i < clientes.length; i++) {
-      ObtenerTagsDeClientesNoPosteados(
-        clientes[i],
-        function(err) {
-          errCallBack(err);
+function ObtenerRegistrosDeTrazabilidadDeConsignacionNoPosteados(
+  callBack,
+  errorCallBack,
+  registrosDeTrazabilidad
+) {
+  SONDA_DB_Session.transaction(
+    function(trans) {
+      var sql =
+        "SELECT CONSIGNMENT_ID" +
+        ", DOC_SERIE_SOURCE" +
+        ", DOC_NUM_SOURCE" +
+        ", SKU" +
+        ", QTY" +
+        ", ACTION" +
+        ", DOC_SERIE_TARGET" +
+        ", DOC_NUM_TARGET" +
+        ", DATE_TRANSACTION, " +
+        "HANDLE_SERIAL, " +
+        "SERIAL_NUMBER " +
+        " FROM HISTORICAL_TRACEABILITY_CONSIGNMENT " +
+        "WHERE IS_POSTED = 0";
+
+      trans.executeSql(
+        sql,
+        [],
+        function(trans2, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var registro = results.rows.item(i);
+            var registroModelo = {
+              CONSIGNMENT_ID: registro.CONSIGNMENT_ID,
+              DOC_SERIE_SOURCE: registro.DOC_SERIE_SOURCE,
+              DOC_NUM_SOURCE: registro.DOC_NUM_SOURCE,
+              SKU: registro.SKU,
+              QTY: registro.QTY,
+              ACTION: registro.ACTION,
+              DOC_SERIE_TARGET: registro.DOC_SERIE_TARGET,
+              DOC_NUM_TARGET: registro.DOC_NUM_TARGET,
+              DATE_TRANSACTION: registro.DATE_TRANSACTION,
+              HANDLE_SERIAL: registro.HANDLE_SERIAL,
+              SERIAL_NUMBER: registro.SERIAL_NUMBER
+            };
+            registrosDeTrazabilidad.push(registroModelo);
+          }
+          callBack(registrosDeTrazabilidad);
         },
-        clientes,
-        function(clientesN1, index, cliente) {
-          clientesN1[index] = cliente;
-          return clientesN1;
-        },
-        callback
-      );
-    }
-    if (i === 0) {
-      callback(clientes);
-    }
-  }
-
-  function ObtenerTagsDeClientesNoPosteados(
-    cliente,
-    errCallBack,
-    clientes,
-    i,
-    callback,
-    returncallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *  ";
-        sql += " FROM TAG_X_CUSTOMER_CHANGE ";
-        sql += " WHERE CUSTOMER_CHANGE_ID= '" + cliente.CustomerChangeId + "'";
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var j = 0; j < results.rows.length; j++) {
-              var tagsCliente = {
-                ClientId: results.rows.item(j).CODE_CUSTOMER,
-                TagColor: results.rows.item(j).TAG_COLOR,
-                DeviceNetworkType: results.rows.item(i).DEVICE_NETWORK_TYPE,
-                IsPostedOffLine: results.rows.item(i).IS_POSTED_OFFLINE
-              };
-              cliente.TagsByCustomer.push(tagsCliente);
-            }
-            callback(clientes, i, cliente);
-
-            if (clientes.length - 1 === i) {
-              returncallBack(clientes);
-            }
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
+        function(error, trans2) {
+          if (error.code !== 0) {
+            errorCallBack(error);
           }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function EnviarCambioCliente(clientes, index, esUltimo) {
-    var data = {
-      customer: clientes[index],
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass,
-      battery: gBatteryLevel,
-      routeid: gCurrentRoute
-    };
-    socket.emit("SendCustomerChange", data);
-    if (esUltimo) return;
-    setTimeout(function() {
-      var actual = index + 1;
-      EnviarCambioCliente(clientes, actual, clientes.length - 1 === actual);
-    }, 5000);
-  }
-
-  function ActualizarEnvioDeCambiosDeClientes(data, callback, errCallBack) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "UPDATE CUSTOMER_CHANGE";
-        sql += " SET IS_POSTED=2";
-        sql += ", SERVER_POSTED_DATETIME = '" + data.ServerPostedDateTime + "'";
-        sql += ", CUSTOMER_CHANGE_ID = " + data.CustomerChangeIdBo;
-        sql += " WHERE CUSTOMER_CHANGE_ID ='" + data.CustomerChangeId + "'";
-        tx.executeSql(sql);
-
-        sql = "UPDATE TAG_X_CUSTOMER_CHANGE ";
-        sql += "SET CUSTOMER_CHANGE_ID = " + data.CustomerChangeIdBo;
-        sql += " WHERE CUSTOMER_CHANGE_ID ='" + data.CustomerChangeId + "'";
-        tx.executeSql(sql);
-      },
-      function(err) {
-        errCallBack(err);
-      },
-      function() {
-        callback(data);
-      }
-    );
-  }
-
-  function ObtenerTodosLosScouitng(callback, errCallBack, clientes) {
-    var fecha = getDateTime().split(" ");
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT * ";
-        sql += " FROM CLIENTS";
-        sql += " WHERE NEW = 1";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var i = 0; i < results.rows.length; i++) {
-              var cliente = {
-                CodigoHH: results.rows.item(i).CLIENT_HH_ID_OLD,
-                CodigoBo: results.rows.item(i).CLIENT_ID,
-                Nombre: results.rows.item(i).CLIENT_NAME,
-                Telefono: results.rows.item(i).PHONE,
-                Direccion: results.rows.item(i).ADDRESS,
-                Ruta: gCurrentRoute,
-                Seller_code: gLoggedUser,
-                loginid: gLoggedUser,
-                PostedDatetime: getDateTime(),
-                ContactCustomer: results.rows.item(i).CONTACT_CUSTOMER,
-                Sign: results.rows.item(i).SIGN,
-                Photo: results.rows.item(i).PHOTO,
-                Status: results.rows.item(i).STATUS,
-                New: results.rows.item(i).NEW,
-                Gps: results.rows.item(i).GPS,
-                Reference: results.rows.item(i).REFERENCE,
-                PostDateTime: results.rows.item(i).POST_DATETIME,
-                PosSaleName: results.rows.item(i).POS_SALE_NAME,
-                InvoiceName: results.rows.item(i).INVOICE_NAME,
-                InvoiceAddress: results.rows.item(i).INVOICE_ADDRESS,
-                Nit: results.rows.item(i).NIT,
-                ContactId: results.rows.item(i).CONTACT_ID,
-                DiasVisita: Array(),
-                UpdatedFromBo: results.rows.item(i).UPDATED_FROM_BO,
-                SyncId:
-                  results.rows.item(i).SYNC_ID === "null" ||
-                  results.rows.item(i).SYNC_ID === null ||
-                  results.rows.item(i).SYNC_ID === "undefined"
-                    ? gCurrentRoute +
-                      fecha[0] +
-                      fecha[1] +
-                      results.rows.item(i).CLIENT_ID
-                    : results.rows.item(i).SYNC_ID,
-                IsPosted: results.rows.item(i).IS_POSTED
-              };
-              clientes.push(cliente);
-            }
-            callback(clientes);
-          },
-          function(tx, err) {
-            errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ObtenerLineasDeFrecuencioasDeTodosLosScouting(
-    cliente,
-    errCallBack,
-    clientes,
-    i,
-    callback,
-    returncallBack
-  ) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT *";
-        sql += " FROM CLIENTS_FREQUENCY";
-        sql += " WHERE (CODE_CUSTOMER='" + cliente.CodigoHH + "'";
-        sql += " OR CODE_CUSTOMER='" + cliente.CodigoBo + "')";
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            for (var j = 0; j < results.rows.length; j++) {
-              var frecuencia = {
-                CodeCustiner: results.rows.item(j).CODE_CUSTOMER,
-                Sunday: results.rows.item(j).SUNDAY,
-                Monday: results.rows.item(j).MONDAY,
-                Tuesday: results.rows.item(j).TUESDAY,
-                Wednesday: results.rows.item(j).WEDNESDAY,
-                Thursday: results.rows.item(j).THURSDAY,
-                Friday: results.rows.item(j).FRIDAY,
-                Saturday: results.rows.item(j).SATURDAY,
-                FrequencyWeeks: results.rows.item(j).FREQUENCY_WEEKS,
-                LastDateVisited: results.rows.item(j).LAST_DATE_VISITED
-              };
-              cliente.DiasVisita.push(frecuencia);
-            }
-            clientes = callback(clientes, i, cliente);
-
-            if (clientes.length - 1 === i) {
-              returncallBack(clientes);
-            }
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function ObtenerFrecuenciaDeTodosLosScouting(
-    callback,
-    errCallBack,
-    clientes
-  ) {
-    var i;
-    for (i = 0; i < clientes.length; i++) {
-      ObtenerLineasDeFrecuencioasDeTodosLosScouting(
-        clientes[i],
-        errCallBack,
-        clientes,
-        i,
-        function(clientesN1, index, cliente) {
-          clientesN1[index] = cliente;
-          return clientesN1;
-        },
-        callback
-      );
-    }
-    if (i === 0) {
-      callback(clientes);
-    }
-  }
-
-  function ObtenerEtiquetasDeTodosLosScouting(callback, errCallBack) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var sql = "SELECT ";
-        sql += " TAG_COLOR ";
-        sql += " , CUSTOMER ";
-        sql += " FROM TAGS_X_CUSTOMER ";
-        sql += " WHERE IS_POSTED >= 0";
-
-        tx.executeSql(
-          sql,
-          [],
-          function(tx, results) {
-            var etiquetasPorCliente = Array();
-            for (var i = 0; i < results.rows.length; i++) {
-              var item = {
-                TAG_COLOR: results.rows.item(i).TAG_COLOR,
-                CUSTOMER: results.rows.item(i).CUSTOMER
-              };
-              etiquetasPorCliente.push(item);
-            }
-            callback(etiquetasPorCliente);
-          },
-          function(tx, err) {
-            if (err.code !== 0) errCallBack(err);
-          }
-        );
-      },
-      function(err) {
-        errCallBack(err);
-      }
-    );
-  }
-
-  function EnviarDatosBajoDemanda(callback, errCallback) {
-    if (socket) {
-      EnviarTodasLasOrdenesDeVenta(
-        function() {
-          EnviarTodosLosScouting(
-            function() {
-              EnviarTodasEtiquetas(
-                function() {
-                  EnviarBorradoresDeBonificaciones(
-                    OrigenDeEnvioDeBorradoresDeBonificacion.ReportarDispositivo
-                  );
-                  callback();
-                },
-                function(err) {
-                  errCallback(err);
-                }
-              );
-            },
-            function(err) {
-              errCallback(err);
-            }
-          );
-        },
-        function(err) {
-          errCallback(err);
         }
       );
+    },
+    function(error) {
+      if (error.code !== 0) {
+        errorCallBack(error);
+      }
+    }
+  );
+}
+
+function EnviarRegistroDeTrazabilidad(
+  registrosDeTrazabilidad,
+  index,
+  esUltimo
+) {
+  var data = {
+    documentoDeTrazabilidad: registrosDeTrazabilidad[index],
+    dbuser: gdbuser,
+    dbuserpass: gdbuserpass,
+    battery: gBatteryLevel,
+    routeid: gCurrentRoute,
+    default_warehouse: gDefaultWhs
+  };
+  SocketControlador.socketIo.emit("InsertTraceabilityConsignments", data);
+  if (esUltimo) return;
+  setTimeout(function() {
+    var actual = index + 1;
+    EnviarRegistroDeTrazabilidad(
+      registrosDeTrazabilidad,
+      actual,
+      registrosDeTrazabilidad.length - 1 === actual
+    );
+  }, 5000);
+}
+
+//------------------- INICIA ENVIO DE TAREAS -------------------------------------------------------
+
+function EvniarTareas(callBack, errorCallBack) {
+  if (_enviandoTareas) {
+    callBack();
+    return;
+  }
+
+  _enviandoTareas = true;
+  var tareas = [];
+  ObtenerTareasNoPosteadas(
+    function(tareasNoPosteadas) {
+      if (tareasNoPosteadas.length > 0) {
+        EnviarTareaNoPosteada(tareasNoPosteadas);
+      } else {
+        _enviandoTareas = false;
+      }
+    },
+    errorCallBack,
+    tareas
+  );
+}
+
+function ObtenerTareasNoPosteadas(callBack, errorCallBack, tareas) {
+  SONDA_DB_Session.transaction(
+    function(trans) {
+      var sql =
+        "SELECT TASK_ID, RELATED_CLIENT_CODE, TASK_BO_ID, COMPLETED_SUCCESSFULLY, REASON, ACCEPTED_STAMP, COMPLETED_STAMP, TASK_STATUS, POSTED_GPS, TASK_SEQ FROM TASK " +
+        "WHERE IS_POSTED = 2";
+      trans.executeSql(
+        sql,
+        [],
+        function(trans2, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var tarea = {
+              taskId: results.rows.item(i).TASK_ID,
+              relatedClientCode: results.rows.item(i).RELATED_CLIENT_CODE,
+              taskBoId: results.rows.item(i).TASK_BO_ID,
+              completedSuccessfully: results.rows.item(i)
+                .COMPLETED_SUCCESSFULLY,
+              reason: results.rows.item(i).REASON,
+              acceptedStamp: results.rows.item(i).ACCEPTED_STAMP,
+              completedStamp: results.rows.item(i).COMPLETED_STAMP,
+              taskStatus: results.rows.item(i).TASK_STATUS,
+              postedGps: results.rows.item(i).POSTED_GPS,
+              taskSeq: parseInt(results.rows.item(i).TASK_SEQ)
+            };
+            tareas.push(tarea);
+          }
+          callBack(tareas);
+        },
+        function(error, trans2) {
+          _enviandoTareas = false;
+          if (error.code !== 0) {
+            errorCallBack(
+              "Error al obtener las tareas no posteadas debido a: " +
+                error.message
+            );
+          }
+        }
+      );
+    },
+    function(error) {
+      _enviandoTareas = false;
+      if (error.code !== 0) {
+        errorCallBack(
+          "Error al obtener las tareas no posteadas debido a: " + error.message
+        );
+      }
+    }
+  );
+}
+
+function EnviarTareaNoPosteada(tareasNoPosteadas) {
+  var data = {
+    tareas: tareasNoPosteadas,
+    dbuser: gdbuser,
+    dbuserpass: gdbuserpass,
+    battery: gBatteryLevel,
+    routeid: gCurrentRoute,
+    default_warehouse: gDefaultWhs
+  };
+  SocketControlador.socketIo.emit("SendTaskPos", data);
+  _enviandoTareas = false;
+}
+
+function MarcarTareaComoSincronizada(tareas, errorCallBack) {
+  SONDA_DB_Session.transaction(
+    function(trans) {
+      tareas.map(function(tarea) {
+        var sql =
+          "UPDATE TASK SET IS_POSTED = 3 WHERE TASK_ID = " +
+          parseInt(tarea.TASK_ID) +
+          " AND TASK_BO_ID = " +
+          parseInt(tarea.TASK_BO_ID);
+        trans.executeSql(sql);
+      });
+    },
+    function(error) {
+      if (error.code !== 0) {
+        errorCallBack(
+          "No se pudo actualizar la tarea sincronizada debido a: " +
+            error.message
+        );
+      }
+    }
+  );
+}
+
+//---------- FINALIZA ENVIO DE TAREAS -------------------------------------------------------------
+
+//----------------- INICIA ENVIO DE CONSIGNACIONES ANULADAS ---------------------------------------
+
+var _enviandoConsignacionesAnuladas = false;
+function EnviarConsignacionesAnuladas(callBack, errorCallBack) {
+  if (_enviandoConsignacionesAnuladas) {
+    callBack();
+    return;
+  }
+
+  _enviandoConsignacionesAnuladas = true;
+  var consignacionesAnuladas = Array();
+  ObtenerConsignacionesAnuladasNoPosteadas(
+    function(consignacionesAnuladasNoPosteadas) {
+      if (consignacionesAnuladasNoPosteadas.length > 0)
+        EnviarConsignacionAnulada(
+          consignacionesAnuladasNoPosteadas,
+          0,
+          consignacionesAnuladasNoPosteadas.length - 1 === 0
+        );
+      _enviandoConsignacionesAnuladas = false;
+    },
+    errorCallBack,
+    consignacionesAnuladas
+  );
+}
+
+function ObtenerConsignacionesAnuladasNoPosteadas(
+  callback,
+  errCallback,
+  consignaciones
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT *";
+      sql += " FROM CONSIGNMENT_HEADER ";
+      sql += " WHERE IS_POSTED = 5 AND STATUS = 'VOID'";
+      sql += " ORDER BY DATE_CREATE ";
+
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var consignacion = {
+              ConsignmentId: results.rows.item(i).CONSIGNMENT_ID,
+              CustomerId: results.rows.item(i).CUSTOMER_ID,
+              DateCreate: results.rows.item(i).DATE_CREATE,
+              DateUpdate: results.rows.item(i).DATE_UPDATE,
+              Status: results.rows.item(i).STATUS,
+              PostedBy: results.rows.item(i).POSTED_BY,
+              IsPosted: results.rows.item(i).IS_POSTED,
+              PosTerminal: results.rows.item(i).POS_TERMINAL,
+              GpsUrl: results.rows.item(i).GPS_URL,
+              DocDate: results.rows.item(i).DOC_DATE,
+              ClosedRouteDatetime: results.rows.item(i).CLOSED_ROUTE_DATETIME,
+              IsActiveRoute: results.rows.item(i).IS_ACTIVE_ROUTE,
+              DueDate: results.rows.item(i).DUE_DATE,
+              ConsignmentBoNum: results.rows.item(i).CONSIGNMENT_BO_NUM,
+              DocSerie: results.rows.item(i).DOC_SERIE,
+              DocNum: results.rows.item(i).DOC_NUM,
+              TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
+              Image: results.rows.item(i).IMG,
+              IsReconsign: results.rows.item(i).IS_RECONSIGN,
+              Reason: results.rows.item(i).REASON,
+              ConsignmentRows: Array()
+            };
+            consignaciones.push(consignacion);
+          }
+          callback(consignaciones);
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallback(err);
+        }
+      );
+    },
+    function(err) {
+      errCallback(err);
+    }
+  );
+}
+
+function EnviarConsignacionAnulada(consignaciones, index, esUltimo) {
+  var data = {
+    consignacion: consignaciones[index],
+    dbuser: gdbuser,
+    dbuserpass: gdbuserpass,
+    battery: gBatteryLevel,
+    routeid: gCurrentRoute,
+    default_warehouse: gDefaultWhs
+  };
+  SocketControlador.socketIo.emit("SendConsignmentVoid", data);
+  if (esUltimo) return;
+  setTimeout(function() {
+    var actual = index + 1;
+    EnviarConsignacionAnulada(
+      consignaciones,
+      actual,
+      consignaciones.length - 1 === actual
+    );
+  }, 5000);
+}
+
+function MarcarConsignacionAnuladaComoSincronizada(
+  consignacion,
+  errorCallBack
+) {
+  SONDA_DB_Session.transaction(
+    function(trans) {
+      var sql =
+        "UPDATE CONSIGNMENT_HEADER SET IS_POSTED = 6 WHERE CONSIGNMENT_ID = " +
+        parseInt(consignacion.ConsignmentId) +
+        " AND DOC_NUM = " +
+        parseInt(consignacion.DocNum);
+      trans.executeSql(sql);
+    },
+    function(error) {
+      if (error.code !== 0) {
+        errorCallBack(
+          "No se pudo actualizar la consignación anulada debido a: " +
+            error.message
+        );
+      }
+    }
+  );
+}
+
+//------------------ FINALIZA ENVIO DE CONSIGNACIONES ANULADAS -------------------------------------
+
+//----------------- INICIA ENVIO DE ENCUESTA DE COMPETENCIA ---------------------------------------
+function EnviarEncuestasDeCompraDeCompetencia() {
+  try {
+    EncuestaServicio.ObtenerEncuestasDeCompraDeCompetenciaNoEnviadas(
+      function(encuestas) {
+        if (encuestas.length > 0) {
+          for (var i = 0; i < encuestas.length; i++) {
+            var data = {
+              encuesta: encuestas[i],
+              dbuser: gdbuser,
+              dbuserpass: gdbuserpass,
+              battery: gBatteryLevel,
+              routeid: gCurrentRoute,
+              default_warehouse: gDefaultWhs
+            };
+            SocketControlador.socketIo.emit("SendBusinessRivalPoll", data);
+          }
+        }
+      },
+      function(err) {
+        notify(err);
+      }
+    );
+  } catch (e) {
+    notify(
+      "Error al intentar enviar las encuestas de compra de competencia: " +
+        e.message
+    );
+  }
+}
+//------------------ FINALIZA ENVIO DE ENCUESTA DE COMPETENCIA -------------------------------------
+
+//------------------ INICIA ENVIO DE DEPOSITOS BANCARIOS -------------------------------------
+var _estaEnviandoDepositos = false;
+function EnviarDepositosNoPosteados(callBack, errorCallBack) {
+  try {
+    if (_estaEnviandoDepositos) {
+      callBack();
     } else {
-      ToastThis("Verifique su conexión");
-    }
-  }
-
-  function EnviarTodasLasOrdenesDeVenta(callback, errCallback) {
-    var ordenesDeCompra = [];
-    ObtenerOrdernesDeCompraNoPosteados(
-      function(ordenesDeCompraN1) {
-        if (ordenesDeCompraN1.length > 0) {
-          ObtenerDetalleDeOrdernesDeCompraNoPosteados(
-            function(ordenesDeCompraN2) {
-              ordenesDeCompraN2.map(function(ordenDeVenta) {
-                var data = {
-                  salesOrder: ordenDeVenta,
-                  dbuser: gdbuser,
-                  dbuserpass: gdbuserpass,
-                  battery: gBatteryLevel,
-                  routeid: gCurrentRoute,
-                  warehouse: gPreSaleWhs
-                };
-                socket.emit("SendAllSalesOrder", data);
-              });
-              callback();
-            },
-            errCallback,
-            ordenesDeCompraN1
-          );
-        } else {
-          ToastThis("No hay ordenes de venta para enviar");
-          callback();
-        }
-      },
-      errCallback,
-      ordenesDeCompra,
-      false
-    );
-  }
-
-  function EnviarTodosLosScouting(callback, errCallback) {
-    var clientes = [];
-    ObtenerTodosLosScouitng(
-      function(clientesN1) {
-        ObtenerFrecuenciaDeTodosLosScouting(
-          function(clientesN2) {
-            clientesN2.map(function(cliente) {
+      _estaEnviandoDepositos = true;
+      ObtenerDepositosNoPosteados(
+        function(depositos) {
+          if (depositos.length > 0) {
+            for (var i = 0; i < depositos.length; i++) {
               var data = {
-                client: cliente,
+                accountid: depositos[i].accountNum,
+                gps: depositos[i].gpsUrl,
+                amount: depositos[i].amount,
+                routeid: gCurrentRoute,
+                processdate: depositos[i].transDateTime,
+                loginid: gLastLogin,
+                transid: depositos[i].transId,
+                docSerie: depositos[i].docSerie,
+                docNum: depositos[i].docNum,
+                image1: depositos[i].image1,
                 dbuser: gdbuser,
                 dbuserpass: gdbuserpass,
-                battery: gBatteryLevel,
-                routeid: gCurrentRoute
+                deviceId: device.uuid
               };
-              socket.emit("InsertAllNewClient", data);
-            });
-            callback();
-          },
-          errCallback,
-          clientesN1
-        );
-      },
-      errCallback,
-      clientes
-    );
-  }
-
-  function EnviarTodasEtiquetas(callback, errCallback) {
-    ObtenerEtiquetasDeTodosLosScouting(function(etiquetasPoCliente) {
-      etiquetasPoCliente.map(function(etiqueta) {
-        var data = {
-          tagscolor: etiqueta.TAG_COLOR,
-          customer: etiqueta.CUSTOMER,
-          dbuser: gdbuser,
-          dbuserpass: gdbuserpass,
-          battery: gBatteryLevel,
-          routeid: gCurrentRoute
-        };
-        socket.emit("InsertAllNewTagsXClient", data);
-      });
-      callback();
-    }, errCallback);
-  }
-
-  //Envio de Bonus Draft
-  function EnviarBorradoresDeBonificaciones(origenDeEnvio) {
-    var bonoServicio = new BonoServicio();
-    bonoServicio.obtenerBorradoresDeBonificacion(
-      function(borradores) {
-        if (borradores.length > 0) {
-          var data = {
-            borradores: borradores,
-            dbuser: gdbuser,
-            dbuserpass: gdbuserpass,
-            routeid: gCurrentRoute,
-            Source: origenDeEnvio
-          };
-          socket.emit("InsertLogOfBonus", data);
+              SocketControlador.socketIo.emit("post_deposit", data);
+            }
+            _estaEnviandoDepositos = false;
+          } else {
+            _estaEnviandoDepositos = false;
+          }
+        },
+        function(err) {
+          _estaEnviandoDepositos = false;
+          notify(err);
         }
-      },
-      function(resultado) {
-        notify(resultado.mensaje);
-      }
+      );
+    }
+  } catch (e) {
+    notify(
+      "Error al intentar enviar las encuestas de compra de competencia: " +
+        e.message
     );
   }
+}
 
-  //============ Envio de Historico de promociones ==============================
-
-  function obtenerHistoricoDePromocionesNoPosteadas(callback, errorCallback) {
-    var historialDePromociones = [];
-    SONDA_DB_Session.readTransaction(
+function ObtenerDepositosNoPosteados(callBack, errorCallBack) {
+  try {
+    var listaDeDepositos = [];
+    SONDA_DB_Session.transaction(
       function(tx) {
-        var sql = [];
-        sql.push(
-          "SELECT DOC_SERIE, DOC_NUM, CODE_ROUTE, CODE_CUSTOMER, HISTORY_DATETIME, PROMO_ID, PROMO_NAME, FREQUENCY, SALES_ORDER_DOCUMENT_NUMBER, SALES_ORDER_DOCUMENT_SERIES "
-        );
-        sql.push(" FROM HISTORY_BY_PROMO WHERE IS_POSTED = 1");
+        var sql =
+          "SELECT TRANS_ID, TRANS_TYPE, TRANS_DATETIME, BANK_ID, ACCOUNT_NUM, AMOUNT, GPS_URL, IS_POSTED, IMG1, DOC_SERIE, DOC_NUM FROM DEPOSITS WHERE IS_POSTED = 0";
 
         tx.executeSql(
-          sql.join(""),
+          sql,
           [],
-          function(txReturn, recordset) {
-            for (var i = 0; i < recordset.rows.length; i++) {
-              var fecha = void 0;
-              fecha = new Date(recordset.rows.item(i).HISTORY_DATETIME);
-              var cadenaFecha =
-                fecha.getFullYear() +
-                "-" +
-                (fecha.getMonth() + 1) +
-                "-" +
-                fecha.getDate();
-              var promo = {
-                docSerie: recordset.rows.item(i).DOC_SERIE,
-                docNum: recordset.rows.item(i).DOC_NUM,
-                codeRoute: recordset.rows.item(i).CODE_ROUTE,
-                codeCustomer: recordset.rows.item(i).CODE_CUSTOMER,
-                historyDateTime: cadenaFecha,
-                promoId: recordset.rows.item(i).PROMO_ID,
-                promoName: recordset.rows.item(i).PROMO_NAME,
-                frequency: recordset.rows.item(i).FREQUENCY,
-                salesOrderDocumentNumber: recordset.rows.item(i)
-                  .SALES_ORDER_DOCUMENT_NUMBER,
-                salesOrderDocumentSeries: recordset.rows.item(i)
-                  .SALES_ORDER_DOCUMENT_SERIES
-              };
-              historialDePromociones.push(promo);
+          function(txResult, results) {
+            if (results.rows.length > 0) {
+              for (var i = 0; i < results.rows.length; i++) {
+                var deposito = results.rows.item(i);
+                var depositoItem = new Deposito();
+
+                depositoItem.transId = deposito.TRANS_ID;
+                depositoItem.transType = deposito.TRANS_TYPE;
+                depositoItem.transDateTime = deposito.TRANS_DATETIME;
+                depositoItem.bankId = deposito.BANK_ID;
+                depositoItem.accountNum = deposito.ACCOUNT_NUM;
+                depositoItem.amount = deposito.AMOUNT;
+                depositoItem.gpsUrl = deposito.GPS_URL;
+                depositoItem.isPosted = deposito.IS_POSTED;
+                depositoItem.image1 = deposito.IMG1;
+                depositoItem.docSerie = deposito.DOC_SERIE;
+                depositoItem.docNum = deposito.DOC_NUM;
+                listaDeDepositos.push(depositoItem);
+              }
+
+              callBack(listaDeDepositos);
+            } else {
+              callBack(listaDeDepositos);
             }
-            callback(historialDePromociones);
           },
           function(txResult, error) {
-            if (error.code !== SqliteError.Desconocido) {
-              errorCallback(
-                "No se ha podido obtener el histórico de las promociones debido a: " +
+            if (error.code !== 0) {
+              errorCallBack(
+                "No se pudo obtener la lista de Depositos debido a: " +
                   error.message
               );
             }
@@ -2591,142 +1333,1090 @@ function ObtenerBroadcastPerdidos() {
         );
       },
       function(err) {
-        if (err.code != SqliteError.Desconocido) {
-          errorCallback(
-            "No se ha podido obtener el histórico de las promociones debido a: " +
-              err.message
+        if (err.code !== 0) {
+          errorCallBack(
+            "No se pudo inicar la transaccion debido a: " + err.message
           );
         }
       }
     );
+  } catch (e) {
+    errorCallBack(
+      "Error al obtener los depositos no posteados debido a: " + e.message
+    );
   }
+}
 
-  function MarcarHistoricoDePromocionesComoPosteado(historicoDePromociones) {
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        historicoDePromociones.map(function(promo) {
-          tx.executeSql(
-            "UPDATE HISTORY_BY_PROMO SET IS_POSTED = 2, SERVER_POSTED_DATETIME = '" +
-              promo.SERVER_POSTED_DATETIME +
-              "' WHERE DOC_SERIE = '" +
-              promo.DOC_SERIE +
-              "' AND DOC_NUM = " +
-              promo.DOC_NUM
-          );
-        });
+//------------------ INICIA ENVIO DE FACTURAS -------------------------------------
+var _enviandoFacturas = false;
+
+function ObtenerFacturasNoPosteadas(callback, errCallBack, facturas) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql =
+        "SELECT * FROM INVOICE_HEADER IH " +
+        "INNER JOIN TASK T " +
+        "WHERE IS_CREDIT_NOTE = 0 " +
+        "AND IH.IS_POSTED IN (0,1) " +
+        "AND IH.STATUS <> 3 " +
+        "AND T.IS_POSTED = 3 " +
+        "GROUP BY IH.INVOICE_NUM " +
+        "ORDER BY IH.INVOICE_NUM";
+
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var factura = {
+              InvoiceId: results.rows.item(i).INVOICE_NUM,
+              Terms: results.rows.item(i).TERMS,
+              PostedDatetime: results.rows.item(i).POSTED_DATETIME,
+              ClientId: results.rows.item(i).CLIENT_ID,
+              ClientName: results.rows.item(i).CLIENT_NAME,
+              PosTerminal: results.rows.item(i).POS_TERMINAL,
+              Gps: results.rows.item(i).GPS,
+              TotalAmount: results.rows.item(i).TOTAL_AMOUNT,
+              IsPosted: results.rows.item(i).IS_POSTED,
+              Status: results.rows.item(i).STATUS,
+              VoidReason: results.rows.item(i).VOID_REASON,
+              VoidNotes: results.rows.item(i).VOID_NOTES,
+              VoidInvoiceId: results.rows.item(i).VOID_INVOICE_ID,
+              PrintRequest: results.rows.item(i).PRINT_REQUEST,
+              PrintedCount: results.rows.item(i).PRINTED_COUNT,
+              AuthId: results.rows.item(i).AUTH_ID,
+              SatSerie: results.rows.item(i).SAT_SERIE,
+              Change: results.rows.item(i).CHANGE,
+              ConsignmnetId: results.rows.item(i).CONSIGNMENT_ID,
+              IsPaidConsignment: results.rows.item(i).IS_PAID_CONSIGNMENT,
+              InitialTaskImage: results.rows.item(i).INITIAL_TASK_IMAGE,
+              Image1: results.rows.item(i).IMG1,
+              Image2: results.rows.item(i).IMG2,
+              Image3: results.rows.item(i).IMG3,
+              ErpInvoiceId: results.rows.item(i).ERP_INVOICE_ID,
+              IsCreditNote: results.rows.item(i).IS_CREDIT_NOTE,
+              InRoutePlan: results.rows.item(i).IN_ROUTE_PLAN,
+              IdBo: results.rows.item(i).ID_BO,
+              IsPostedValidated: results.rows.item(i).IS_POSTED_VALIDATED,
+              DetailQty: 0,
+              HandleTax: results.rows.item(i).HANDLE_TAX,
+              TaxPercent: results.rows.item(i).TAX_PERCENT,
+              TelephoneNumber: results.rows.item(i).TELEPHONE_NUMBER,
+              IsFromDeliveryNote: results.rows.item(i).IS_FROM_DELIVERY_NOTE,
+              Discount: results.rows.item(i).DISCOUNT,
+              Comment: results.rows.item(i).COMMENT,
+              DueDate: results.rows.item(i).DUE_DATE
+                ? results.rows.item(i).DUE_DATE
+                : null,
+              CreditAmount: results.rows.item(i).CREDIT_AMOUNT
+                ? results.rows.item(i).CREDIT_AMOUNT
+                : 0,
+              CashAmount: results.rows.item(i).CASH_AMOUNT
+                ? results.rows.item(i).CASH_AMOUNT
+                : 0,
+              PaidToDate: results.rows.item(i).PAID_TO_DATE
+                ? results.rows.item(i).PAID_TO_DATE
+                : 0,
+              TaskId: results.rows.item(i).TASK_ID,
+              GoalHeaderId: results.rows.item(i).GOAL_HEADER_ID,
+              ElectronicSignature: results.rows.item(i).ELECTRONIC_SIGNATURE,
+              DocumentSeries: results.rows.item(i).DOCUMENT_SERIES,
+              DocumentNumber: results.rows.item(i).DOCUMENT_NUMBER,
+              DocumentUrl: results.rows.item(i).DOCUMENT_URL,
+              Shipment: results.rows.item(i).SHIPMENT,
+              ValidationResult: results.rows.item(i).VALIDATION_RESULT,
+              ShipmentDatetime: results.rows.item(i).SHIPMENT_DATETIME,
+              ShipmentResponse: results.rows.item(i).SHIPMENT_RESPONSE,
+              IsContingencyDocument: results.rows.item(i)
+                .IS_CONTINGENCY_DOCUMENT,
+              ContingencyDocSerie: results.rows.item(i).CONTINGENCY_DOC_SERIE,
+              ContingencyDocNum: results.rows.item(i).CONTINGENCY_DOC_NUM,
+              FelDocumentType: results.rows.item(i).FEL_DOCUMENT_TYPE,
+              FelStablishmentCode: results.rows.item(i).FEL_STABLISHMENT_CODE,
+              InvoiceDetail: Array()
+            };
+            facturas.push(factura);
+          }
+          callback(facturas);
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+function ObtenerLineasDeFacturaNoPosteados(
+  factura,
+  errCallBack,
+  facturas,
+  i,
+  callback,
+  returncallBack
+) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT * ";
+      sql += " FROM INVOICE_DETAIL ";
+      sql += " WHERE INVOICE_NUM=" + factura.InvoiceId + "";
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var j = 0; j < results.rows.length; j++) {
+            var detFactura = {
+              InvoiceId: results.rows.item(j).INVOICE_NUM,
+              Sku: results.rows.item(j).SKU,
+              SkuName: results.rows.item(j).SKU_NAME,
+              Qty: results.rows.item(j).QTY,
+              Price: results.rows.item(j).PRICE,
+              Discount: results.rows.item(j).DISCOUNT,
+              TotalLine: results.rows.item(j).TOTAL_LINE,
+              Serie: results.rows.item(j).SERIE,
+              Serie2: results.rows.item(j).SERIE_2,
+              RequeriesSerie: results.rows.item(j).REQUERIES_SERIE,
+              LineSeq: j,
+              IsActive: results.rows.item(j).IS_ACTIVE,
+              ComboReference: results.rows.item(j).COMBO_REFERENCE,
+              ParentSeq: results.rows.item(j).PARENT_SEQ,
+              Exposure: results.rows.item(j).EXPOSURE,
+              Phone: results.rows.item(j).PHONE,
+              TaxCode: results.rows.item(j).TAX_CODE,
+              SalesPackUnit: results.rows.item(j).PACK_UNIT,
+              StockPackUnit: results.rows.item(j).CODE_PACK_UNIT_STOCK,
+              ConversionFactor: results.rows.item(j).CONVERSION_FACTOR
+            };
+            factura.InvoiceDetail.push(detFactura);
+          }
+
+          factura.DetailQty = results.rows.length;
+
+          facturas = callback(facturas, i, factura);
+
+          if (facturas.length - 1 === i) {
+            returncallBack(facturas);
+          }
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+function ObtenerDetalleDeFacturaNoPosteados(callback, errCallBack, facturas) {
+  var i;
+  for (i = 0; i < facturas.length; i++) {
+    ObtenerLineasDeFacturaNoPosteados(
+      facturas[i],
+      errCallBack,
+      facturas,
+      i,
+      function(facturasN1, index, factura) {
+        facturasN1[index] = factura;
+        return facturasN1;
       },
-      function(err) {
-        if (err.code !== SqliteError.Desconocido) {
-          notify(
-            "No se ha podido actualizar el histórico de las promociones debido a: " +
-              err.message
-          );
-        }
-      }
+      callback
     );
   }
+  if (i === 0) {
+    callback(facturas);
+  }
+}
 
-  function enviarHistoricoDePromocionesNoPosteadas() {
-    _enviandoHistoricoDePromociones = true;
-    obtenerHistoricoDePromocionesNoPosteadas(
-      function(historialDePromociones) {
-        if (historialDePromociones.length > 0) {
-          var data = {
-            historialDePromociones: historialDePromociones,
-            dbuser: gdbuser,
-            dbuserpass: gdbuserpass,
-            routeid: gCurrentRoute
-          };
-          socket.emit("insertHistoryOfPromo", data);
-        }
-        _enviandoHistoricoDePromociones = false;
-      },
-      function(error) {
-        notify(error);
-        _enviandoHistoricoDePromociones = false;
+function EnviarFactura(facturas, index, esUltimo) {
+  if (facturas.length <= 0) {
+    _enviandoFacturas = false;
+  } else {
+    var facturaAEnviar = null;
+    var sendingInterval = setInterval(function() {
+      facturaAEnviar = facturas.splice(0, 1); //Se envian facturas de 1 en 1
+      if (facturaAEnviar && facturaAEnviar.length > 0) {
+        var data = {
+          invoice: facturaAEnviar[0],
+          dbuser: gdbuser,
+          dbuserpass: gdbuserpass,
+          battery: gBatteryLevel,
+          routeid: gCurrentRoute,
+          uuid: device.uuid,
+          warehouse: gDefaultWhs
+        };
+        SocketControlador.socketIo.emit("post_invoice", data);
       }
-    );
+
+      if (facturas.length === 0) {
+        facturaAEnviar = null;
+        clearInterval(sendingInterval);
+        _enviandoFacturas = false;
+      }
+    }, 3000);
+  }
+}
+
+function ActualizarEnvioDeFactura(data, callback, errCallBack) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "UPDATE INVOICE_HEADER";
+      sql += " SET IS_POSTED=1";
+      sql += " WHERE";
+      sql += " INVOICE_NUM =" + data.InvoiceId;
+
+      tx.executeSql(sql);
+    },
+    function(err) {
+      errCallBack(err);
+    },
+    function() {
+      callback(data);
+    }
+  );
+}
+
+function FinalizarEnvioFactura(data, callback, errCallBack) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "UPDATE INVOICE_HEADER";
+      sql += " SET IS_POSTED = 2";
+      sql += "  ,ID_BO = " + data.IdBo;
+      sql += " WHERE";
+      sql += " INVOICE_NUM =" + data.InvoiceId;
+
+      tx.executeSql(sql);
+    },
+    function(err) {
+      errCallBack(err);
+    },
+    function() {
+      callback(data);
+    }
+  );
+}
+
+function EnviarFacturas(callback, errCallback) {
+  if (_enviandoFacturas) {
+    callback();
+    return;
+  }
+  _enviandoFacturas = true;
+  var facturas = [];
+  ObtenerFacturasNoPosteadas(
+    function(facturasN1) {
+      console.dir(facturasN1);
+      ObtenerDetalleDeFacturaNoPosteados(
+        function(facturasN2) {
+          if (facturasN2.length > 0) {
+            EnviarFactura(facturasN2, 0, facturasN2.length - 1 === 0);
+          } else {
+            _enviandoFacturas = false;
+          }
+        },
+        errCallback,
+        facturasN1
+      );
+    },
+    errCallback,
+    facturas
+  );
+}
+
+//------------------ FINALIZA ENVIO DE FACTURAS -------------------------------------
+
+//------------------ INICIA VALIDACION ENVIO DE FACTURAS -------------------------------------
+
+function EnviarValidacionDeFactura(callback, errCallback) {
+  if (_enviandoValidacionDeFacturas) {
+    callback();
+    return;
+  }
+  _enviandoValidacionDeFacturas = true;
+
+  VerificarDocumentosEnServidor(
+    TipoDeValidacionDeFactura.EnRuta,
+    false,
+    function() {
+      _enviandoValidacionDeFacturas = false;
+      callback();
+    },
+    function(err) {
+      errCallback(err);
+    }
+  );
+}
+
+function VerificarDocumentosEnServidor(
+  tipoDeValidacionDeFactura,
+  obtenerTodasLasFacturas,
+  callback,
+  errCallback
+) {
+  if (gIsOnline == EstaEnLinea.No) {
+    errCallback("No hay conexion hacia el servidor");
+    return;
   }
 
-  //============ Finaliza Envio de Historico de promociones ==============================
+  ObtenerFacturasSincronizadas(
+    obtenerTodasLasFacturas,
+    function(facturas) {
+      FormarEnvioDeFacturas(
+        facturas,
+        function(enviarFacturas) {
+          if (
+            tipoDeValidacionDeFactura === TipoDeValidacionDeFactura.FinDeRuta
+          ) {
+            SocketControlador.socketIo.on("ValidateInvoices_Request", callback);
+          }
 
-  //============ Inicia Envio de Encuestas de Cliente ====================================
-
-  function EnviarEncuestasDeClienteNoPosteadas() {
-    if (_enviandoEncuestasDeCliente) return;
-
-    _enviandoEncuestasDeCliente = true;
-
-    var encuestaServicio = new EncuestaServicio();
-    var encuestasAEnviar = [];
-
-    encuestaServicio.obtenerEncuestasNoSincronizadas(function(
-      encuestasNoSincronizadas
-    ) {
-      if (encuestasNoSincronizadas.length > 0) {
-        var intervaloDeEnvioDeEncuestas = setInterval(function() {
-          encuestasAEnviar = encuestasNoSincronizadas.splice(0, 5); //TODO:Se toman los primeros 5 objetos disponibles
           var data = {
-            encuestas: encuestasAEnviar,
+            Invoices: enviarFacturas,
             dbuser: gdbuser,
             dbuserpass: gdbuserpass,
             routeid: gCurrentRoute,
-            loginId: gLoggedUser
+            Source: tipoDeValidacionDeFactura
           };
 
-          socket.emit("AddMicrosurveyByClient", data);
-          if (encuestasNoSincronizadas.length === 0) {
-            encuestasAEnviar.length = 0;
-            clearInterval(intervaloDeEnvioDeEncuestas);
-            _enviandoEncuestasDeCliente = false;
-            encuestaServicio = null;
+          SocketControlador.socketIo.emit("ValidateInvoice", data);
+
+          if (
+            tipoDeValidacionDeFactura !== TipoDeValidacionDeFactura.FinDeRuta
+          ) {
+            callback();
           }
-        }, 2000);
-      } else {
-        encuestaServicio = null;
-        _enviandoEncuestasDeCliente = false;
-      }
-    });
-  }
-  //============ Finaliza Envio de Encuestas de Cliente ==========================================
+        },
+        function(err) {
+          errCallback(err);
+        }
+      );
+    },
+    function(err) {
+      errCallback(err);
+    }
+  );
 }
 
-//----------------- ENVIO DE DOCUMENTOS DE PAGO DE FACTURAS VENCIDAS -----------------------------
+function ObtenerFacturasSincronizadas(obtenerTodas, callback, errCallback) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql =
+        "SELECT H.INVOICE_NUM, H.ID_BO, COUNT(D.SKU) AS DETAIL_NUM, MAX(H.CLIENT_ID) CLIENT_ID, " +
+        "MAX(H.AUTH_ID) AUTH_ID, MAX(H.SAT_SERIE) SAT_SERIE, MAX(H.POSTED_DATETIME) POSTED_DATETIME";
+      sql += " FROM INVOICE_HEADER H";
+      sql += " INNER JOIN INVOICE_DETAIL D ON (H.INVOICE_NUM = D.INVOICE_NUM)";
+      sql +=
+        " WHERE H.IS_CREDIT_NOTE = 0 AND H.IS_POSTED =" +
+        EstadoEnvioDoc.EnviadoConAcuseDeRecibido;
+      if (!obtenerTodas) {
+        sql += " AND IFNULL(H.IS_POSTED_VALIDATED,0) IN (0,1) ";
+      }
+      sql += " GROUP BY H.ID_BO";
 
-function EnviarDocumentosDePagoDeFacturasVencidas() {
-  if (_enviandoDocumentosDePagoDeFacturasVencidas) return;
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          callback(results);
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallback(err);
+        }
+      );
+    },
+    function(err) {
+      errCallback(err);
+    }
+  );
+}
 
-  _enviandoDocumentosDePagoDeFacturasVencidas = true;
+function FormarEnvioDeFacturas(facturas, callback, errCallback) {
+  try {
+    var enviarFacturas = [];
 
-  var pagoServicio = new PagoDeFacturaVencidaServicio();
-  var pagosAEnviar = [];
+    for (var i = 0; i < facturas.rows.length; i++) {
+      var factura = {
+        IdBo: facturas.rows.item(i).ID_BO,
+        InvoiceId: facturas.rows.item(i).INVOICE_NUM,
+        AuthId: facturas.rows.item(i).AUTH_ID,
+        SatSerie: facturas.rows.item(i).SAT_SERIE,
+        ClientId: facturas.rows.item(i).CLIENT_ID,
+        PostedDatetime: facturas.rows.item(i).POSTED_DATETIME,
+        DetailNum:
+          facturas.rows.item(i).DETAIL_NUM === null ||
+          facturas.rows.item(i).DETAIL_NUM === "null" ||
+          facturas.rows.item(i).DETAIL_NUM === "NULL" ||
+          facturas.rows.item(i).DETAIL_NUM === undefined
+            ? 0
+            : facturas.rows.item(i).DETAIL_NUM
+      };
+      enviarFacturas.push(factura);
+    }
+    callback(enviarFacturas);
+  } catch (e) {
+    errCallback(e);
+  }
+}
 
-  pagoServicio.obtenerDocumentosDePagoNoPosteadosEnElServidor(function(
-    documentosNoPosteados
-  ) {
-    if (documentosNoPosteados.length > 0) {
-      var intervaloDeEnvioDeDocumentosDePago = setInterval(function() {
-        pagosAEnviar = documentosNoPosteados.splice(0, 5); //Se envian los documentos de 5 en 5
+function ActualizarEstadoDeFactura(
+  invoiceId,
+  estado,
+  estadoDeValidacion,
+  index,
+  callback,
+  errCallback
+) {
+  try {
+    SONDA_DB_Session.transaction(
+      function(tx) {
+        var sql = "UPDATE INVOICE_HEADER";
+        sql += " SET IS_POSTED = " + estado;
+        sql += " ,IS_POSTED_VALIDATED = " + estadoDeValidacion;
+        sql += " WHERE INVOICE_NUM = " + invoiceId;
+
+        tx.executeSql(
+          sql,
+          [],
+          function(tx, results) {
+            callback(index);
+          },
+          function(tx, err) {
+            if (err.code !== 0) errCallback(err);
+          }
+        );
+      },
+      function(err) {
+        errCallback(err);
+      }
+    );
+  } catch (e) {
+    errCallback({ code: 0, message: e.message });
+  }
+}
+
+function CambiarEstadoParaReenviarFacturas(facturas, callback, errCallback) {
+  try {
+    for (var i = 0; i < facturas.length; i++) {
+      ActualizarEstadoDeFactura(
+        facturas[i].DOC_NUM,
+        facturas[i].RESULT === EstadoEnvioDoc.NoEnviado
+          ? EstadoEnvioDoc.NoEnviado
+          : EstadoEnvioDoc.EnviadoConAcuseDeRecibido,
+        facturas[i].RESULT ===
+          EstadoDeValidacionDeOrdenDeVenta.PendienteDeValidar
+          ? EstadoDeValidacionDeOrdenDeVenta.PendienteDeValidar
+          : EstadoDeValidacionDeOrdenDeVenta.EnviadoConAcuseDeValidado,
+        i,
+        function(index) {
+          if (index === facturas.length - 1) {
+            callback();
+          }
+        },
+        function(err) {
+          errCallback(err);
+        }
+      );
+    }
+  } catch (e) {
+    errCallback({ code: 0, message: e.message });
+  }
+}
+
+function ValidarValidacionesDeFacturasSincronizadas(callback, errCallBack) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT *  ";
+      sql += " FROM INVOICE_HEADER ";
+      sql += " WHERE IFNULL(IS_POSTED_VALIDATED,0) IN (0,1)";
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          if (results.rows.length < 1) {
+            callback();
+          } else {
+            errCallBack(
+              "No se han validado todas las facturas, espere por favor."
+            );
+          }
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+//------------------ FINALIZA VALIDACION ENVIO DE FACTURAS -------------------------------------
+
+//------------------ INICIA ENVIO DE VALIDACION DE SCOUTINGS -----------------------------------
+function EnviarValidacionDeClientes(callback, errCallback) {
+  if (_enviandoValidacionDeClientes) {
+    callback();
+    return;
+  }
+  _enviandoValidacionDeClientes = true;
+
+  VerificarClientesEnServidor(
+    false,
+    TipoDeValidacionDeCliente.EnRuta,
+    function() {
+      _enviandoValidacionDeClientes = false;
+      if (callback) {
+        callback();
+      }
+    },
+    function(err) {
+      if (errCallback) {
+        errCallback(err);
+      }
+    }
+  );
+}
+//------------------ FINALIZA ENVIO DE VALIDACION DE SCOUTINGS ---------------------------------
+
+//------------------ INICIA ENVIO DE CLIENTES SCOUTING -----------------------------------------
+function EnviarScouting() {
+  if (_enviandoScouting) return;
+  _enviandoScouting = true;
+  var clienteServicio = new ClienteServicio();
+  var clientesAEnviar = [];
+
+  clienteServicio.obtenerClientesConEtiquetasNoSincronizados(
+    function(clientes) {
+      if (clientes.length > 0) {
+        InteraccionConUsuarioServicio.bloquearPantalla();
+        var sendingInterval = setInterval(function() {
+          clientesAEnviar = clientes.splice(0, 5); //Se envian los clientes de 5 en 5
+          var data = {
+            scouting: clientesAEnviar,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            loginId: gLastLogin,
+            deviceId: device.uuid
+          };
+
+          SocketControlador.socketIo.emit("InsertScoutingFromSondaPos", data);
+          if (clientes.length === 0) {
+            clientesAEnviar = null;
+            clearInterval(sendingInterval);
+            _enviandoScouting = false;
+          }
+        }, 3000);
+      } else {
+        _enviandoScouting = false;
+      }
+    },
+    function(resultado) {
+      notify(
+        "No se han podido obtener los clientes no sincronizados debido a: " +
+          resultado.mensaje
+      );
+    }
+  );
+}
+
+function VerificarValidacionesDeClientesSincronizados(callback, errCallBack) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql = "SELECT *  ";
+      sql += " FROM CLIENT ";
+      sql += " WHERE IFNULL(IS_POSTED_VALIDATED,0) IN (0,1)";
+      tx.executeSql(
+        sql,
+        [],
+        function(txReturn, results) {
+          if (results.rows.length < 1) {
+            callback();
+          } else {
+            errCallBack(
+              "No se han validado todos los clientes, espere por favor."
+            );
+          }
+        },
+        function(txReturn, err) {
+          if (err.code !== 0) errCallBack(err.message);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err.message);
+    }
+  );
+}
+
+function VerificarClientesEnServidor(
+  obtenerTodosLosClientes,
+  tipoDeValidacionDeCliente,
+  callback,
+  errCallback
+) {
+  if (gIsOnline == EstaEnLinea.No) {
+    errCallback("No hay conexion hacia el servidor");
+    return;
+  }
+
+  var clienteServicio = new ClienteServicio();
+  clienteServicio.obtenerClientesParaValidacionEnBo(
+    obtenerTodosLosClientes,
+    function(clientes) {
+      if (clientes.length > 0) {
+        if (tipoDeValidacionDeCliente === TipoDeValidacionDeCliente.FinDeRuta) {
+          SocketControlador.socketIo.on(
+            "ValidateScoutingsPOS_Request" + tipoDeValidacionDeCliente,
+            callback
+          );
+        }
         var data = {
-          overdueInvoicePayment: pagosAEnviar,
+          scouting: clientes,
           dbuser: gdbuser,
           dbuserpass: gdbuserpass,
           routeid: gCurrentRoute,
-          loginId: gLastLogin
+          Source: tipoDeValidacionDeCliente
         };
 
-        socket.emit("AddOverdueInvoicePayment", data);
-        if (documentosNoPosteados.length === 0) {
-          pagosAEnviar = null;
-          clearInterval(intervaloDeEnvioDeDocumentosDePago);
-          _enviandoDocumentosDePagoDeFacturasVencidas = false;
-          pagoServicio = null;
+        SocketControlador.socketIo.emit("ValidateScoutingsPOS", data);
+
+        if (tipoDeValidacionDeCliente !== TipoDeValidacionDeCliente.FinDeRuta) {
+          callback();
         }
-      }, 3000);
-    } else {
-      pagoServicio = null;
-      _enviandoDocumentosDePagoDeFacturasVencidas = false;
+      } else {
+        if (tipoDeValidacionDeCliente === TipoDeValidacionDeCliente.FinDeRuta) {
+          var data2 = {
+            option: OpcionRespuesta.Exito,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            Source: tipoDeValidacionDeCliente
+          };
+          callback(data2);
+          data2 = null;
+        } else {
+          callback();
+        }
+      }
+    },
+    function(resultado) {
+      errCallback(resultado.mensaje);
+      return;
     }
-  });
+  );
+}
+//------------------ FINALIZA ENVIO DE CLIENTES SCOUTING -----------------------------------------
+
+//------------------ INICIA ENVIO DE NUMEROS DE TELEFONO ASOCIADOS A FACTURAS -----------------------------------------
+
+function EnviarFacturasConNumeroDeTelefonoAsociado(callback, errCallback) {
+  if (gIsOnline == EstaEnLinea.No) {
+    return;
+  }
+  if (_enviandoNumerosDeTelefonoAsociadosAFactura) {
+    callback();
+    return;
+  }
+  _enviandoNumerosDeTelefonoAsociadosAFactura = true;
+
+  var facturas = [];
+  ObtenerFacturasConNumeroTelefonico(
+    function(facturasN1) {
+      if (facturasN1.length > 0)
+        EnviarFacturaConNumeroDeTelefonoAsociado(facturasN1);
+      _enviandoNumerosDeTelefonoAsociadosAFactura = false;
+    },
+    errCallback,
+    facturas,
+    true
+  );
+}
+
+function ObtenerFacturasConNumeroTelefonico(callback, errCallBack, facturas) {
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      var sql =
+        "SELECT * FROM INVOICE_HEADER WHERE IS_CREDIT_NOTE = 0 AND IS_POSTED IN (1,2) AND STATUS <> 3 AND TELEPHONE_NUMBER IS NOT NULL AND ID_BO IS NOT NULL ORDER BY INVOICE_NUM";
+      tx.executeSql(
+        sql,
+        [],
+        function(tx, results) {
+          for (var i = 0; i < results.rows.length; i++) {
+            var factura = {
+              InvoiceId: results.rows.item(i).INVOICE_NUM,
+              PosTerminal: results.rows.item(i).POS_TERMINAL,
+              AuthId: results.rows.item(i).AUTH_ID,
+              SatSerie: results.rows.item(i).SAT_SERIE,
+              IdBo: results.rows.item(i).ID_BO,
+              TelephoneNumber: results.rows.item(i).TELEPHONE_NUMBER
+            };
+            facturas.push(factura);
+          }
+          callback(facturas);
+        },
+        function(tx, err) {
+          if (err.code !== 0) errCallBack(err);
+        }
+      );
+    },
+    function(err) {
+      errCallBack(err);
+    }
+  );
+}
+
+function EnviarFacturaConNumeroDeTelefonoAsociado(facturas) {
+  var data = {
+    invoices: facturas,
+    dbuser: gdbuser,
+    dbuserpass: gdbuserpass,
+    battery: gBatteryLevel,
+    routeid: gCurrentRoute,
+    uuid: device.uuid,
+    warehouse: gDefaultWhs
+  };
+  SocketControlador.socketIo.emit("UpdateTelephoneNumberToInvoice", data);
+}
+//------------------ FINALIZA ENVIO DE NUMEROS DE TELEFONO ASOCIADOS A FACTURAS -----------------------------------------
+
+//----------------- INICIA ENVIO DE NOTAS DE ENTREGA --------------------------------------------------------------------
+
+function EnviarNotasDeEntrega() {
+  if (_enviandoNotasDeEntrega) return;
+
+  _enviandoNotasDeEntrega = true;
+
+  var notaDeEntregaServicio = new NotaDeEntregaServicio();
+  var notasDeEntregaAEnviar = [];
+
+  notaDeEntregaServicio.obtenerDocumentosParaSincronizacion(
+    function(documentosParaSincronizar) {
+      if (documentosParaSincronizar.length > 0) {
+        var intervaloDeEnvioDeNotasDeEntrega = setInterval(function() {
+          notasDeEntregaAEnviar = documentosParaSincronizar.splice(0, 5); //Se envian los clientes de 5 en 5
+          var data = {
+            notasDeEntrega: notasDeEntregaAEnviar,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            loginId: gLastLogin,
+            deviceId: device.uuid
+          };
+
+          SocketControlador.socketIo.emit(
+            "InsertDeliveryNotesFromSondaSd",
+            data
+          );
+          if (documentosParaSincronizar.length === 0) {
+            notasDeEntregaAEnviar = null;
+            clearInterval(intervaloDeEnvioDeNotasDeEntrega);
+            _enviandoNotasDeEntrega = false;
+          }
+        }, 3000);
+      } else {
+        _enviandoNotasDeEntrega = false;
+      }
+    },
+    function(error) {
+      notify(error.mensaje);
+    }
+  );
+}
+
+//----------------- FINALIZA ENVIO DE NOTAS DE ENTREGA ------------------------------------------------------------------
+
+//----------------- INICIA ENVIO DE ENTREGA CANCELADAS--------------------------------------------------------------------
+
+function EnviarEntregasCanceladas() {
+  if (_enviandoNotasDeEntregaCanceladas) return;
+
+  _enviandoNotasDeEntregaCanceladas = true;
+
+  var entregaServicio = new EntregaServicio();
+  var entregasCanceladasAEnviar = [];
+
+  entregaServicio.obtenerEntregasCanceladasParaSincronizacion(
+    function(entregasCanceladasParaSincronizar) {
+      if (entregasCanceladasParaSincronizar.length > 0) {
+        var intervaloDeEnvioDeEntregasCanceladas = setInterval(function() {
+          entregasCanceladasAEnviar = entregasCanceladasParaSincronizar.splice(
+            0,
+            5
+          ); //Se envian los clientes de 5 en 5
+          var data = {
+            entregasCanceladas: entregasCanceladasAEnviar,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            loginId: gLastLogin
+          };
+
+          SocketControlador.socketIo.emit(
+            "InsertCanceledDeliveryFromSondaSd",
+            data
+          );
+          if (entregasCanceladasParaSincronizar.length === 0) {
+            entregasCanceladasAEnviar = null;
+            clearInterval(intervaloDeEnvioDeEntregasCanceladas);
+            _enviandoNotasDeEntregaCanceladas = false;
+          }
+        }, 3000);
+      } else {
+        _enviandoNotasDeEntregaCanceladas = false;
+      }
+    },
+    function(error) {
+      notify(error.mensaje);
+    }
+  );
+}
+
+//----------------- FINALIZA ENVIO DE ENTREGA CANCELADAS ------------------------------------------------------------------
+
+//----------------- INICIA ENVIO DE DEMANDAS DE DESPACHO POR TAREA --------------------------------------------------------------------
+
+function EnviarDemandasDeDespachoPorTarea() {
+  if (_enviandoDemandasDeDespachoPorTarea) return;
+
+  _enviandoDemandasDeDespachoPorTarea = true;
+
+  var entregaServicio = new EntregaServicio();
+  var demandasDeDespachoPorTareaAEnviar = [];
+
+  entregaServicio.obtenerDemandasDeDespachoPorTareaParaSincronizacion(
+    function(demandasDeDespachoPorTareaParaSincronizar) {
+      if (demandasDeDespachoPorTareaParaSincronizar.length > 0) {
+        var intervaloDeEnvioDeDemandasDeDespachoPorTarea = setInterval(
+          function() {
+            demandasDeDespachoPorTareaAEnviar = demandasDeDespachoPorTareaParaSincronizar.splice(
+              0,
+              5
+            ); //Se envian los clientes de 5 en 5
+            var data = {
+              demandasDespachoPorTarea: demandasDeDespachoPorTareaAEnviar,
+              dbuser: gdbuser,
+              dbuserpass: gdbuserpass,
+              routeid: gCurrentRoute,
+              loginId: gLastLogin
+            };
+
+            SocketControlador.socketIo.emit(
+              "InsertPickingDemandByTaskFromSondaSd",
+              data
+            );
+            if (demandasDeDespachoPorTareaParaSincronizar.length === 0) {
+              demandasDeDespachoPorTareaAEnviar = null;
+              clearInterval(intervaloDeEnvioDeDemandasDeDespachoPorTarea);
+              _enviandoDemandasDeDespachoPorTarea = false;
+            }
+          },
+          3000
+        );
+      } else {
+        _enviandoDemandasDeDespachoPorTarea = false;
+      }
+    },
+    function(error) {
+      notify(error.mensaje);
+    }
+  );
+}
+
+//----------------- FINALIZA ENVIO DE DEMANDAS DE DESPACHO POR TAREA --------------------------------------------------------------------
+
+//----------------- INICIA SINCRONIZAICON DE MANIFIESTOS 3PL --------------------------------------------------------------------
+
+function MarcarManifiestos3PlComoCompletos() {
+  if (_marcandoManifiestos3Pl) return;
+  _marcandoManifiestos3Pl = true;
+  var manifiestoServicio = new ManifiestoServicio();
+  manifiestoServicio.obtenerManifiestos3PlParaSincronizacion(
+    function(manifiestos3PlParaSincronizar) {
+      if (manifiestos3PlParaSincronizar.length > 0) {
+        this.EnviarManifiesto3pl(
+          manifiestos3PlParaSincronizar,
+          0,
+          manifiestos3PlParaSincronizar.length - 1 === 0
+        );
+        _marcandoManifiestos3Pl = false;
+      } else {
+        _marcandoManifiestos3Pl = false;
+      }
+    },
+    function(error) {
+      notify(error.mensaje);
+    }
+  );
+}
+
+function EnviarManifiesto3pl(manifiestos, index, esUltimo) {
+  var manifiestoControlador = new ManifiestoControlador();
+  manifiestoControlador.cambiarEstadoManifiesto3plEnElServidor(
+    manifiestos[index].manifestHeaderId,
+    EstadoDeManifiesto.Completado.toString()
+  );
+  if (esUltimo) return;
+  setTimeout(function() {
+    var actual = index + 1;
+    EnviarManifiesto3pl(manifiestos, actual, manifiestos.length - 1 === actual);
+  }, 5000);
+}
+
+//----------------- INICIA ENVIO DE NOTAS DE ENTREGA ANULADAS --------------------------------------------------------------------
+
+function EnviarNotasDeEntregaAnuladas() {
+  if (_enviandoNotasDeEntregaAnuladas) return;
+
+  _enviandoNotasDeEntregaAnuladas = true;
+
+  var notaDeEntregaServicio = new NotaDeEntregaServicio();
+  var notasDeEntregaAEnviar = [];
+
+  notaDeEntregaServicio.obtenerNotasDeEntregaAnuladasParaSincronizacion(
+    function(documentosParaSincronizar) {
+      if (documentosParaSincronizar.length > 0) {
+        var intervaloDeEnvioDeNotasDeEntrega = setInterval(function() {
+          notasDeEntregaAEnviar = documentosParaSincronizar.splice(0, 5); //Se envian los documentos de 5 en 5
+          var data = {
+            notasDeEntrega: notasDeEntregaAEnviar,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            loginId: gLastLogin
+          };
+
+          SocketControlador.socketIo.emit(
+            "InsertDeliveryNoteCanceledFromSondaSd",
+            data
+          );
+          if (documentosParaSincronizar.length === 0) {
+            notasDeEntregaAEnviar = null;
+            clearInterval(intervaloDeEnvioDeNotasDeEntrega);
+            _enviandoNotasDeEntregaAnuladas = false;
+          }
+        }, 3000);
+      } else {
+        _enviandoNotasDeEntregaAnuladas = false;
+      }
+    },
+    function(error) {
+      notify(error.mensaje);
+    }
+  );
+}
+
+//----------------- FINALIZA ENVIO DE NOTAS DE ENTREGA ANULADAS ------------------------------------------------------------------
+
+//----------------- ENVIO DE DOCUMENTOS DE PAGO DE FACTURAS VENCIDAS -----------------------------
+
+{
+  function EnviarDocumentosDePagoDeFacturasVencidas() {
+    if (_enviandoDocumentosDePagoDeFacturasVencidas) return;
+
+    _enviandoDocumentosDePagoDeFacturasVencidas = true;
+
+    var pagoServicio = new PagoServicio();
+    var pagosAEnviar = [];
+
+    pagoServicio.obtenerDocumentosDePagoNoPosteadosEnElServidor(function(
+      documentosNoPosteados
+    ) {
+      if (documentosNoPosteados.length > 0) {
+        var intervaloDeEnvioDeDocumentosDePago = setInterval(function() {
+          pagosAEnviar = documentosNoPosteados.splice(0, 5); //Se envian los documentos de 5 en 5
+          var data = {
+            overdueInvoicePayment: pagosAEnviar,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            loginId: gLastLogin
+          };
+
+          SocketControlador.socketIo.emit("AddOverdueInvoicePayment", data);
+          if (documentosNoPosteados.length === 0) {
+            pagosAEnviar = null;
+            clearInterval(intervaloDeEnvioDeDocumentosDePago);
+            _enviandoDocumentosDePagoDeFacturasVencidas = false;
+            pagoServicio = null;
+          }
+        }, 3000);
+      } else {
+        pagoServicio = null;
+        _enviandoDocumentosDePagoDeFacturasVencidas = false;
+      }
+    });
+  }
 }
 //-------------------------------------------------------------------------------------------------
+
+//#region SINCRONIZACIÓN DE TAREAS CON SERVIDOR
+//-------------------------------------- SINCRONIZACIÓN DE TAREAS CON SERVIDOR --------------------------------------
+var _enviandoNuevasTareas = false;
+
+/**
+ *
+ * @param {()=>void} callBack
+ * @param {()=>void} errorCallBack
+ */
+function EnviarNuevasTareas(callBack, errorCallBack) {
+  if (_enviandoNuevasTareas) {
+    callBack();
+    return;
+  }
+
+  _enviandoNuevasTareas = true;
+  var nuevasTareas = [];
+  var nuevasTareasAEnviar = [];
+  TareaServicio.ObtenerNuevasTareasNoPosteadas(
+    nuevasTareas => {
+      if (nuevasTareas.length > 0) {
+        var sendingInterval = setInterval(() => {
+          nuevasTareasAEnviar = nuevasTareas.splice(0, 5); //Se envían las tareas de 5 en 5
+          gNetworkState = navigator.connection.type;
+          states[Connection.UNKNOWN] = "Unknown";
+          states[Connection.ETHERNET] = "Ethernet";
+          states[Connection.WIFI] = "WiFi";
+          states[Connection.CELL_2G] = "2G";
+          states[Connection.CELL_3G] = "3G";
+          states[Connection.CELL_4G] = "4G";
+          states[Connection.CELL] = "EDGE";
+          states[Connection.NONE] = "NONE";
+
+          var data = {
+            tasking: nuevasTareasAEnviar,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass,
+            routeid: gCurrentRoute,
+            loginId: gLastLogin,
+            deviceId: device.uuid,
+            networkType: states[gNetworkState]
+          };
+
+          SocketControlador.socketIo.emit("InsertNewTasksSD", data);
+          if (nuevasTareas.length === 0) {
+            nuevasTareasAEnviar = null;
+            clearInterval(sendingInterval);
+            _enviandoNuevasTareas = false;
+          }
+        }, 3000);
+      } else {
+        _enviandoNuevasTareas = false;
+      }
+    },
+    resultado => {
+      notify(
+        "No se han podido obtener tareas no sincronizadas debido a: " +
+          resultado
+      );
+    },
+    nuevasTareas
+  );
+}
+//-------------------------------------------------------------------------------------------------------------------
+//#endregion

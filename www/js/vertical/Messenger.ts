@@ -1,6 +1,4 @@
-﻿/// <reference path="subscription.ts" />
-/// <reference path="../libs/collections.ts" />
-
+﻿
 declare function getType(sender: any): string;
 
 class SubscriberChangeMessage {
@@ -12,7 +10,7 @@ class SubscriptionToken {
     public guid: string;
     private dependentObjects: any[];
 
-    constructor(id: string, public disposeMeCallback: () => void, public deliveryCallBack: (message: any,subscriber:any) => void) {
+    constructor(id: string, public disposeMeCallback: () => void, public deliveryCallBack: (message: any, subscriber: any) => void) {
         this.guid = id;
     }
 
@@ -24,31 +22,31 @@ class SubscriptionToken {
 
 
 interface IMessenger {
-    subscribe<TMessage>(deliveryCallback: (message: TMessage) => void, messageType: string, subscriber:any): SubscriptionToken;
+    subscribe<TMessage>(deliveryCallback: (message: TMessage) => void, messageType: string, subscriber: any): SubscriptionToken;
     unsubscribe<TMessage>(subscriptionId: string, messageType: string): void;
     publish<TMessage>(message: TMessage, messageType: string): void;
 }
 
 class Messenger implements IMessenger {
-    private  subscriptions: collections.Dictionary<string, collections.Dictionary<string, Subscription<any>>>;
+    private subscriptions: collections.Dictionary<string, collections.Dictionary<string, Subscription<any>>>;
 
     constructor() {
         this.subscriptions = new collections.Dictionary<string, collections.Dictionary<string, Subscription<any>>>();
     }
 
-    subscribe<TMessage>(deliveryCallback: (message: TMessage,subscriber:any) => void, messageType: string, subscriber:any): SubscriptionToken {
-        return  this.subscribeInternal(deliveryCallback, messageType,subscriber);
+    subscribe<TMessage>(deliveryCallback: (message: TMessage, subscriber: any) => void, messageType: string, subscriber: any): SubscriptionToken {
+        return this.subscribeInternal(deliveryCallback, messageType, subscriber);
     }
 
-    unsubscribe<TMessage>(subscriptionId: string,messageType:string): void {
-        this.internalUnsubscribe<TMessage>(subscriptionId,messageType);
+    unsubscribe<TMessage>(subscriptionId: string, messageType: string): void {
+        this.internalUnsubscribe<TMessage>(subscriptionId, messageType);
     }
 
     publish<TMessage>(message: TMessage, messageType: string): void {
         this.internalPublish(message, messageType);
     }
 
-    private  internalPublish<TMessage>(message: TMessage, messageType: string): void {
+    private internalPublish<TMessage>(message: TMessage, messageType: string): void {
         if (message == null) {
             throw new Error("Argument null Exception");
         }
@@ -66,16 +64,16 @@ class Messenger implements IMessenger {
             allSucceeded = toNotify[i].invoke(message) && allSucceeded;
         }
 
-        
+
     }
 
-    private subscribeInternal<TMessage>(deliveryCallback: (message: TMessage, subscriber:any) => void,messageType:string, subscriber:any):SubscriptionToken {
+    private subscribeInternal<TMessage>(deliveryCallback: (message: TMessage, subscriber: any) => void, messageType: string, subscriber: any): SubscriptionToken {
         if (deliveryCallback == null) {
             throw new Error("Not Delivery Callback");
         }
-        var subscription = new Subscription<TMessage>(null,deliveryCallback, subscriber);
+        var subscription = new Subscription<TMessage>(null, deliveryCallback, subscriber);
 
-        var messageSubscriptions :collections.Dictionary<string, Subscription<TMessage>>;
+        var messageSubscriptions: collections.Dictionary<string, Subscription<TMessage>>;
         if (!this.subscriptions.containsKey(messageType)) {
             messageSubscriptions = new collections.Dictionary<string, Subscription<TMessage>>();
             this.subscriptions.setValue(messageType, messageSubscriptions);
@@ -86,12 +84,12 @@ class Messenger implements IMessenger {
         messageSubscriptions.setValue(subscription.id, subscription);
         this.publishSubscriberChangeMessage<TMessage>(messageSubscriptions, messageType);
 
-        return new SubscriptionToken(subscription.id, () => this.internalUnsubscribe(subscription.id,messageType), deliveryCallback);
+        return new SubscriptionToken(subscription.id, () => this.internalUnsubscribe(subscription.id, messageType), deliveryCallback);
 
 
     }
 
-    private internalUnsubscribe<TMessage>(subscriptionId:string,messageType:string) {
+    private internalUnsubscribe<TMessage>(subscriptionId: string, messageType: string) {
         var messageSubscriptions: collections.Dictionary<string, Subscription<TMessage>>;
         if (this.subscriptions.containsKey(messageType)) {
             messageSubscriptions = this.subscriptions.getValue(messageType);
@@ -102,7 +100,7 @@ class Messenger implements IMessenger {
         }
     }
 
-    private   publishSubscriberChangeMessage<TMessage>(messageSubscriptions: collections.Dictionary<string, Subscription<TMessage>>, messageType:string) {
+    private publishSubscriberChangeMessage<TMessage>(messageSubscriptions: collections.Dictionary<string, Subscription<TMessage>>, messageType: string) {
         var newCount = messageSubscriptions.size();
         var msg = new SubscriberChangeMessage(this, messageType, newCount);
         this.publish(msg, getType(SubscriberChangeMessage));

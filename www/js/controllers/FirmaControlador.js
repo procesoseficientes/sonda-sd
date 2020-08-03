@@ -1,107 +1,80 @@
-var socketTareaDetalle;
 var FirmaControlador = (function () {
     function FirmaControlador(mensajero) {
         this.mensajero = mensajero;
-        this.tareaServicio = new TareaServcio();
-        this.tokenFirma = mensajero.subscribe(this.firmaEntregada, getType(FirmaMensaje), this);
+        this.firmaCapturada = null;
     }
-    FirmaControlador.prototype.delegadoFirmaControlador = function () {
-        var este = this;
-        $("#UiUserSignaturPage").on("pageshow", function () {
-            este.validarFirmaObligatoria(function () {
-                este.prepararCanvas();
-            });
+    FirmaControlador.prototype.delegarFirmaControlador = function () {
+        var _this_1 = this;
+        $("#UiSignaturePage").on("pageshow", function () {
+            InteraccionConUsuarioServicio.bloquearPantalla();
+            ToastThis("Preparando espacio de firma...");
+            var to = setTimeout(function () {
+                _this_1.prepararEspacioParaFirma();
+                _this_1.mostrarImagenDeFirmaCapturada();
+                clearTimeout(to);
+                InteraccionConUsuarioServicio.desbloquearPantalla();
+            }, 1000);
         });
-        $("#UiCancerlarFirma").bind("touchstart", function () {
-            este.usuarioDeseaVerPantallaAnterior();
+        $("#UiBtnBackFromSignaturePage").on("click", function () {
+            _this_1.usuarioDeseaVolverAPantallaAnterior();
         });
-        $("#UiLimpiarFirmaEnPantallaDeFirma").bind("touchstart", function () {
-            este.pad.clear();
+        $("#UiBtnClearSignaturePage").on("click", function () {
+            _this_1.usuarioDeseaLimpiarEspacioDeFirma();
         });
-        $("#UiGuardarFirma").bind("touchstart", function () {
-            este.usuarioDeseaGuardarFoto(function () {
-                este.usuarioDeseaVerPantallaAnterior();
-            });
+        $("#UiBtnUserAcceptSignature").on("click", function () {
+            _this_1.usuarioDeseaAceptarFirma();
         });
-        document.addEventListener("backbutton", function () {
-            este.usuarioDeseaVerPantallaAnterior();
-        }, true);
     };
-    FirmaControlador.prototype.prepararCanvas = function () {
-        var pantalla = $("#UiUserSignaturPage");
-        var canvas = document.querySelector("canvas[id=UiCanvasDeFirma]");
-        canvas.height = (pantalla.innerHeight() - 20);
-        this.pad = new SignaturePad(canvas, {
-            minWidth: 1,
-            maxWidth: 2,
-            penColor: "rgb(0, 0, 0)"
-        });
-        canvas = null;
-        pantalla = null;
-    };
-    FirmaControlador.prototype.usuarioDeseaVerPantallaAnterior = function () {
-        switch ($.mobile.activePage[0].id) {
-            case "UiUserSignaturPage":
-                switch (this.origen) {
-                    case "SalesOrderSummaryPage":
-                        $.mobile.changePage("#SalesOrderSummaryPage");
-                        break;
-                }
-                break;
+    FirmaControlador.prototype.prepararEspacioParaFirma = function () {
+        if (zkSignature) {
+            zkSignature.capture();
         }
     };
-    FirmaControlador.prototype.usuarioDeseaGuardarFoto = function (callback) {
-        var _this = this;
-        this.validarFirma(function (firma) {
-            _this.firma = firma;
-            _this.publicarFirma();
-            callback();
-        }, function (resultado) {
-            notify(resultado.mensaje);
+    FirmaControlador.prototype.usuarioDeseaVolverAPantallaAnterior = function () {
+        InteraccionConUsuarioServicio.confirmarAccion("¿Está seguro de cancelar el proceso actual?", function () {
+            zkSignature.clear();
+            window.history.back();
         });
     };
-    FirmaControlador.prototype.validarFirma = function (callback, errCallback) {
-        if (this.firmaObligatoria) {
-            if (this.pad.isEmpty()) {
-                errCallback({ codigo: -1, mensaje: "La firma es obligatoria" });
-            }
-            else {
-                callback(this.pad.toDataURL());
-            }
+    FirmaControlador.prototype.usuarioDeseaLimpiarEspacioDeFirma = function () {
+        var _this_1 = this;
+        InteraccionConUsuarioServicio.confirmarAccion("¿Está seguro de limpiar el espacio de firma? Los cambios, si los hay, podrían perderse.", function () {
+            _this_1.firmaCapturada = null;
+            zkSignature.clear();
+            _this_1.mostrarImagenDeFirmaCapturada();
+        });
+    };
+    FirmaControlador.prototype.usuarioDeseaAceptarFirma = function () {
+        InteraccionConUsuarioServicio.bloquearPantalla();
+        try {
+            this.firmaCapturada = zkSignature.save() || this.firmaCapturada;
+            this.publicarFirma(this.firmaCapturada);
+            var to_1 = setTimeout(function () {
+                window.history.back();
+                clearTimeout(to_1);
+                to_1 = null;
+                InteraccionConUsuarioServicio.desbloquearPantalla();
+            }, 500);
+        }
+        catch (error) {
+            InteraccionConUsuarioServicio.desbloquearPantalla();
+            notify(error.message);
+        }
+    };
+    FirmaControlador.prototype.publicarFirma = function (firma) {
+        var mensaje = new FirmaMensaje(this);
+        mensaje.firma = firma;
+        this.mensajero.publish(mensaje, getType(FirmaMensaje));
+    };
+    FirmaControlador.prototype.mostrarImagenDeFirmaCapturada = function () {
+        var imagenFirmaCapturada = $("#UiDeliverySignatureCaptured");
+        if (this.firmaCapturada && this.firmaCapturada.length > 0) {
+            imagenFirmaCapturada.attr("src", this.firmaCapturada);
+            imagenFirmaCapturada.show();
         }
         else {
-            callback(this.pad.toDataURL());
-        }
-    };
-    FirmaControlador.prototype.firmaEntregada = function (mensaje, subcriber) {
-        subcriber.firma = mensaje.firma;
-        subcriber.origen = mensaje.origen;
-    };
-    FirmaControlador.prototype.publicarFirma = function () {
-        var msg = new FirmaMensaje(this);
-        msg.firma = this.firma;
-        msg.origen = this.origen;
-        this.mensajero.publish(msg, getType(FirmaMensaje));
-    };
-    FirmaControlador.prototype.validarFirmaObligatoria = function (callback) {
-        var _this = this;
-        try {
-            this.tareaServicio.obtenerRegla("FirmaObligatoriaEnOrdenDeVenta", function (listaDeReglas) {
-                _this.firmaObligatoria = false;
-                if (listaDeReglas.length >= 1) {
-                    if (listaDeReglas[0].enabled.toUpperCase() === "SI") {
-                        _this.firmaObligatoria = true;
-                    }
-                }
-                callback();
-            }, function (resultado) {
-                notify(resultado.mensaje);
-                _this.firmaObligatoria = false;
-            });
-        }
-        catch (err) {
-            notify("Error al validar si modifica DMG: " + err.message);
-            this.firmaObligatoria = false;
+            imagenFirmaCapturada.attr("src", "");
+            imagenFirmaCapturada.hide();
         }
     };
     return FirmaControlador;

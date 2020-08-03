@@ -21,4 +21,4 @@ var Subscription = (function () {
     };
     return Subscription;
 }());
-//# sourceMappingURL=subscription.js.map
+//# sourceMappingURL=Subscription.js.map

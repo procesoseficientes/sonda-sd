@@ -1,645 +1,295 @@
 var ClienteServicio = (function () {
     function ClienteServicio() {
-        this.tareaServicio = new TareaServcio();
     }
-    ClienteServicio.prototype.obtenerCliente = function (cliente, configuracionDecimales, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT";
-            sql += " C.CLIENT_ID";
-            sql += " ,C.CLIENT_NAME";
-            sql += " ,C.CLIENT_TAX_ID";
-            sql += " ,C.INVOICE_NAME";
-            sql += " ,C.NIT";
-            sql += " ,C.ADDRESS";
-            sql += " ,C.PHONE";
-            sql += " ,C.CLIENT_HH_ID_OLD";
-            sql += " ,C.CONTACT_CUSTOMER";
-            sql += " ,C.GPS";
-            sql += " ,C.REFERENCE";
-            sql += " ,C.DISCOUNT";
-            sql += " ,C.RGA_CODE";
-            sql += " ,C.BONUS_LIST_ID";
-            sql += " ,C.DISCOUNT_LIST_ID";
-            sql += " ,C.PRICE_LIST_ID";
-            sql += " ,C.SALES_BY_MULTIPLE_LIST_ID";
-            sql += " ,C.NEW";
-            sql += " ,C.PREVIUS_BALANCE";
-            sql += " ,C.LAST_PURCHASE";
-            sql += " ,C.LAST_PURCHASE_DATE";
-            sql += " ,C.SPECIAL_PRICE_LIST_ID";
-            sql += " ,C.CODE_CHANNEL";
-            sql += " ,C.OUTSTANDING_BALANCE";
-            sql += " FROM CLIENTS C";
-            sql += " WHERE C.CLIENT_ID = '" + cliente.clientId + "' ";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length >= 1) {
-                    var clienteTemp = results.rows.item(0);
-                    var clienteRespuesta = {
-                        clientId: clienteTemp.CLIENT_ID,
-                        clientName: clienteTemp.CLIENT_NAME,
-                        clientTaxId: clienteTemp.CLIENT_TAX_ID,
-                        invoiceTaxId: clienteTemp.NIT,
-                        invoiceName: clienteTemp.INVOICE_NAME,
-                        address: clienteTemp.ADDRESS,
-                        phone: clienteTemp.PHONE,
-                        clientHhIdOld: clienteTemp.CLIENT_HH_ID_OLD,
-                        contactCustomer: clienteTemp.CONTACT_CUSTOMER,
-                        gps: clienteTemp.GPS,
-                        discountMax: trunc_number(clienteTemp.DISCOUNT, configuracionDecimales.defaultCalculationsDecimals),
-                        discount: trunc_number(0, configuracionDecimales.defaultCalculationsDecimals),
-                        appliedDiscount: trunc_number(0, configuracionDecimales.defaultCalculationsDecimals),
-                        totalAmout: trunc_number(0, configuracionDecimales.defaultCalculationsDecimals),
-                        cuentaCorriente: new CuentaCorriente(),
-                        deliveryDate: new Date(),
-                        skus: "",
-                        rgaCode: clienteTemp.RGA_CODE,
-                        bonusListId: clienteTemp.BONUS_LIST_ID,
-                        discountListId: clienteTemp.DISCOUNT_LIST_ID,
-                        priceListId: clienteTemp.PRICE_LIST_ID,
-                        salesByMultipleListId: clienteTemp.SALES_BY_MULTIPLE_LIST_ID,
-                        isNew: clienteTemp.NEW === "1" || clienteTemp.NEW === 1 ? true : false,
-                        previousBalance: clienteTemp.PREVIUS_BALANCE,
-                        lastPurchase: clienteTemp.LAST_PURCHASE,
-                        bonoPorCombos: new Array(),
-                        spcialPriceListId: clienteTemp.SPECIAL_PRICE_LIST_ID,
-                        channel: clienteTemp.CODE_CHANNEL,
-                        lastPurchaseDate: clienteTemp.LAST_PURCHASE_DATE
-                            ? clienteTemp.LAST_PURCHASE_DATE.split("T")[0]
-                            : null,
-                        outStandingBalance: clienteTemp.OUTSTANDING_BALANCE
-                    };
-                    callback(clienteRespuesta);
-                }
-                else {
-                    callbackError({
-                        codigo: -1,
-                        mensaje: "Error al obtener el cliente: No se puede encontrar el cliente"
-                    });
-                }
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener el Cliente: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerListaDePrecioPorCliente = function (cliente, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT";
-            sql += " P.CODE_PRICE_LIST";
-            sql += " FROM PRICE_LIST_BY_CUSTOMER P";
-            sql += " WHERE P.CODE_CUSTOMER = '" + cliente.clientId + "'";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length >= 1) {
-                    var clienteTemp = results.rows.item(0);
-                    cliente.priceListId = clienteTemp.CODE_PRICE_LIST;
-                    callback(cliente);
-                }
-                else {
-                    cliente.priceListId = localStorage.getItem("gDefaultPriceList");
-                    callback(cliente);
-                }
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "No se pudo obtener la Lista de Precios del Cliente debido al siguiente error: " +
-                    err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerCuentaCorriente = function (cliente, configuracionDecimales, callback, callbackError) {
-        var _this = this;
+    ClienteServicio.prototype.cambiarEstadoAClientesParaReenviar = function (clientes, callback, errorCallback) {
         try {
-            var configuracion_1 = configuracionDecimales;
-            this.obtenerSiTieneFacturasVenciadas(cliente, function (cliente) {
-                _this.obtenerLimiteDeCredito(cliente, configuracion_1, function (cliente) {
-                    _this.obtenerSiTieneDiasDeCreditoVencidos(cliente, function (cliente) {
-                        _this.obtenerSaldoActual(cliente, configuracion_1, function (cliente) {
-                            _this.obtenerSaldoDeFacturas(cliente, configuracion_1, function (cliente) {
-                                _this.obtenerSaldoDeOrdenesDeVenta(cliente, configuracion_1, function (cliente) {
-                                    callback(cliente);
-                                }, function (reultado) {
-                                    callbackError(reultado);
-                                });
-                            }, function (reultado) {
-                                callbackError(reultado);
-                            });
-                        }, function (reultado) {
-                            callbackError(reultado);
-                        });
-                    }, function (reultado) {
-                        callbackError(reultado);
-                    });
-                }, function (reultado) {
-                    callbackError(reultado);
-                });
-            }, function (reultado) {
-                callbackError(reultado);
-            });
-        }
-        catch (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener el cuenta corriente: " + err.message
-            });
-        }
-    };
-    ClienteServicio.prototype.obtenerSiTieneFacturasVenciadas = function (cliente, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT ";
-            sql += " I.DOC_DUE_DATE";
-            sql += " FROM INVOICE_HEADER I";
-            sql += " WHERE I.CLIENT_ID = '" + cliente.clientId + "'";
-            sql += " AND I.IS_POSTED = 3";
-            sql += " AND I.DOC_DUE_DATE <= DATE()";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length > 0) {
-                    cliente.cuentaCorriente.facturasVencidas = true;
-                }
-                else {
-                    cliente.cuentaCorriente.facturasVencidas = false;
-                }
-                callback(cliente);
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener facturas vencidas: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerLimiteDeCredito = function (cliente, configuracionDecimales, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT ";
-            sql += " C.CREDIT_LIMIT";
-            sql += " ,C.EXTRADAYS";
-            sql += " FROM CLIENTS C";
-            sql += " WHERE C.CLIENT_ID = '" + cliente.clientId + "'";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length >= 1) {
-                    var clienteTemp = results.rows.item(0);
-                    cliente.cuentaCorriente.limiteDeCredito = trunc_number(clienteTemp.CREDIT_LIMIT, configuracionDecimales.defaultCalculationsDecimals);
-                    cliente.cuentaCorriente.diasCredito = clienteTemp.EXTRADAYS;
-                }
-                else {
-                    cliente.cuentaCorriente.limiteDeCredito = trunc_number(0, configuracionDecimales.defaultCalculationsDecimals);
-                    cliente.cuentaCorriente.diasCredito = 0;
-                }
-                callback(cliente);
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener limite de credito y dias credito: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerSiTieneDiasDeCreditoVencidos = function (cliente, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT ";
-            sql += " I.POSTED_DATETIME";
-            sql += " FROM INVOICE_HEADER I";
-            sql += " WHERE I.CLIENT_ID = '" + cliente.clientId + "'";
-            sql += " AND I.IS_POSTED = 3";
-            sql +=
-                " AND date(I.POSTED_DATETIME, '+" +
-                    cliente.cuentaCorriente.diasCredito +
-                    " day') <= DATE()";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length > 0) {
-                    cliente.cuentaCorriente.diasCreditoVencidos = true;
-                }
-                else {
-                    cliente.cuentaCorriente.diasCreditoVencidos = false;
-                }
-                callback(cliente);
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener dias de credito vencidos: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerSaldoActual = function (cliente, configuracionDecimales, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT ";
-            sql += " IFNULL(SUM(I.TOTAL_AMOUNT),0) TOTAL_AMOUNT";
-            sql += " FROM INVOICE_HEADER I";
-            sql += " WHERE I.CLIENT_ID = '" + cliente.clientId + "'";
-            sql += " AND IS_POSTED = 3";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length > 0) {
-                    var clienteTemp = results.rows.item(0);
-                    cliente.cuentaCorriente.saldoActual += trunc_number(clienteTemp.TOTAL_AMOUNT, configuracionDecimales.defaultCalculationsDecimals);
-                }
-                else {
-                    cliente.cuentaCorriente.saldoActual += trunc_number(0, configuracionDecimales.defaultCalculationsDecimals);
-                }
-                callback(cliente);
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener facturas vencidas: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerSaldoDeFacturas = function (cliente, configuracionDecimales, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT ";
-            sql += " IFNULL(SUM(I.TOTAL_AMOUNT),0) TOTAL_AMOUNT";
-            sql += " FROM INVOICE_HEADER I";
-            sql += " WHERE I.CLIENT_ID = '" + cliente.clientId + "'";
-            sql += " AND IS_POSTED != 3";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length > 0) {
-                    var clienteTemp = results.rows.item(0);
-                    cliente.cuentaCorriente.saldoActual += trunc_number(clienteTemp.TOTAL_AMOUNT, configuracionDecimales.defaultCalculationsDecimals);
-                }
-                else {
-                    cliente.cuentaCorriente.saldoActual += trunc_number(0, configuracionDecimales.defaultCalculationsDecimals);
-                }
-                callback(cliente);
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener facturas vencidas: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerSaldoDeOrdenesDeVenta = function (cliente, configuracionDecimales, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = "SELECT ";
-            sql += " IFNULL(SUM(H.TOTAL_AMOUNT),0) TOTAL_AMOUNT";
-            sql += " FROM SALES_ORDER_HEADER H";
-            sql += " WHERE H.CLIENT_ID = '" + cliente.clientId + "'";
-            sql += " AND IS_DRAFT = 0";
-            sql += " AND IS_VOID = 0";
-            sql += " AND SALES_ORDER_TYPE = 'CREDIT'";
-            tx.executeSql(sql, [], function (tx, results) {
-                if (results.rows.length > 0) {
-                    var clienteTemp = results.rows.item(0);
-                    cliente.cuentaCorriente.saldoActualDeOrdenesDeVenta += trunc_number(clienteTemp.TOTAL_AMOUNT, configuracionDecimales.defaultCalculationsDecimals);
-                }
-                else {
-                    cliente.cuentaCorriente.saldoActualDeOrdenesDeVenta += trunc_number(0, configuracionDecimales.defaultCalculationsDecimals);
-                }
-                cliente.cuentaCorriente.saldoActual +=
-                    cliente.cuentaCorriente.saldoActualDeOrdenesDeVenta;
-                callback(cliente);
-            });
-        }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener facturas vencidas: " + err.message
-            });
-        });
-    };
-    ClienteServicio.prototype.validarDatosGeneralesCuentaCorriente = function (cliente, callback, callbackError) {
-        var _this = this;
-        try {
-            this.tareaServicio.obtenerRegla("NoValidarAntiguedadDeSaldos", function (reglas) {
-                if (reglas.length > 0) {
-                    if (reglas[0].enabled === "Si") {
-                        callback(cliente);
-                    }
-                    else {
-                        _this.validarAntiguedadDeSaldos(cliente, function (clienteN1) {
-                            callback(clienteN1);
-                        }, function (resultado) {
-                            callbackError(resultado);
-                        });
-                    }
-                }
-                else {
-                    _this.validarAntiguedadDeSaldos(cliente, function (clienteN1) {
-                        callback(clienteN1);
-                    }, function (resultado) {
-                        callbackError(resultado);
-                    });
-                }
-            }, function (reultado) {
-                callbackError(reultado);
-            });
-        }
-        catch (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al validar cuenta corriente: " + err.message
-            });
-        }
-    };
-    ClienteServicio.prototype.validarAntiguedadDeSaldos = function (cliente, callback, callbackError) {
-        try {
-            if (cliente.cuentaCorriente.facturasVencidas) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "Tiene facturas vencidas"
-                });
-            }
-            else if (cliente.cuentaCorriente.limiteDeCredito <= 0) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "El cliente no tiene configurado el límite de crédito"
-                });
-            }
-            else if (cliente.cuentaCorriente.diasCredito <= 0) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "El cliente no tiene configurado la cantidad de días de crédito"
-                });
-            }
-            else if (cliente.cuentaCorriente.diasCreditoVencidos) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "Tiene una factura emitida que ya vencieron los días de crédito"
-                });
-            }
-            else {
-                callback(cliente);
-            }
-        }
-        catch (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al validar cuenta corriente: " + err.message
-            });
-        }
-    };
-    ClienteServicio.prototype.validarCuentaCorriente = function (cliente, listasku, ordenDeVentaTipo, configuracionDecimales, callback, callbackError) {
-        try {
-            var totalSku = 0;
-            for (var i = 0; i < listasku.length; i++) {
-                var sku = listasku[i];
-                totalSku += trunc_number(sku.qty * sku.cost, configuracionDecimales.defaultCalculationsDecimals);
-            }
-            if (ordenDeVentaTipo === OrdenDeVentaTipo.Contado) {
-                callback(cliente);
-            }
-            else {
-                if (trunc_number(cliente.cuentaCorriente.saldoActual + cliente.totalAmout + totalSku, configuracionDecimales.defaultCalculationsDecimals) <=
-                    trunc_number(cliente.cuentaCorriente.limiteDeCredito, configuracionDecimales.defaultCalculationsDecimals)) {
-                    my_dialog("", "", "closed");
-                    callback(cliente);
-                }
-                else {
-                    my_dialog("", "", "close");
-                    callbackError({
-                        codigo: -1,
-                        mensaje: "El crédito es insuficiente"
-                    });
-                }
-            }
-        }
-        catch (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al validar cuenta corriente: " + err.message
-            });
-        }
-    };
-    ClienteServicio.prototype.enviarSolicitudParaObtenerCuentaCorriente = function (socketIo, cliente, opcionValidarSaldoCliente, ordenDeVentaTipo, callback, callbackError) {
-        try {
-            var data = {
-                Total: cliente.totalAmout +
-                    cliente.cuentaCorriente.saldoActualDeOrdenesDeVenta,
-                CodeCustomer: cliente.clientId,
-                sku: "",
-                cantidad: 0,
-                source: opcionValidarSaldoCliente,
-                salesOrderType: ordenDeVentaTipo,
-                dbuser: gdbuser,
-                dbuserpass: gdbuserpass,
-                routeid: gCurrentRoute
-            };
-            socketIo.emit("GetCurrentAccountByCustomer", data);
-            callback(cliente);
-        }
-        catch (err) {
-            var operacion = new Operacion();
-            operacion.resultado = ResultadoOperacionTipo.Error;
-            operacion.codigo = err.code;
-            operacion.mensaje = err.message;
-            callbackError(operacion);
-        }
-    };
-    ClienteServicio.prototype.obtenerTodosLosClientesAbordo = function (criterio, callback, callbackError) {
-        try {
-            var clientes = [];
+            var sql_1 = "";
             SONDA_DB_Session.transaction(function (tx) {
-                var sql = "SELECT";
-                sql += " C.CLIENT_ID";
-                sql += " ,C.CLIENT_NAME";
-                sql += " ,C.CLIENT_TAX_ID";
-                sql += " ,C.ADDRESS";
-                sql += " ,C.PHONE";
-                sql += " ,C.CLIENT_HH_ID_OLD";
-                sql += " ,C.CONTACT_CUSTOMER";
-                sql += " ,C.GPS";
-                sql += " ,C.REFERENCE";
-                sql += " ,C.DISCOUNT";
-                sql += " ,C.RGA_CODE";
-                sql += " ,C.PRICE_LIST_ID";
-                sql += " FROM CLIENTS C";
-                sql +=
-                    " WHERE C.CLIENT_ID NOT IN(SELECT RELATED_CLIENT_CODE FROM PRESALES_ROUTE) AND";
-                sql +=
-                    " (C.CLIENT_ID LIKE '" +
-                        "%" +
-                        criterio +
-                        "%" +
-                        "' OR C.CLIENT_NAME LIKE '" +
-                        "%" +
-                        criterio +
-                        "%" +
-                        "' OR C.ADDRESS LIKE '" +
-                        "%" +
-                        criterio +
-                        "%" +
-                        "' OR C.RGA_CODE = '" +
-                        criterio +
-                        "' )";
-                tx.executeSql(sql, [], function (tx, results) {
-                    for (var i = 0; i < results.rows.length; i++) {
-                        var clienteTemp = results.rows.item(i);
-                        var clienteRespuesta = {
-                            clientId: clienteTemp.CLIENT_ID,
-                            clientName: clienteTemp.CLIENT_NAME,
-                            clientTaxId: clienteTemp.CLIENT_TAX_ID,
-                            address: clienteTemp.ADDRESS,
-                            phone: clienteTemp.PHONE,
-                            clientHhIdOld: clienteTemp.CLIENT_HH_ID_OLD,
-                            contactCustomer: clienteTemp.CONTACT_CUSTOMER,
-                            gps: clienteTemp.GPS,
-                            discountMax: clienteTemp.DISCOUNT,
-                            discount: 0,
-                            appliedDiscount: 0,
-                            totalAmout: 0,
-                            cuentaCorriente: new CuentaCorriente(),
-                            deliveryDate: new Date(),
-                            skus: "",
-                            rgaCode: clienteTemp.RGA_CODE,
-                            priceListId: clienteTemp.PRICE_LIST_ID
-                        };
-                        clientes.push(clienteRespuesta);
-                    }
-                    callback(clientes);
+                clientes.map(function (cliente) {
+                    sql_1 =
+                        "UPDATE CLIENT\n                            SET IS_POSTED = " + (cliente.EXISTS === EstadoEnvioDoc.NoEnviado ? EstadoEnvioDoc.NoEnviado : EstadoEnvioDoc.EnviadoConAcuseDeRecibido) + ",\n                            IS_POSTED_VALIDATED = " + (cliente.EXISTS === EstadoEnvioDoc.NoEnviado ? EstadoEnvioDoc.NoEnviado : EstadoEnvioDoc.EnviadoConAcuseDeRecibido) + "\n                            WHERE\n                             CLIENT_ID = '" + cliente.CODE_CUSTOMER + "'\n                             AND DOC_SERIE = '" + cliente.DOC_SERIE + "'\n                             AND DOC_NUM = " + cliente.DOC_NUM;
+                    tx.executeSql(sql_1);
                 });
             }, function (err) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "Error al obtener el Cliente: " + err.message
-                });
+                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
+                return;
+            }, function () {
+                callback();
             });
         }
-        catch (err) {
-            var operacion = new Operacion();
-            operacion.resultado = ResultadoOperacionTipo.Error;
-            operacion.codigo = err.code;
-            operacion.mensaje = err.message;
-            callbackError(operacion);
+        catch (e) {
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
+            return;
         }
     };
-    ClienteServicio.prototype.obtenerEtiquetas = function (cliente, callback, callbackError) {
+    ClienteServicio.prototype.obtenerClientesParaValidacionEnBo = function (obtenerTodosLosClientes, callback, errorCallback) {
+        try {
+            var sql_2 = "";
+            var clientsToVerify_1 = new Array();
+            SONDA_DB_Session.transaction(function (tx) {
+                sql_2 =
+                    "SELECT CLIENT_ID, DOC_SERIE, DOC_NUM, POSTED_DATETIME, TAGS_QTY, SYNC_ID \n                         FROM CLIENT\n                         WHERE IS_POSTED = " + EstadoEnvioDoc.EnviadoConAcuseDeRecibido + "\n                         " + (!obtenerTodosLosClientes ? " AND IFNULL(IS_POSTED_VALIDATED, 0) = 0" : "") + " ";
+                tx.executeSql(sql_2, [], function (txReturn, results) {
+                    if (results.rows.length > 0) {
+                        for (var i = 0; i < results.rows.length; i++) {
+                            var clientTemp = results.rows.item(i);
+                            var clientResult = {
+                                clientId: clientTemp.CLIENT_ID,
+                                docSerie: clientTemp.DOC_SERIE,
+                                docNum: clientTemp.DOC_NUM,
+                                postedDatetime: clientTemp.POSTED_DATETIME,
+                                tagsQty: clientTemp.TAGS_QTY,
+                                syncId: clientTemp.SYNC_ID
+                            };
+                            clientsToVerify_1.push(clientResult);
+                        }
+                        callback(clientsToVerify_1);
+                    }
+                    else {
+                        callback(clientsToVerify_1);
+                    }
+                }, function (txReturn, error) {
+                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message });
+                    return;
+                });
+            }, function (err) {
+                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
+                return;
+            });
+        }
+        catch (e) {
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
+            return;
+        }
+    };
+    ClienteServicio.prototype.guardarScouting = function (scouting, callbak, errCallback) {
+        var _this_1 = this;
         SONDA_DB_Session.transaction(function (tx) {
-            var sql = " SELECT TC.*";
-            sql += " ,T.TAG_VALUE_TEXT";
-            sql += " ,T.TAG_PRIORITY";
-            sql += " ,T.TAG_COMMENTS";
-            sql += " FROM TAGS_X_CUSTOMER TC";
-            sql += " INNER JOIN TAGS T ON (T.TAG_COLOR = TC.TAG_COLOR)";
-            sql += " WHERE CUSTOMER = '" + cliente.clientId + "'";
-            tx.executeSql(sql, [], function (tx, results) {
-                var listaEtiquetas = [];
-                for (var i = 0; i < results.rows.length; i++) {
-                    var etiquetaSql = results.rows.item(i);
-                    var etiqueta = {
-                        tagColor: etiquetaSql.TAG_COLOR,
-                        tagValueText: etiquetaSql.TAG_VALUE_TEXT,
-                        tagPriority: etiquetaSql.TAG_PRIORITY,
-                        tagComments: etiquetaSql.TAG_COMMENTS
-                    };
-                    listaEtiquetas.push(etiqueta);
-                }
-                cliente.etiquetas = listaEtiquetas;
-                callback(cliente);
+            var formatoDeInsercionDeClienteNuevo = _this_1.obtenerFormatoDeInsercionDeClienteNuevo(scouting);
+            tx.executeSql(formatoDeInsercionDeClienteNuevo);
+            scouting.tags.map(function (etiqueta) {
+                var formatoDeInsercionDeEtiquetaDeCliente = _this_1
+                    .obtenerFormatoDeInsercionDeEtiquetaDeClienteNuevo(scouting, etiqueta);
+                tx.executeSql(formatoDeInsercionDeEtiquetaDeCliente);
             });
         }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener etiquetas del Cliente: " + err.message
+            errCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
+        }, function () {
+            PagoConsignacionesServicio
+                .ActualizarSecuenciaDeDocumentos(SecuenciaDeDocumentoTipo.Scouting, scouting.docNum, function () {
+                callbak(scouting);
+            }, function (error) {
+                errCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error });
             });
         });
     };
-    ClienteServicio.prototype.obtnerFormatoSqlDeInsertarClienteModificado = function (cliente, sequence) {
-        var sql = "INSERT INTO CUSTOMER_CHANGE (CUSTOMER_CHANGE_ID,\n                CODE_CUSTOMER,\n                PHONE_CUSTOMER,\n                ADRESS_CUSTOMER,\n                CONTACT_CUSTOMER,\n                GPS,\n                POSTED_DATETIME,\n                POSTED_BY,\n                CODE_ROUTE,\n                IS_POSTED,\n                TAX_ID,\n                INVOICE_NAME,\n                CUSTOMER_NAME,\n                NEW_CUSTOMER_NAME,\n                DEVICE_NETWORK_TYPE,\n                IS_POSTED_OFFLINE)\n                VALUES('" + sequence + "'\n                ,'" + cliente.clientId + "'\n                ,'" + cliente.phone + "'\n                ,'" + cliente.address + "'\n                ,'" + cliente.contactCustomer + "'\n                ,'" + cliente.gps + "'\n                ,'" + getDateTime() + "'\n                ,'" + gLastLogin + "'\n                ,'" + gCurrentRoute + "'\n                ,0\n                ,'" + cliente.invoiceTaxId + "'\n                ,'" + cliente.invoiceName + "'\n                ,'" + cliente.clientName + "'\n                ,'" + cliente.clientNewName + "'\n                ,'" + tipoDeRedALaQueEstaConectadoElDispositivo + "'\n                ," + (gIsOnline === SiNo.Si ? 0 : 1) + ");";
-        return sql;
+    ClienteServicio.prototype.obtenerClientesConEtiquetasNoSincronizados = function (callback, errCallback) {
+        var _this_1 = this;
+        var sql = "";
+        var clientsReturn = new Array();
+        SONDA_DB_Session.transaction(function (tx) {
+            sql = "SELECT CLIENT_ID, \n                CLIENT_NAME,\n                CLIENT_TAX_ID,\n                ADDRESS,\n                PHONE,\n                CLIENT_HH_ID_OLD,\n                CONTACT_CUSTOMER,\n                CONTACT_CUSTOMER_PHONE,\n                PHOTO,\n                PHOTO_2,\n                PHOTO_3,\n                STATUS,\n                GPS,\n                CREATED_FROM,\n                INVOICE_NAME,\n                INVOICE_ADDRESS,\n                DOC_SERIE,\n                DOC_NUM,\n                POSTED_DATETIME,\n                TAGS_QTY,\n                SYNC_ID\n                FROM CLIENT \n                WHERE IS_POSTED = 0";
+            tx.executeSql(sql, [], function (txResult, results) {
+                if (results.rows.length > 0) {
+                    for (var i = 0; i < results.rows.length; i++) {
+                        var clientTemp = results.rows.item(i);
+                        var clientResult = {
+                            clientId: clientTemp.CLIENT_ID,
+                            clientName: clientTemp.CLIENT_NAME,
+                            clientTaxId: clientTemp.CLIENT_TAX_ID,
+                            address: clientTemp.ADDRESS,
+                            phone: clientTemp.PHONE,
+                            clientHhIdOld: clientTemp.CLIENT_HH_ID_OLD,
+                            contactCustomer: clientTemp.CONTACT_CUSTOMER,
+                            contactPhone: clientTemp.CONTACT_CUSTOMER_PHONE,
+                            photo1: clientTemp.PHOTO,
+                            photo2: clientTemp.PHOTO_2,
+                            photo3: clientTemp.PHOTO_3,
+                            status: clientTemp.STATUS,
+                            isNew: 1,
+                            gps: clientTemp.GPS,
+                            latitude: clientTemp.GPS.split(",")[0],
+                            longitude: clientTemp.GPS.split(",")[1],
+                            tags: new Array(),
+                            createdFrom: clientTemp.CREATED_FROM,
+                            billingName: clientTemp.INVOICE_NAME,
+                            billingAddress: clientTemp.INVOICE_ADDRESS,
+                            docSerie: clientTemp.DOC_SERIE,
+                            docNum: clientTemp.DOC_NUM,
+                            postedDatetime: clientTemp.POSTED_DATETIME,
+                            tagsQty: clientTemp.TAGS_QTY,
+                            syncId: clientTemp.SYNC_ID
+                        };
+                        _this_1.obtenerEtiquetasPorCliente(txResult, clientResult, i, function (clientComplete, index) {
+                            clientsReturn.push(clientComplete);
+                            if (index === results.rows.length - 1) {
+                                callback(clientsReturn);
+                            }
+                        }, function (resultado) {
+                            errCallback(resultado);
+                        });
+                    }
+                }
+                else {
+                    callback(clientsReturn);
+                }
+            }, function (txResult, err) {
+                errCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
+            });
+        }, function (err) {
+            errCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
+        });
     };
-    ClienteServicio.prototype.obtnerFormatoSqlDeInsertarEtiquetaDeClienteModificado = function (cliente, etiqueta, sequence) {
-        var sql = "INSERT INTO TAG_X_CUSTOMER_CHANGE (\n                CUSTOMER_CHANGE_ID,\n                TAG_COLOR,\n                CODE_CUSTOMER,\n                DEVICE_NETWORK_TYPE,\n                IS_POSTED_OFFLINE)\n                VALUES(\n                '" + sequence + "'\n                ,'" + etiqueta.tagColor + "'\n                ,'" + cliente.clientId + "'\n                ,'" + tipoDeRedALaQueEstaConectadoElDispositivo + "'\n                ," + (gIsOnline === SiNo.Si ? 0 : 1) + ");";
-        return sql;
+    ClienteServicio.prototype.obtenerEtiquetasPorCliente = function (txResult, cliente, indice, callback, errCallback) {
+        var sql = "SELECT T.TAG_COLOR, \n                    T.TAG_VALUE_TEXT,\n                    T.TAG_PRIORITY,\n                    T.TAG_COMMENTS,\n                    TC.DOC_SERIE_CLIENT, \n                    TC.DOC_NUM_CLIENT\n                    FROM TAG AS T\n                    INNER JOIN TAG_X_CUSTOMER AS TC\n                    ON(TC.TAG_COLOR = T.TAG_COLOR)\n                    WHERE TC.DOC_SERIE_CLIENT = '" + cliente.docSerie + "' AND TC.DOC_NUM_CLIENT = " + cliente.docNum;
+        txResult.executeSql(sql, [], function (txTagsResult, resultsTags) {
+            for (var j = 0; j < resultsTags.rows.length; j++) {
+                var tagTemp = resultsTags.rows.item(j);
+                var tagResult = {
+                    tagColor: tagTemp.TAG_COLOR,
+                    tagValueText: tagTemp.TAG_VALUE_TEXT,
+                    tagPriority: tagTemp.TAG_PRIORITY,
+                    tagComments: tagTemp.TAG_COMMENTS,
+                    docSerieClient: tagTemp.DOC_SERIE_CLIENT,
+                    docNumClient: tagTemp.DOC_NUM_CLIENT
+                };
+                cliente.tags.push(tagResult);
+            }
+            callback(cliente, indice);
+        }, function (txTagsResult, errorTags) {
+            errCallback({
+                codigo: -1,
+                resultado: ResultadoOperacionTipo.Error,
+                mensaje: errorTags.message
+            });
+        });
     };
-    ClienteServicio.prototype.guardarCambiosDeCliente = function (cliente, callback, callbackError) {
-        this.obtenerSecuenciaDeCambios(this, function (sequence, controlador) {
-            SONDA_DB_Session.transaction(function (tx) {
-                var sql = controlador.obtnerFormatoSqlDeInsertarClienteModificado(cliente, sequence);
-                tx.executeSql(sql);
-                for (var i = 0; i < cliente.etiquetas.length; i++) {
-                    sql = controlador.obtnerFormatoSqlDeInsertarEtiquetaDeClienteModificado(cliente, cliente.etiquetas[i], sequence);
+    ClienteServicio.prototype.marcarClienteComoSincronizado = function (clientes, callback, errCallback) {
+        var sql = "";
+        SONDA_DB_Session.transaction(function (tx) {
+            clientes.map(function (cliente) {
+                if (cliente.IS_SUCCESSFUL) {
+                    sql = "UPDATE CLIENT \n                        SET IS_POSTED = 2,\n                        CLIENT_ID = '" + cliente.CLIENT_ID_BO + "'  \n                        WHERE CLIENT_HH_ID_OLD = '" + cliente.CLIENT_ID_HH + "'\n                        AND DOC_SERIE = '" + cliente.DOC_SERIE + "'\n                        AND DOC_NUM = " + cliente.DOC_NUM;
+                    tx.executeSql(sql);
+                    sql = "UPDATE TAG_X_CUSTOMER \n                        SET CLIENT_ID = '" + cliente.CLIENT_ID_BO + "' \n                        WHERE CLIENT_ID = '" + cliente.CLIENT_ID_HH + "'\n                        AND DOC_SERIE_CLIENT = '" + cliente.DOC_SERIE + "'\n                        AND DOC_NUM_CLIENT = " + cliente.DOC_NUM;
                     tx.executeSql(sql);
                 }
-                callback(cliente);
-            }, function (err) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "Error al insertar el los cambios del cliente: " + err.message
-                });
-            });
-        });
-    };
-    ClienteServicio.prototype.obtenerSecuenciaDeCambios = function (controlador, callback) {
-        try {
-            GetNexSequence("CUSTOMER_CHANGE", function (sequence) {
-                callback(sequence, controlador);
-            }, function (err) {
-                notify("Error al obtener sequencia de cambios: " + err.message);
-            });
-        }
-        catch (err) {
-            notify("Error al obtener secuencia de cambios: " + err.message);
-        }
-    };
-    ClienteServicio.prototype.obtenerEtiquetasNoAsociadasAlCliente = function (cliente, callback, callbackError) {
-        SONDA_DB_Session.transaction(function (tx) {
-            var sql = " SELECT T.TAG_COLOR";
-            sql += " ,T.TAG_VALUE_TEXT";
-            sql += " ,T.TAG_PRIORITY";
-            sql += " ,T.TAG_COMMENTS";
-            sql += " FROM TAGS T";
-            sql +=
-                " LEFT JOIN TAGS_X_CUSTOMER TC ON (T.TAG_COLOR = TC.TAG_COLOR) AND CUSTOMER = '" +
-                    cliente.clientId +
-                    "'";
-            sql += " WHERE CUSTOMER IS NULL";
-            tx.executeSql(sql, [], function (tx, results) {
-                var listaEtiquetas = [];
-                for (var i = 0; i < results.rows.length; i++) {
-                    var etiquetaSql = results.rows.item(i);
-                    var etiqueta = {
-                        tagColor: etiquetaSql.TAG_COLOR,
-                        tagValueText: etiquetaSql.TAG_VALUE_TEXT,
-                        tagPriority: etiquetaSql.TAG_PRIORITY,
-                        tagComments: etiquetaSql.TAG_COMMENTS
-                    };
-                    listaEtiquetas.push(etiqueta);
+                else {
+                    ToastThis("Cliente " + cliente.CLIENT_ID_HH + " " + cliente.MESSAGE);
                 }
-                callback(listaEtiquetas);
             });
+            sql = null;
         }, function (err) {
-            callbackError({
-                codigo: -1,
-                mensaje: "Error al obtener etiquetas no asociadas al cliente: " + err.message
-            });
+            errCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
+        }, function () {
+            callback();
         });
     };
-    ClienteServicio.prototype.obtenerClienteBo = function (cliente, callback, callbackError) {
+    ClienteServicio.prototype.obtenerFormatoDeInsercionDeClienteNuevo = function (cliente) {
+        var formatoDeInsercionDeCliente = "";
+        formatoDeInsercionDeCliente = "INSERT INTO CLIENT(";
+        formatoDeInsercionDeCliente += "CLIENT_ID, ";
+        formatoDeInsercionDeCliente += "CLIENT_NAME,";
+        formatoDeInsercionDeCliente += "CLIENT_TAX_ID,";
+        formatoDeInsercionDeCliente += "ADDRESS,";
+        formatoDeInsercionDeCliente += "CLIENT_HH_ID_OLD,";
+        formatoDeInsercionDeCliente += "CONTACT_CUSTOMER,";
+        formatoDeInsercionDeCliente += "CONTACT_CUSTOMER_PHONE,";
+        formatoDeInsercionDeCliente += "PHOTO,";
+        formatoDeInsercionDeCliente += "PHOTO_2,";
+        formatoDeInsercionDeCliente += "PHOTO_3,";
+        formatoDeInsercionDeCliente += "STATUS,";
+        formatoDeInsercionDeCliente += "NEW,";
+        formatoDeInsercionDeCliente += "GPS,";
+        formatoDeInsercionDeCliente += "CREATED_FROM,";
+        formatoDeInsercionDeCliente += "INVOICE_NAME,";
+        formatoDeInsercionDeCliente += "INVOICE_ADDRESS,";
+        formatoDeInsercionDeCliente += "IS_POSTED,";
+        formatoDeInsercionDeCliente += "DOC_SERIE,";
+        formatoDeInsercionDeCliente += "DOC_NUM,";
+        formatoDeInsercionDeCliente += "POSTED_DATETIME,";
+        formatoDeInsercionDeCliente += "TAGS_QTY,";
+        formatoDeInsercionDeCliente += "IS_POSTED_VALIDATED,";
+        formatoDeInsercionDeCliente += "SYNC_ID)";
+        formatoDeInsercionDeCliente += "VALUES(";
+        formatoDeInsercionDeCliente += "'" + cliente.clientId + "' ";
+        formatoDeInsercionDeCliente += ", '" + cliente.clientName + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.clientTaxId + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.address + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.clientHhIdOld + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.contactCustomer + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.contactPhone + "'";
+        if (cliente.photo1 === null || cliente.photo1 === undefined || cliente.photo1 === "") {
+            formatoDeInsercionDeCliente += "," + null;
+        }
+        else {
+            formatoDeInsercionDeCliente += ", '" + cliente.photo1 + "'";
+        }
+        if (cliente.photo2 === null || cliente.photo2 === undefined || cliente.photo2 === "") {
+            formatoDeInsercionDeCliente += "," + null;
+        }
+        else {
+            formatoDeInsercionDeCliente += ", '" + cliente.photo2 + "'";
+        }
+        if (cliente.photo3 === null || cliente.photo3 === undefined || cliente.photo3 === "") {
+            formatoDeInsercionDeCliente += "," + null;
+        }
+        else {
+            formatoDeInsercionDeCliente += ", '" + cliente.photo3 + "'";
+        }
+        formatoDeInsercionDeCliente += ", '" + cliente.status + "'";
+        formatoDeInsercionDeCliente += ", " + cliente.isNew;
+        formatoDeInsercionDeCliente += ", '" + cliente.gps + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.createdFrom + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.billingName + "'";
+        formatoDeInsercionDeCliente += ", '" + cliente.billingAddress + "'";
+        formatoDeInsercionDeCliente += ", 0";
+        formatoDeInsercionDeCliente += ", '" + cliente.docSerie + "'";
+        formatoDeInsercionDeCliente += ", " + cliente.docNum;
+        formatoDeInsercionDeCliente += ", '" + getDateTime() + "'";
+        formatoDeInsercionDeCliente += ", " + cliente.tags.length;
+        formatoDeInsercionDeCliente += ", 0";
+        formatoDeInsercionDeCliente += ", '" + (gCurrentRoute + "|" + gLastLogin + "|" + getDateTime() + "|" + cliente.clientId) + "'";
+        formatoDeInsercionDeCliente += ")";
+        return formatoDeInsercionDeCliente;
+    };
+    ClienteServicio.prototype.obtenerFormatoDeInsercionDeEtiquetaDeClienteNuevo = function (cliente, etiqueta) {
+        var formatoDeInsercionDeEtiqueta = "";
+        formatoDeInsercionDeEtiqueta = "INSERT INTO TAG_X_CUSTOMER(";
+        formatoDeInsercionDeEtiqueta += "TAG_COLOR,";
+        formatoDeInsercionDeEtiqueta += "CLIENT_ID,";
+        formatoDeInsercionDeEtiqueta += "DOC_SERIE_CLIENT,";
+        formatoDeInsercionDeEtiqueta += "DOC_NUM_CLIENT";
+        formatoDeInsercionDeEtiqueta += ") VALUES(";
+        formatoDeInsercionDeEtiqueta += "'" + etiqueta.tagColor + "'";
+        formatoDeInsercionDeEtiqueta += ",'" + cliente.clientId + "'";
+        formatoDeInsercionDeEtiqueta += ",'" + cliente.docSerie + "'";
+        formatoDeInsercionDeEtiqueta += "," + cliente.docNum;
+        formatoDeInsercionDeEtiqueta += ")";
+        return formatoDeInsercionDeEtiqueta;
+    };
+    ClienteServicio.prototype.obtenerUltimoComentarioDeFactura = function (callback) {
         try {
-            SONDA_DB_Session.transaction(function (tx) {
-                var sql = "SELECT";
-                sql += " C.CLIENT_ID";
-                sql += " FROM CLIENTS C";
-                sql += " WHERE C.CLIENT_HH_ID_OLD = '" + cliente.clientHhIdOld + "'";
-                sql += " OR C.CLIENT_ID = '" + cliente.clientHhIdOld + "'";
-                tx.executeSql(sql, [], function (tx, results) {
+            SONDA_DB_Session.transaction(function (trans) {
+                var sql = "SELECT IFNULL(COMMENT,'N/A') AS COMMENT FROM INVOICE_HEADER WHERE COMMENT IS NOT NULL ORDER BY INVOICE_NUM DESC LIMIT 1";
+                trans.executeSql(sql, [], function (transReturn, results) {
                     if (results.rows.length > 0) {
-                        var clienteTemp = results.rows.item(0);
-                        cliente.clientId = clienteTemp.CLIENT_ID;
+                        var comment = results.rows.item(0).COMMENT;
+                        callback(comment);
+                        comment = null;
                     }
                     else {
-                        callbackError({
-                            codigo: -1,
-                            mensaje: "Error al obtener el codigo de cliente: Sin resultados"
-                        });
+                        callback("N/A");
                     }
-                    callback(cliente);
+                }, function (transReturn, error) {
+                    callback("N/A");
                 });
-            }, function (err) {
-                callbackError({
-                    codigo: -1,
-                    mensaje: "Error al obtener el codigo de cliente: " + err.message
-                });
+            }, function (error) {
+                callback("N/A");
             });
         }
-        catch (err) {
-            var operacion = new Operacion();
-            operacion.resultado = ResultadoOperacionTipo.Error;
-            operacion.codigo = err.code;
-            operacion.mensaje = err.message;
-            callbackError(operacion);
+        catch (e) {
+            callback("N/A");
         }
     };
     return ClienteServicio;

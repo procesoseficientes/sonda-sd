@@ -22,14 +22,23 @@
       sql.push(`,${data.GOAL_AMOUNT_OF_DAY} `);
       sql.push(")");
 
-      gInsertsInitialRoute.push(sql.join(""));
+      SONDA_DB_Session.transaction(
+        (trans: SqlTransaction) => {
+          trans.executeSql(sql.join(""));
+        },
+        (error: SqlError) => {
+          console.log(
+            `Error al insertar la estadistica de ventas del usuario debido a: ${error.message}`
+          );
+          InteraccionConUsuarioServicio.desbloquearPantalla();
+          notify("Error al insertar la estadística de ventas del usuario.");
+        }
+      );
     } catch (e) {
       console.log(
-        `Error al insertar la estadistica de ventas del usuario debido a: ${
-          e.message
-        }`
+        `Error al insertar la estadistica de ventas del usuario debido a: ${e.message}`
       );
-      DesBloquearPantalla();
+      InteraccionConUsuarioServicio.desbloquearPantalla();
       notify("Error al insertar la estadística de ventas del usuario.");
     }
   }
@@ -46,21 +55,27 @@
               callback(estadistica);
             },
             (resultado: Operacion) => {
-              throw new Error(resultado.mensaje);
+              console.log(
+                `Error al obtener la estadistica de ventas del usuario debido a: ${resultado.mensaje}`
+              );
+              InteraccionConUsuarioServicio.desbloquearPantalla();
+              notify("Error al obtener la estadística de ventas del usuario.");
             }
           );
         },
         (resultado: Operacion) => {
-          throw new Error(resultado.mensaje);
+          console.log(
+            `Error al obtener la estadistica de ventas del usuario debido a: ${resultado.mensaje}`
+          );
+          InteraccionConUsuarioServicio.desbloquearPantalla();
+          notify("Error al obtener la estadística de ventas del usuario.");
         }
       );
     } catch (e) {
       console.log(
-        `Error al obtener la estadistica de ventas del usuario debido a: ${
-          e.message
-        }`
+        `Error al obtener la estadistica de ventas del usuario debido a: ${e.message}`
       );
-      DesBloquearPantalla();
+      InteraccionConUsuarioServicio.desbloquearPantalla();
       notify("Error al obtener la estadística de ventas del usuario.");
     }
   }
@@ -128,17 +143,16 @@
     errorCallback: (resultado: Operacion) => void
   ): void {
     let sql: string[] = [];
-    let op: Operacion = new Operacion();
+    let op = new Operacion();
 
     sql.push(
-      "SELECT COUNT(SALES_ORDER_ID) ORDERS_QTY, SUM(TOTAL_AMOUNT_DISPLAY) TOTAL_SOLD"
+      `SELECT COUNT(INVOICE_NUM) INVOICES_QTY, SUM(TOTAL_AMOUNT) TOTAL_SOLD FROM INVOICE_HEADER WHERE STATUS = 1 AND IS_CREDIT_NOTE = 0`
     );
-    sql.push("FROM SALES_ORDER_HEADER WHERE IS_VOID = 0 AND IS_DRAFT <> 1");
 
     SONDA_DB_Session.transaction(
       (trans: SqlTransaction) => {
         trans.executeSql(
-          sql.join(" "),
+          sql.join(""),
           [],
           (transReturn: SqlTransaction, results: SqlResultSet) => {
             if (results.rows.length > 0) {
@@ -147,7 +161,7 @@
               ) as any).TOTAL_SOLD;
               estadisticaDeVenta.salesOrdersOfDay = (results.rows.item(
                 0
-              ) as any).ORDERS_QTY;
+              ) as any).INVOICES_QTY;
 
               estadisticaDeVenta.pendingToSaleToday =
                 estadisticaDeVenta.goalAmountOfDay -
@@ -170,5 +184,179 @@
         errorCallback(op);
       }
     );
+  }
+
+  agregarEstadisticaDeVentaPorCliente(data: any): void {
+    try {
+      let sql: string[] = [];
+
+      sql.push(
+        "INSERT INTO STATISTIC_SALES_BY_CUSTOMER(ID,CLIENT_ID,CODE_SKU,SKU_NAME "
+      );
+      sql.push(", QTY,SALE_PACK_UNIT) ");
+      sql.push("VALUES( ");
+      sql.push(`${data.ID}`);
+      sql.push(`,'${data.CLIENT_ID}' `);
+      sql.push(`,'${data.CODE_SKU}' `);
+      sql.push(`,'${data.SKU_NAME}' `);
+      sql.push(`,${data.QTY} `);
+      sql.push(`,'${data.SALE_PACK_UNIT}' `);
+      sql.push(")");
+
+      SONDA_DB_Session.transaction(
+        (trans: SqlTransaction) => {
+          trans.executeSql(sql.join(""));
+        },
+        (error: SqlError) => {
+          console.log(
+            `Error al insertar la estadistica de ventas del cliente debido a: ${error.message}`
+          );
+          InteraccionConUsuarioServicio.desbloquearPantalla();
+          notify("Error al insertar la estadística de ventas del cliente.");
+        }
+      );
+    } catch (e) {
+      console.log(
+        `Error al insertar la estadistica de ventas del cliente debido a: ${e.message}`
+      );
+      InteraccionConUsuarioServicio.desbloquearPantalla();
+      notify("Error al insertar la estadística de ventas del cliente.");
+    }
+  }
+
+  obtenerEstadisticaDeVentaPorCliente(
+    clientId: String,
+    callback: (estadisticas: EstadisticaDeVentaPorCliente[]) => void,
+    errorCallback: (resultado: Operacion) => void
+  ): void {
+    let sql: String[] = [];
+    let op = new Operacion();
+
+    let listadoDeEstadisticas: Array<EstadisticaDeVentaPorCliente> = [];
+
+    ObtenerListaDePreciosDeCliente(
+      clientId,
+      function(priceListId) {
+        sql.push("SELECT");
+        sql.push(
+          "SSBC.ID, SSBC.CLIENT_ID, SSBC.CODE_SKU, SSBC.SKU_NAME, SSBC.QTY, A.ON_HAND, SSBC.SALE_PACK_UNIT, IFNULL(PLS.PRICE, 0) AS PRICE , A.CODE_PACK_UNIT_STOCK, PC.CONVERSION_FACTOR"
+        );
+        sql.push("FROM STATISTIC_SALES_BY_CUSTOMER SSBC");
+        sql.push(
+          `LEFT JOIN SKUS A ON (SSBC.CODE_SKU = A.SKU AND SSBC.CLIENT_ID='${clientId}')`
+        );
+        sql.push(
+          "LEFT JOIN PRICE_LIST_BY_SKU_PACK_SCALE PLS ON( PLS.CODE_SKU = A.SKU AND PLS.CODE_PACK_UNIT = SSBC.SALE_PACK_UNIT)"
+        );
+        sql.push(
+          "LEFT JOIN PACK_CONVERSION PC ON (PC.CODE_SKU = SSBC.CODE_SKU)"
+        );
+        sql.push(`WHERE PLS.CODE_PRICE_LIST ='${priceListId}'`);
+        sql.push("AND PLS.LOW_LIMIT = 1");
+        sql.push("ORDER BY A.SKU_NAME");
+
+        SONDA_DB_Session.transaction(
+          (trans: SqlTransaction) => {
+            trans.executeSql(
+              sql.join(" "),
+              [],
+              (_transReturn: SqlTransaction, results: SqlResultSet) => {
+                if (results.rows.length > 0) {
+                  for (let i = 0; i < results.rows.length; i++) {
+                    let estadisticas = new EstadisticaDeVentaPorCliente();
+                    let estadisticaTemp = results.rows.item(i) as any;
+                    estadisticas.id = estadisticaTemp.ID;
+                    estadisticas.clientId = estadisticaTemp.CLIENT_ID;
+                    estadisticas.codeSku = estadisticaTemp.CODE_SKU;
+                    estadisticas.skuName = estadisticaTemp.SKU_NAME;
+                    estadisticas.qty = estadisticaTemp.QTY;
+                    estadisticas.onHand = estadisticaTemp.ON_HAND;
+                    estadisticas.salePackUnit = estadisticaTemp.SALE_PACK_UNIT;
+                    estadisticas.price = estadisticaTemp.PRICE;
+                    estadisticas.conversionFactor =
+                      estadisticaTemp.CONVERSION_FACTOR;
+                    estadisticas.codePackUnitStock =
+                      estadisticaTemp.CODE_PACK_UNIT_STOCK;
+                    listadoDeEstadisticas.push(estadisticas);
+                  }
+                  callback(listadoDeEstadisticas);
+                } else {
+                  callback(listadoDeEstadisticas);
+                }
+              },
+              (transReturn: SqlTransaction, error: SqlError) => {
+                op.codigo = error.code;
+                op.mensaje = error.message;
+                op.resultado = ResultadoOperacionTipo.Error;
+                errorCallback(op);
+              }
+            );
+          },
+          (error: SqlError) => {
+            op.codigo = error.code;
+            op.mensaje = error.message;
+            op.resultado = ResultadoOperacionTipo.Error;
+            errorCallback(op);
+          }
+        );
+      },
+      function(error) {
+        op.codigo = -1;
+        op.mensaje = error;
+        op.resultado = ResultadoOperacionTipo.Error;
+        errorCallback(op);
+      }
+    );
+  }
+
+  agregarEstadisticaDeVentaPorClienteFueraDeRuta(
+    data: any,
+    callback: () => void
+  ): void {
+    try {
+      if (data && data.length) {
+        SONDA_DB_Session.transaction(
+          (trans: SqlTransaction) => {
+            for (let i = 0; i < data.length; i++) {
+              let sql: string[] = [];
+              let element = data[i];
+              sql.push(
+                "INSERT INTO STATISTIC_SALES_BY_CUSTOMER(ID,CLIENT_ID,CODE_SKU,SKU_NAME "
+              );
+              sql.push(", QTY,SALE_PACK_UNIT) ");
+              sql.push("VALUES( ");
+              sql.push(`${element.ID}`);
+              sql.push(`,'${element.CLIENT_ID}' `);
+              sql.push(`,'${element.CODE_SKU}' `);
+              sql.push(`,'${element.SKU_NAME}' `);
+              sql.push(`,${element.QTY} `);
+              sql.push(`,'${element.SALE_PACK_UNIT}' `);
+              sql.push(")");
+
+              trans.executeSql(sql.join(""));
+
+              sql = null;
+            }
+
+            callback();
+          },
+          (error: SqlError) => {
+            console.log(
+              `Error al insertar la estadistica de ventas del cliente debido a: ${error.message}`
+            );
+            InteraccionConUsuarioServicio.desbloquearPantalla();
+            notify("Error al insertar la estadística de ventas del cliente.");
+          }
+        );
+      } else {
+        callback();
+      }
+    } catch (e) {
+      console.log(
+        `Error al insertar la estadistica de ventas del cliente debido a: ${e.message}`
+      );
+      InteraccionConUsuarioServicio.desbloquearPantalla();
+      notify("Error al insertar la estadística de ventas del cliente.");
+    }
   }
 }

@@ -1,24 +1,20 @@
 ﻿class ConfirmacionDePagoControlador {
   tokenDePago: SubscriptionToken;
   pagoProcesado: PagoDeFacturaVencidaEncabezado = new PagoDeFacturaVencidaEncabezado();
-  pagoServicio: PagoDeFacturaVencidaServicio = new PagoDeFacturaVencidaServicio();
+  pagoServicio: PagoServicio = new PagoServicio();
   clienteProcesado: Cliente;
 
-  funcionDeRetornoAPocesoPrincipal: Function = null;
-
   constructor(public mensajero: Messenger) {
-    this.tokenDePago = mensajero.subscribe<PagoDeFacturaVencidaMensaje>(
+    this.tokenDePago = mensajero.subscribe<PagoMensaje>(
       this.pagoEntregado,
-      getType(PagoDeFacturaVencidaMensaje),
+      getType(PagoMensaje),
       this
     );
   }
 
-  pagoEntregado(message: PagoDeFacturaVencidaMensaje, subscriber: any): void {
+  pagoEntregado(message: PagoMensaje, subscriber: any): void {
     subscriber.pagoProcesado = message.pago;
     subscriber.clienteProcesado = message.cliente;
-    subscriber.funcionDeRetornoAPocesoPrincipal =
-      message.funcionDeRetornoAPocesoPrincipal;
   }
 
   delegarConfirmacionDePagoControlador(): void {
@@ -28,8 +24,8 @@
 
     $("#UiBtnPaymentConfirmed").on("click", () => {
       this.definirPantallaDeDestinoEnBaseAParametroDePorcentajeMinimoDePago(
-        () => {
-          window.history.back();
+        pantallaDeDestino => {
+          this.irAPantalla(pantallaDeDestino);
         }
       );
     });
@@ -43,17 +39,40 @@
     });
   }
 
+  irAPantalla(pantalla: string): void {
+    $.mobile.changePage(`#${pantalla}`, {
+      transition: "pop",
+      reverse: false,
+      changeHash: false,
+      showLoadMsg: false
+    });
+  }
+
   definirPantallaDeDestinoEnBaseAParametroDePorcentajeMinimoDePago(
-    callback: () => void
+    callback: (pantallaDestino: string) => void
   ): void {
+    let procesarVentaDeCliente = () => {
+      let nitDeCliente = $("#txtNIT");
+      nitDeCliente.val(gNit);
+      nitDeCliente = null;
+
+      ShowSkusToPOS();
+    };
+
     if (this.pagoProcesado.validateMinimumPercentOfPaid) {
       if (
         this.pagoProcesado.percentCoveredWhitThePaid >=
         this.pagoProcesado.minimumPercentOfPaid
       ) {
         this.enviarInformacionDeDetalleDePagos(() => {
-          // return to the main process
-          this.funcionDeRetornoAPocesoPrincipal();
+          if (
+            this.pagoProcesado.paymentType ===
+            TipoDePagoDeFactura.FacturaVencida
+          ) {
+            procesarVentaDeCliente();
+          } else {
+            ShorSummaryPage();
+          }
         });
       } else {
         this.regresarAPantallaDeFacturasVendidasDebidoANoAlcanzarElPagoMinimoParaNuevaVenta(
@@ -62,21 +81,37 @@
         );
       }
     } else {
-      this.enviarInformacionDeDetalleDePagos(() => {
-        // return to the main process
-        this.funcionDeRetornoAPocesoPrincipal();
-        notify("Puede seguir con el proceso de venta.");
-      });
+      if (
+        this.pagoProcesado.paymentType === TipoDePagoDeFactura.FacturaVencida
+      ) {
+        this.regresarAPantallaDeFacturasVendidasDebidoANoAlcanzarElPagoMinimoParaNuevaVenta(
+          null,
+          callback
+        );
+      } else {
+        ShorSummaryPage();
+        notify("Puede seguir con el proceso de facturación.");
+      }
     }
   }
 
   regresarAPantallaDeFacturasVendidasDebidoANoAlcanzarElPagoMinimoParaNuevaVenta(
     porcentajeMinimo: number,
-    callback: () => void
+    callback: (nombreDePantalla: string) => void
   ): void {
-    this.enviarInformacionDeClientePertenecienteAlPagoActual(() => {
-      this.enviarInformacionDeDetalleDePagos(callback);
-    });
+    if (this.pagoProcesado.paymentType === TipoDePagoDeFactura.FacturaVencida) {
+      publicarClienteParaProcesoDeCobroDeFacturasVencidas(() => {
+        this.enviarInformacionDeDetalleDePagos(() => {
+          callback("UiOverdueInvoicePaymentPage");
+        });
+      });
+    } else {
+      this.enviarInformacionDeClientePertenecienteAlPagoActual(() => {
+        this.enviarInformacionDeDetalleDePagos(() => {
+          callback("UiOverdueInvoicePaymentPage");
+        });
+      });
+    }
 
     notify(
       `El pago realizado no cubre el porcentaje: ${
@@ -87,16 +122,14 @@
 
   cargarDatosPrincipales(): void {
     EnviarData();
-    let etiquetaDePagoProcesado: JQuery = $("#UiLblNumberOfPaidProcessed");
+    let etiquetaDePagoProcesado = $("#UiLblNumberOfPaidProcessed");
     etiquetaDePagoProcesado.text(this.pagoProcesado.docNum);
     etiquetaDePagoProcesado = null;
   }
 
   imprimirDocumentoDePago(callback: () => void): void {
     try {
-      if (this.pagoProcesado.printsQuantity === 2) {
-        return callback();
-      }
+      if (this.pagoProcesado.printsQuantity === 2) return callback();
       this.pagoServicio.imprimirPago(
         this.pagoProcesado,
         () => {
@@ -106,6 +139,9 @@
         },
         error => {
           InteraccionConUsuarioServicio.desbloquearPantalla();
+          console.log(
+            `Error al imprimir el documento de pago debido a: ${error}`
+          );
           notify(
             `Ha ocurrido un error al imprimir el documento de pago, por favor vuelva a intentar.`
           );
@@ -147,5 +183,7 @@
     callback();
   }
 
-  enviarSolicitudDeActualizacionDeInformacionDePagoActual(): void {}
+  enviarSolicitudDeActualizacionDeInformacionDePagoActual():void{
+    
+  }
 }

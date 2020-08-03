@@ -1,7 +1,11 @@
 var Etiqueta = (function () {
     function Etiqueta() {
-        this.isPostedOffLine = 0;
-        this.deviceNetworkType = "";
+        this.tagColor = "";
+        this.tagValueText = "";
+        this.tagPriority = "";
+        this.tagComments = "";
+        this.docSerieClient = "";
+        this.docNumClient = "";
     }
     return Etiqueta;
 }());

@@ -1,166 +1,225 @@
 var ValidacionDeLicenciaControlador = (function () {
-    function ValidacionDeLicenciaControlador(mensajero) {
-        this.mensajero = mensajero;
+    function ValidacionDeLicenciaControlador() {
         this.validacionDeLicenciaServicio = new ValidacionDeLicenciaServicio();
-        this.fromDisconet = false;
-        localStorage.setItem("isPrinterZebra", "0");
     }
     ValidacionDeLicenciaControlador.prototype.delegarValidacionDeLicenciaControlador = function () {
-        var _this = this;
+        var _this_1 = this;
         $("#btnLogme").bind("touchstart", function () {
-            _this.validateCredentials();
+            _this_1.validateCredentials();
         });
-        $("#txtPin").keyup(function (event) {
-            if (event.keyCode === 13) {
-                _this.validateCredentials();
-                _this.limpiarInicioDeRuta();
+        $("#txtPin").on("keypress", function (e) {
+            if (e.keyCode === 13) {
+                _this_1.validateCredentials();
             }
         });
     };
     ValidacionDeLicenciaControlador.prototype.validateCredentials = function () {
-        pUserID = $("#txtUserID").val();
-        pPinCode = $("#txtPin").val();
-        localStorage.setItem("APP_IS_READY", "0");
-        if (isNaN(pPinCode)) {
-            my_dialog("", "", "close");
-            notify("ERROR, Debe ingresar un valor numerico");
-            $("#txtPin").val("");
-            $("#txtPin").focus();
-        }
-        else {
-            if (pPinCode === "") {
-                my_dialog("", "", "close");
-                notify("ERROR, ingrese usuario/pin.");
-                return -1;
-            }
-            if (navigator.connection.type === "none") {
-                notify("Debe tener conectividad a Internet para poder iniciar sesión. Por favor, verifique y vuelva a intentar.");
-                return -1;
+        var txtUserId = $("#txtUserID");
+        pUserID = txtUserId.val();
+        pPINCode = $("#txtPin").val();
+        try {
+            if (isNaN(pPINCode)) {
+                notify("ERROR, Debe ingresar un valor numerico");
+                txtUserId.val("");
+                txtUserId.focus();
             }
             else {
+                if (pPINCode === "") {
+                    notify("ERROR, ingrese usuario/pin.");
+                    return;
+                }
                 my_dialog("Espere...", "validando usuario y password", "open");
-                this.validarLicencia(pUserID, pPinCode, true);
-            }
-        }
-    };
-    ValidacionDeLicenciaControlador.prototype.validarLicencia = function (usuario, contraseña, estaIniciandoSession) {
-        var _this = this;
-        this.validacionDeLicenciaServicio.validarLicencia(usuario, contraseña, function (data) {
-            try {
-                var globalUtilsServicio_1 = new GlobalUtilsServicio(), tareaDetalleControlador_1 = new TareaDetalleControlador(_this.mensajero), consultaDeInventarioPorZonaControlador_1 = new ConsultaDeInventarioPorZonaControlador(), impresionManifiestoControlador_1 = new ImpresionManifiestoControlador(), unidadesDeMedidaTomaDeInventarioControlador_1 = new UnidadesDeMedidaTomaDeInventarioControlador(_this.mensajero);
-                socket = io.connect(data.CommunicationAddress);
-                localStorage.setItem("pUserID", usuario);
-                localStorage.setItem("pUserCode", contraseña);
-                socket.on("connect", function () {
-                    try {
-                        if (gIsOnline === 0) {
-                            DeviceIsOnline();
-                            socket.emit("IdentifyDeviceInRoute", {
-                                user: localStorage.getItem("pUserID"),
-                                routeId: gCurrentRoute,
-                                deviceId: device.uuid,
-                                message: "Registrando desde la aplicacion nueva " + SondaVersion
-                            });
-                        }
-                        $(".networkclass").text(tipoDeRedALaQueEstaConectadoElDispositivo);
-                        $(".networkclass").buttonMarkup({ icon: "cloud" });
-                        gIsOnline = 1;
-                        if (!_this.fromDisconet) {
-                            globalUtilsServicio_1.delegarSockets(socket);
-                            tareaDetalleControlador_1.delegarSockets(socket);
-                            consultaDeInventarioPorZonaControlador_1.delegarSockets(socket);
-                            impresionManifiestoControlador_1.delegarSockets(socket);
-                            unidadesDeMedidaTomaDeInventarioControlador_1.delegarSockets(socket);
-                            DelegarABroadcast(socket);
-                            DelegarSocketsListadoOrdenDeVentaControlador(socket);
-                        }
-                        CheckforOffline();
-                        if (localStorage.getItem("POS_STATUS") === "OPEN") {
-                            EnviarData();
-                        }
-                    }
-                    catch (ex) {
-                        notify("error: " + ex.message);
-                    }
-                });
-                socket.on("disconnect", function () {
-                    _this.fromDisconet = true;
-                    $(".networkclass").text("OFF");
-                    $(".networkclass").buttonMarkup({ icon: "forbidden" });
-                    gIsOnline = 0;
-                    if (socket.connected) {
-                        DeviceIsOnline();
-                    }
-                    else {
-                        if (estaCargandoInicioRuta === 1) {
-                            estaCargandoInicioRuta = 0;
-                            notify("Ha perdido la conexión a internet.");
-                            $("#btnStartPOS_action").css("display", "none");
-                            BorrarTablasParaInicioDeRuta();
-                            $.mobile.changePage("#login_page", {
-                                transition: "flow",
-                                reverse: true,
-                                showLoadMsg: false
-                            });
-                            DesBloquearPantalla();
-                        }
-                        else if (estaEnControlDeFinDeRuta) {
-                            DesBloquearPantalla();
-                            my_dialog("", "", "close");
-                        }
-                    }
-                });
-                socket.on("error_message", function (data) {
-                    notify(data.message);
-                });
-                if (estaIniciandoSession) {
-                    var to_1 = setTimeout(function () {
-                        socket.emit("validatecredentials", {
-                            loginid: usuario,
-                            pin: contraseña,
-                            uuid: device.uuid,
-                            validationtype: data.ValidationType,
-                            version: SondaVersion
-                        });
-                        clearTimeout(to_1);
-                    }, 1000);
+                InteraccionConUsuarioServicio.bloquearPantalla();
+                if (this.usuarioTieneConexionAInternet()) {
+                    this.validarLicencia(pUserID, pPINCode, true);
+                }
+                else {
+                    notify("Por favor verifique su conexi\u00F3n a internet.");
+                    InteraccionConUsuarioServicio.desbloquearPantalla();
                 }
             }
-            catch (e) {
-                my_dialog("", "", "close");
-                notify(e.message);
+        }
+        catch (e) {
+            notify("Error al validar credenciales: " + e.message);
+        }
+        txtUserId = null;
+    };
+    ValidacionDeLicenciaControlador.prototype.desbloquearPantalla = function () {
+        InteraccionConUsuarioServicio.desbloquearPantalla();
+        my_dialog("", "", "close");
+    };
+    ValidacionDeLicenciaControlador.prototype.validarLicencia = function (usuario, contraseña, estaIniciandoSession) {
+        var _this_1 = this;
+        this.validacionDeLicenciaServicio.validarLicencia(usuario, contraseña, device.uuid, function (data) {
+            try {
+                _this_1.establecerConexionConElServidor(usuario, contraseña, data.CommunicationAddress, data.ValidationType, estaIniciandoSession);
             }
-            return -1;
-        }, function (err) {
-            my_dialog("", "", "close");
-            notify(err.message);
+            catch (e) {
+                _this_1.desbloquearPantalla();
+                notify("Error al validar licencia: " + e.message);
+            }
+        }, function (error) {
+            _this_1.desbloquearPantalla();
+            notify(error.mensaje);
         });
     };
-    ValidacionDeLicenciaControlador.prototype.limpiarInicioDeRuta = function () {
-        $("#UiImgUsuario").attr("src", "");
-        $("#UiLblLogin").text("...");
-        $("#UiLblRuta").text("...");
-        $("#UiLblBodegaVenta").text("...");
-        $("#UiLblBodegaVentaNombre").text("...");
-        $("#UiLblBodegaPreventa").text("...");
-        $("#UiLblBodegaPreventaNombre").text("...");
-        $("#UiLblAutorizacion").text("...");
-        $("#UiLblSerie").text("...");
-        $("#UiLblFechaAutorizacion").text("....-..-..");
-        $("#UiLblFechaVencimiento").text("...-..-..");
-        $("#UiLblFacturaInicio").text("0");
-        $("#UiLblFacturaFinal").text("0");
-        $("#UiLblFacturaActual").text("0");
-        $("#UiSecuenciaDeDocumentos")
-            .children()
-            .remove("li");
-        $("#UiResumenDeTareas")
-            .children()
-            .remove("li");
-        $("#UiResumenDeCantidad")
-            .children()
-            .remove("li");
-        $("#UiAcordionInformacionUsuario").collapsible("option", "collapsed", false);
+    ValidacionDeLicenciaControlador.prototype.establecerConexionConElServidor = function (usuario, contrass, direccionDeComunicacion, tipoDeValidacionDeLicencia, estaIniciandoSession) {
+        var _this_1 = this;
+        try {
+            localStorage.setItem("UserID", usuario);
+            localStorage.setItem("UserCode", contrass);
+            SocketControlador.establecerConexionConServidor(direccionDeComunicacion);
+            var intent_1 = 0;
+            var idInterval_1 = setInterval(function () {
+                if (intent_1 === 5) {
+                    clearInterval(idInterval_1);
+                    if (!SocketControlador.socketIo.connected) {
+                        notify("No se ha podido establecer la conexión con el servidor, por favor, verifique y vuelva a intentar.");
+                        InteraccionConUsuarioServicio.desbloquearPantalla();
+                    }
+                }
+                intent_1++;
+            }, 1000);
+            SocketControlador.socketIo.on("connect", function () {
+                SocketControlador.socketIo.sendBuffer.length = 0;
+                var lblNetworkDeliveryMenu = $("#lblNetworkDeliveryMenu");
+                var lblNetworkSkusPOS_1 = $("#lblNetworkSkusPOS_1");
+                var lblNetworkDeliverySumm = $("#lblNetworkDeliverySumm");
+                var lblNetworkCust = $("#lblNetworkCust");
+                var lblNetworkSkusPOS = $("#lblNetworkSkusPOS");
+                var lblNetworkLogin = $("#lblNetworkLogin");
+                var lblNetworkDevolucion = $("#lblNetworkDevolucion");
+                var lblNetwork = $("#lblNetwork");
+                var btnNetworkStatus = $("#btnNetworkStatus");
+                var lblNetworkStatusMenuPage = $("#lblNetworkStatusMenuPage");
+                var lblSondaVersion = $("#lblSondaVersion");
+                if (SocketControlador.vieneDeDesconexion === false) {
+                    _this_1.delegarConexionDeServidor(SocketControlador.socketIo);
+                }
+                lblNetwork.text(states[gNetworkState]);
+                btnNetworkStatus.buttonMarkup({ icon: "cloud" });
+                lblNetworkStatusMenuPage.text(states[gNetworkState]);
+                lblNetworkDeliveryMenu.text(states[gNetworkState]);
+                lblNetworkDeliveryMenu.buttonMarkup({ icon: "cloud" });
+                lblNetworkSkusPOS_1.text(states[gNetworkState]);
+                lblNetworkSkusPOS_1.buttonMarkup({ icon: "cloud" });
+                lblNetworkDeliverySumm.text(states[gNetworkState]);
+                lblNetworkDeliverySumm.buttonMarkup({ icon: "cloud" });
+                lblNetworkCust.text(states[gNetworkState]);
+                lblNetworkCust.buttonMarkup({ icon: "cloud" });
+                lblNetworkSkusPOS.text(states[gNetworkState]);
+                lblNetworkSkusPOS.buttonMarkup({ icon: "cloud" });
+                lblNetworkLogin.text(states[gNetworkState]);
+                lblNetworkLogin.buttonMarkup({ icon: "cloud" });
+                lblNetworkDevolucion.text(states[gNetworkState]);
+                lblNetworkDevolucion.buttonMarkup({ icon: "cloud" });
+                gIsOnline = EstaEnLinea.Si;
+                lblSondaVersion.text(SondaVersion);
+                if (estaIniciandoSession) {
+                    gLastLogin = usuario;
+                    estaIniciandoSession = false;
+                    var time_1 = setTimeout(function () {
+                        SocketControlador.socketIo.emit("validatecredentials", {
+                            loginid: usuario,
+                            pin: contrass,
+                            uuid: device.uuid,
+                            dbuser: gdbuser,
+                            dbuserpass: gdbuserpass,
+                            validationtype: tipoDeValidacionDeLicencia,
+                            version: SondaVersion
+                        });
+                        clearTimeout(time_1);
+                    }, 1000);
+                }
+                else {
+                    gLastLogin = localStorage.getItem("UserID");
+                    EnviarData();
+                    ObtenerBroadcastPerdidos();
+                    EnviarResolucion("SendInvoice");
+                }
+                SocketControlador.socketIo.on("disconnect", function () {
+                    SocketControlador.vieneDeDesconexion = true;
+                    var lblNetworkDeliveryMenu = $("#lblNetworkDeliveryMenu");
+                    var lblNetworkSkusPOS_1 = $("#lblNetworkSkusPOS_1");
+                    var lblNetworkDeliverySumm = $("#lblNetworkDeliverySumm");
+                    var lblNetworkCust = $("#lblNetworkCust");
+                    var lblNetworkSkusPOS = $("#lblNetworkSkusPOS");
+                    var lblNetworkLogin = $("#lblNetworkLogin");
+                    var lblNetworkDevolucion = $("#lblNetworkDevolucion");
+                    var lblNetwork = $("#lblNetwork");
+                    var btnNetworkStatus = $("#btnNetworkStatus");
+                    var lblNetworkStatusMenuPage = $("#lblNetworkStatusMenuPage");
+                    var lblSondaVersion = $("#lblSondaVersion");
+                    lblNetwork.text("Off-line");
+                    btnNetworkStatus.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkDeliverySumm.text("Off-line");
+                    lblNetworkDeliverySumm.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkStatusMenuPage.text("Off-line");
+                    lblNetworkDeliveryMenu.text("Off-line");
+                    lblNetworkDeliveryMenu.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkCust.text("Off-line");
+                    lblNetworkCust.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkSkusPOS.text("Off-line");
+                    lblNetworkSkusPOS.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkSkusPOS_1.text("Off-line");
+                    lblNetworkSkusPOS_1.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkLogin.text("Off-line");
+                    lblNetworkLogin.buttonMarkup({ icon: "forbidden" });
+                    lblNetworkDevolucion.text("Off-line");
+                    lblNetworkDevolucion.buttonMarkup({ icon: "forbidden" });
+                    lanzarEventoDePerdidaDeConexionAlServidor();
+                    gIsOnline = EstaEnLinea.No;
+                    lblSondaVersion.text(SondaVersion);
+                    lblNetworkDeliveryMenu = null;
+                    lblNetworkSkusPOS_1 = null;
+                    lblNetworkDeliverySumm = null;
+                    lblNetworkCust = null;
+                    lblNetworkSkusPOS = null;
+                    lblNetworkLogin = null;
+                    lblNetworkDevolucion = null;
+                    lblNetwork = null;
+                    btnNetworkStatus = null;
+                    lblNetworkStatusMenuPage = null;
+                    lblSondaVersion = null;
+                    InteraccionConUsuarioServicio.desbloquearPantalla();
+                    ToastThis("Ha perdido la conexión al servidor.");
+                });
+                lblNetworkDeliveryMenu = null;
+                lblNetworkSkusPOS_1 = null;
+                lblNetworkDeliverySumm = null;
+                lblNetworkCust = null;
+                lblNetworkSkusPOS = null;
+                lblNetworkLogin = null;
+                lblNetworkDevolucion = null;
+                lblNetwork = null;
+                btnNetworkStatus = null;
+                lblNetworkStatusMenuPage = null;
+                lblSondaVersion = null;
+            });
+            SocketControlador.socketIo.on("error_message", function (data) {
+                InteraccionConUsuarioServicio.desbloquearPantalla();
+                notify("Error: " + data.message);
+            });
+        }
+        catch (e) {
+            gIsOnline = EstaEnLinea.No;
+            SocketControlador.cerrarConexionConServidor();
+        }
+    };
+    ValidacionDeLicenciaControlador.prototype.delegarConexionDeServidor = function (socket) {
+        var socketsGlobalesServicio = new SocketsGlobalesServicio(), manifiestoControlador = new ManifiestoControlador(new Messenger());
+        manifiestoControlador.delegarSockets(socket);
+        socketsGlobalesServicio.delegarSocketsGlobales(socket);
+        delegarABroadcast(socket);
+        delegarSocketsTareaFueraDeRutaControlador(socket);
+        delegarSocketsDeObjetosJs(socket);
+        ParametroServicio.delegarSockets(socket);
+        ClasificacionControlador.delegarSockets(socket);
+        tareaControladorADelegar.DelegarSocketsDeTareaControlador(socket);
+        confirmacionControlador.delegarSockets(socket);
+    };
+    ValidacionDeLicenciaControlador.prototype.usuarioTieneConexionAInternet = function () {
+        return !(!navigator.onLine || navigator.connection.type === "none");
     };
     return ValidacionDeLicenciaControlador;
 }());

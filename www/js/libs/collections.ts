@@ -1,4 +1,4 @@
-// Copyright 2013 Basarat Ali Syed. All Rights Reserved.
+﻿// Copyright 2013 Basarat Ali Syed. All Rights Reserved.
 //
 // Licensed under MIT open source license http://opensource.org/licenses/MIT
 //
@@ -8,9 +8,9 @@
  * @namespace Top level namespace for collections, a TypeScript data structure library.
  */
 module collections {
-    
+
     var _hasOwnProperty = Object.prototype.hasOwnProperty;
-    var has = function(obj, prop) {
+    var has = function (obj, prop) {
         return _hasOwnProperty.call(obj, prop);
     }
 
@@ -20,21 +20,21 @@ module collections {
     * = 0 means they are equal
     * >0 means a is larger
     */
-    export interface ICompareFunction<T>{
+    export interface ICompareFunction<T> {
         (a: T, b: T): number;
     }
 
     /**
     * Function signature for checking equality
     */
-    export interface IEqualsFunction<T>{
+    export interface IEqualsFunction<T> {
         (a: T, b: T): boolean;
     }
 
     /**
     * Function signature for Iterations. Return false to break from loop
     */
-    export interface ILoopFunction<T>{
+    export interface ILoopFunction<T> {
         (a: T): boolean;
     }
 
@@ -333,7 +333,7 @@ module collections {
 
 
     // A linked list node
-    export interface ILinkedListNode<T>{
+    export interface ILinkedListNode<T> {
         element: T;
         next: ILinkedListNode<T>;
     }
@@ -736,7 +736,7 @@ module collections {
 
 
     // Used internally by dictionary 
-    export interface IDictionaryPair<K, V>{
+    export interface IDictionaryPair<K, V> {
         key: K;
         value: V;
     }
@@ -974,8 +974,8 @@ module collections {
 
         constructor(toStrFunction?: (key: K) => string) {
             super(toStrFunction);
-            this.head = new LinkedDictionaryPair (null, null);
-            this.tail = new LinkedDictionaryPair (null, null);
+            this.head = new LinkedDictionaryPair(null, null);
+            this.tail = new LinkedDictionaryPair(null, null);
             this.head.next = this.tail;
             this.tail.prev = this.head;
         }
@@ -1037,7 +1037,7 @@ module collections {
                 return pair.value;
             }
             return undefined;
-        } 
+        }
 
         /**
         * Removes all mappings from this LinkedDictionary.
@@ -1194,41 +1194,41 @@ module collections {
         private equalsF: IEqualsFunction<V>;
         private allowDuplicate: boolean;
 
-      /**
-       * Creates an empty multi dictionary.
-       * @class <p>A multi dictionary is a special kind of dictionary that holds
-       * multiple values against each key. Setting a value into the dictionary will
-       * add the value to an array at that key. Getting a key will return an array,
-       * holding all the values set to that key.
-       * You can configure to allow duplicates in the values.
-       * This implementation accepts any kind of objects as keys.</p>
-       *
-       * <p>If the keys are custom objects a function which converts keys to strings must be
-       * provided. Example:</p>
-       *
-       * <pre>
-       * function petToString(pet) {
-         *  return pet.name;
-         * }
-       * </pre>
-       * <p>If the values are custom objects a function to check equality between values
-       * must be provided. Example:</p>
-       *
-       * <pre>
-       * function petsAreEqualByAge(pet1,pet2) {
-         *  return pet1.age===pet2.age;
-         * }
-       * </pre>
-       * @constructor
-       * @param {function(Object):string=} toStrFunction optional function
-       * to convert keys to strings. If the keys aren't strings or if toString()
-       * is not appropriate, a custom function which receives a key and returns a
-       * unique string must be provided.
-       * @param {function(Object,Object):boolean=} valuesEqualsFunction optional
-       * function to check if two values are equal.
-       *
-       * @param allowDuplicateValues
-       */
+        /**
+         * Creates an empty multi dictionary.
+         * @class <p>A multi dictionary is a special kind of dictionary that holds
+         * multiple values against each key. Setting a value into the dictionary will
+         * add the value to an array at that key. Getting a key will return an array,
+         * holding all the values set to that key.
+         * You can configure to allow duplicates in the values.
+         * This implementation accepts any kind of objects as keys.</p>
+         *
+         * <p>If the keys are custom objects a function which converts keys to strings must be
+         * provided. Example:</p>
+         *
+         * <pre>
+         * function petToString(pet) {
+           *  return pet.name;
+           * }
+         * </pre>
+         * <p>If the values are custom objects a function to check equality between values
+         * must be provided. Example:</p>
+         *
+         * <pre>
+         * function petsAreEqualByAge(pet1,pet2) {
+           *  return pet1.age===pet2.age;
+           * }
+         * </pre>
+         * @constructor
+         * @param {function(Object):string=} toStrFunction optional function
+         * to convert keys to strings. If the keys aren't strings or if toString()
+         * is not appropriate, a custom function which receives a key and returns a
+         * unique string must be provided.
+         * @param {function(Object,Object):boolean=} valuesEqualsFunction optional
+         * function to check if two values are equal.
+         *
+         * @param allowDuplicateValues
+         */
         constructor(toStrFunction?: (key: K) => string, valuesEqualsFunction?: IEqualsFunction<V>, allowDuplicateValues = false) {
             this.dict = new Dictionary<K, Array<V>>(toStrFunction);
             this.equalsF = valuesEqualsFunction || collections.defaultEquals;
@@ -1317,7 +1317,7 @@ module collections {
          */
         values(): V[] {
             var values = this.dict.values();
-            var array:Array<V> = [];
+            var array: Array<V> = [];
             for (var i = 0; i < values.length; i++) {
                 var v = values[i];
                 for (var j = 0; j < v.length; j++) {
@@ -2057,7 +2057,7 @@ module collections {
                     isSub = false;
                     return false;
                 }
-            return true;
+                return true;
             });
             return isSub;
         }
@@ -2166,7 +2166,7 @@ module collections {
         * undefined 1 copy is added.
         * @return {boolean} true unless element is undefined.
         */
-        add(element: T, nCopies: number= 1): boolean {
+        add(element: T, nCopies: number = 1): boolean {
 
             if (collections.isUndefined(element) || nCopies <= 0) {
                 return false;
@@ -2247,7 +2247,7 @@ module collections {
          * @return {Array} an array containing all of the elements in this bag.
          */
         toArray(): T[] {
-            var a:Array<T> = [];
+            var a: Array<T> = [];
             var values = this.dictionary.values();
             var vl = values.length;
             for (var i = 0; i < vl; i++) {
@@ -2323,7 +2323,7 @@ module collections {
 
 
     // Internal interface for BST 
-    interface BSTreeNode<T>{
+    interface BSTreeNode<T> {
         element: T;
         leftCh: BSTreeNode<T>;
         rightCh: BSTreeNode<T>;
@@ -2547,7 +2547,7 @@ module collections {
         * @private
         */
         private searchNode(node: BSTreeNode<T>, element: T): BSTreeNode<T> {
-            var cmp:number = null;
+            var cmp: number = null;
             while (node !== null && cmp !== 0) {
                 cmp = this.compare(element, node.element);
                 if (cmp < 0) {
@@ -2691,9 +2691,9 @@ module collections {
             return node;
         }
 
-      /**
-        * @private
-        */
+        /**
+          * @private
+          */
         private heightAux(node: BSTreeNode<T>): number {
             if (node === null) {
                 return -1;
@@ -2708,7 +2708,7 @@ module collections {
 
             var parent: any = null;
             var position = this.root;
-            var cmp:number = null;
+            var cmp: number = null;
             while (position !== null) {
                 cmp = this.compare(node.element, position.element);
                 if (cmp === 0) {

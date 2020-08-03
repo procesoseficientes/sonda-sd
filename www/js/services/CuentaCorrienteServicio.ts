@@ -1,51 +1,101 @@
 class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
-  agregarFacturaVencidaDeCliente(data: any): void {
-    let facturaVencida: FacturaVencidaDeCliente = new FacturaVencidaDeCliente();
-    facturaVencida.id = data.ID;
-    facturaVencida.invoiceId = data.INVOICE_ID;
-    facturaVencida.docEntry = data.DOC_ENTRY;
-    facturaVencida.codeCustomer = data.CODE_CUSTOMER;
-    facturaVencida.createdDate = data.CREATED_DATE;
-    facturaVencida.dueDate = data.DUE_DATE;
-    facturaVencida.totalAmount = data.TOTAL_AMOUNT;
-    facturaVencida.pendingToPaid = data.PENDING_TO_PAID;
-    facturaVencida.isExpired = data.IS_EXPIRED;
+  agregarFacturaVencidaDeCliente(data: any) {
+    SONDA_DB_Session.transaction(
+      (trans: SqlTransaction) => {
+        let facturaVencida = new FacturaVencidaDeCliente();
+        facturaVencida.id = data.ID;
+        facturaVencida.invoiceId = data.INVOICE_ID;
+        facturaVencida.docEntry = data.DOC_ENTRY;
+        facturaVencida.codeCustomer = data.CODE_CUSTOMER;
+        facturaVencida.createdDate = data.CREATED_DATE;
+        facturaVencida.dueDate = data.DUE_DATE;
+        facturaVencida.totalAmount = data.TOTAL_AMOUNT;
+        facturaVencida.pendingToPaid = data.PENDING_TO_PAID;
+        facturaVencida.isExpired = data.IS_EXPIRED;
 
-    let sql: Array<string> = [];
+        let sql: Array<string> = [];
 
-    sql.push(`INSERT INTO OVERDUE_INVOICE_BY_CUSTOMER(`);
-    sql.push(
-      `ID,INVOICE_ID,DOC_ENTRY,CODE_CUSTOMER,CREATED_DATE,DUE_DATE,TOTAL_AMOUNT,PENDING_TO_PAID,IS_EXPIRED)`
+        sql.push(`INSERT INTO OVERDUE_INVOICE_BY_CUSTOMER(`);
+        sql.push(
+          `ID,INVOICE_ID,DOC_ENTRY,CODE_CUSTOMER,CREATED_DATE,DUE_DATE,TOTAL_AMOUNT,PENDING_TO_PAID,IS_EXPIRED)`
+        );
+        sql.push(`VALUES(`);
+        sql.push(`${facturaVencida.id}`);
+        sql.push(`,${facturaVencida.invoiceId}`);
+        sql.push(`,${facturaVencida.docEntry}`);
+        sql.push(`,'${facturaVencida.codeCustomer}'`);
+        sql.push(`,'${facturaVencida.createdDate}'`);
+        sql.push(`,'${facturaVencida.dueDate}'`);
+        sql.push(`,${facturaVencida.totalAmount}`);
+        sql.push(`,${facturaVencida.pendingToPaid}`);
+        sql.push(`,${facturaVencida.isExpired}`);
+        sql.push(`)`);
+
+        trans.executeSql(sql.join(""));
+
+        sql = null;
+      },
+      (error: SqlError) => {
+        notify(
+          `No se ha podido agregar la factura vencida debido a: ${
+            error.message
+          }`
+        );
+      }
     );
-    sql.push(`VALUES(`);
-    sql.push(`${facturaVencida.id}`);
-    sql.push(`,'${facturaVencida.invoiceId}'`);
-    sql.push(`,'${facturaVencida.docEntry}'`);
-    sql.push(`,'${facturaVencida.codeCustomer}'`);
-    sql.push(`,'${facturaVencida.createdDate}'`);
-    sql.push(`,'${facturaVencida.dueDate}'`);
-    sql.push(`,${facturaVencida.totalAmount}`);
-    sql.push(`,${facturaVencida.pendingToPaid}`);
-    sql.push(`,${facturaVencida.isExpired}`);
-    sql.push(`)`);
+  }
 
-    gInsertsInitialRoute.push(sql.join(""));
+  agregarCuentaCorrienteDeCliente(data: any) {
+    SONDA_DB_Session.transaction(
+      (trans: SqlTransaction) => {
+        let cuentaCorriente = new CuentaCorrienteDeCliente();
+        cuentaCorriente.id = data.ID;
+        cuentaCorriente.codeCustomer = data.CODE_CUSTOMER;
+        cuentaCorriente.groupNum = data.GROUP_NUM;
+        cuentaCorriente.creditLimit = data.CREDIT_LIMIT;
+        cuentaCorriente.outstandingBalance = data.OUTSTANDING_BALANCE;
+        cuentaCorriente.extraDays = data.EXTRA_DAYS;
 
-    sql = null;
+        let sql: Array<string> = [];
+
+        sql.push(`INSERT INTO CUSTOMER_ACCOUNTING_INFORMATION(`);
+        sql.push(
+          `ID,CODE_CUSTOMER,GROUP_NUM,CREDIT_LIMIT,OUTSTANDING_BALANCE,EXTRA_DAYS)`
+        );
+        sql.push(`VALUES(`);
+        sql.push(`${cuentaCorriente.id}`);
+        sql.push(`,'${cuentaCorriente.codeCustomer}'`);
+        sql.push(`,${cuentaCorriente.groupNum}`);
+        sql.push(`,${cuentaCorriente.creditLimit}`);
+        sql.push(`,${cuentaCorriente.outstandingBalance}`);
+        sql.push(`,${cuentaCorriente.extraDays}`);
+        sql.push(`)`);
+
+        trans.executeSql(sql.join(""));
+
+        sql = null;
+      },
+      (error: SqlError) => {
+        notify(
+          `No se ha podido agregar la cuenta corriente debido a: ${
+            error.message
+          }`
+        );
+      }
+    );
   }
 
   obtenerFacturasVencidasDeCliente(
     cliente: Cliente,
     callback: (facturasVencidas: FacturaVencidaDeCliente[]) => void,
     errorCallback: (resultado: Operacion) => void
-  ): void {
+  ) {
     try {
-      SONDA_DB_Session.transaction(
+      SONDA_DB_Session.readTransaction(
         (trans: SqlTransaction) => {
           let sql: Array<string> = [];
 
           sql.push(
-// tslint:disable-next-line: max-line-length
             `SELECT ID,INVOICE_ID,DOC_ENTRY,CODE_CUSTOMER,(SELECT datetime(CREATED_DATE)) as CREATED_DATE,(SELECT datetime(DUE_DATE)) as DUE_DATE,TOTAL_AMOUNT,PENDING_TO_PAID `
           );
           sql.push(`FROM OVERDUE_INVOICE_BY_CUSTOMER `);
@@ -69,7 +119,7 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
             (transReturn: SqlTransaction, results: SqlResultSet) => {
               let facturasDeCliente: Array<FacturaVencidaDeCliente> = [];
 
-              for (let i: number = 0; i < results.rows.length; i++) {
+              for (let i = 0; i < results.rows.length; i++) {
                 let factura: any = results.rows.item(i);
                 let facturaVencida: FacturaVencidaDeCliente = new FacturaVencidaDeCliente();
 
@@ -116,30 +166,31 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
     cliente: Cliente,
     callback: (cuentaCorriente: CuentaCorrienteDeCliente) => void,
     errorCallback: (resultado: Operacion) => void
-  ): void {
+  ) {
     try {
       SONDA_DB_Session.readTransaction(
         (trans: SqlTransaction) => {
           let sql: Array<string> = [];
 
           sql.push(
-            `SELECT CLIENT_ID AS CODE_CUSTOMER, GROUP_NUM, CREDIT_LIMIT, OUTSTANDING_BALANCE, EXTRADAYS`
+            `SELECT ID,CODE_CUSTOMER,GROUP_NUM,CREDIT_LIMIT,OUTSTANDING_BALANCE,EXTRA_DAYS `
           );
-          sql.push(`FROM CLIENTS`);
-          sql.push(`WHERE CLIENT_ID = '${cliente.clientId}'`);
+          sql.push(`FROM CUSTOMER_ACCOUNTING_INFORMATION `);
+          sql.push(`WHERE CODE_CUSTOMER = '${cliente.clientId}'`);
 
           trans.executeSql(
-            sql.join(" "),
+            sql.join(""),
             [],
             (transReturn: SqlTransaction, results: SqlResultSet) => {
               let cuentaCorriente: CuentaCorrienteDeCliente = new CuentaCorrienteDeCliente();
               if (results.rows.length > 0) {
                 let cuenta: any = results.rows.item(0);
+                cuentaCorriente.id = cuenta.ID;
                 cuentaCorriente.codeCustomer = cuenta.CODE_CUSTOMER;
                 cuentaCorriente.groupNum = cuenta.GROUP_NUM;
                 cuentaCorriente.creditLimit = cuenta.CREDIT_LIMIT;
                 cuentaCorriente.outstandingBalance = cuenta.OUTSTANDING_BALANCE;
-                cuentaCorriente.extraDays = cuenta.EXTRADAYS;
+                cuentaCorriente.extraDays = cuenta.EXTRA_DAYS;
               }
 
               callback(cuentaCorriente);
@@ -238,7 +289,6 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
           this.obtenerSumatoriaTotalDeFacturasEnRutaDeCliente(
             cliente,
             clienteConMontoDeFacturasDelDiaActual => {
-              // tslint:disable-next-line: max-line-length
               clienteConMontoDeFacturasDelDiaActual.canBuyOnCredit = this.verificarSiElClienteTieneLimiteDeCreditoYDiasDeCreditoConfigurados(
                 clienteConMontoDeFacturasDelDiaActual
               );
@@ -308,7 +358,7 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
     cliente: Cliente,
     callback: (cliente: Cliente) => void,
     errorCallback: (error: Operacion) => void
-  ): void {
+  ) {
     try {
       SONDA_DB_Session.transaction(
         (trans: SqlTransaction) => {
@@ -367,15 +417,15 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
           sql.push(
             `SELECT IFNULL(SUM(IFNULL(PAYMENT_AMOUNT,0)), 0) AS TOTAL_AMOUNT_PAYED`
           );
-          sql.push(`FROM OVERDUE_INVOICE_PAYMENT_HEADER`);
+          sql.push(`  FROM OVERDUE_INVOICE_PAYMENT_HEADER`);
           sql.push(
-            `WHERE CODE_CUSTOMER = '${
+            ` WHERE CODE_CUSTOMER = '${
               cliente.clientId
             }' AND PAYMENT_APPLIED_TO = '${cliente.paymentType}'`
           );
 
           trans.executeSql(
-            sql.join(" "),
+            sql.join(""),
             [],
             (transResult: SqlTransaction, results: SqlResultSet) => {
               cliente.totalAmountPayedOfOverdueInvoices = parseFloat(
@@ -417,7 +467,7 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
     try {
       var sumaDeFacturasAbiertas: number = 0;
 
-      cliente.overdueInvoices.forEach((factura, _idx, _invoices) => {
+      cliente.overdueInvoices.forEach((factura, idx, invoices) => {
         sumaDeFacturasAbiertas += factura.pendingToPaid;
       });
       callback(sumaDeFacturasAbiertas);
@@ -428,11 +478,5 @@ class CuentaCorrienteServicio implements ICuentaCorrienteServicio {
         mensaje: error.message
       } as Operacion);
     }
-  }
-
-  clienteTieneFacturasAbiertasOVencidas(
-    facturasVencidas: FacturaVencidaDeCliente[]
-  ): boolean {
-    return facturasVencidas && facturasVencidas.length > 0;
   }
 }

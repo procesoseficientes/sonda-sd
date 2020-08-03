@@ -1,51 +1,21 @@
 interface ICuentaCorrienteServicio {
-  agregarFacturaVencidaDeCliente(data: any): void;
+    agregarFacturaVencidaDeCliente(data: any);
 
-  obtenerFacturasVencidasDeCliente(
-    cliente: Cliente,
-    callback: (facturasVencidas: Array<FacturaVencidaDeCliente>) => void,
-    errorCallback: (resultado: Operacion) => void
-  ): void;
+    agregarCuentaCorrienteDeCliente(data: any);
 
-  obtenerCuentaCorrienteDeCliente(
-    cliente: Cliente,
-    callback: (cuentaCorriente: CuentaCorrienteDeCliente) => void,
-    errorCallback: (resultado: Operacion) => void
-  ): void;
+    obtenerFacturasVencidasDeCliente(cliente: Cliente, callback: (facturasVencidas: Array<FacturaVencidaDeCliente>) => void, errorCallback: (resultado: Operacion) => void);
 
-  obtenerSumatoriaTotalDeFacturasEnRutaDeCliente(
-    cliente: Cliente,
-    callback: (cliente: Cliente) => void,
-    errorCallback: (error: Operacion) => void
-  ): void;
+    obtenerCuentaCorrienteDeCliente(cliente: Cliente, callback: (cuentaCorriente: CuentaCorrienteDeCliente) => void, errorCallback: (resultado: Operacion) => void);
 
-  procesarInformacionDeCuentaCorrienteDeCliente(
-    codigoDeCliente: string,
-    callbak: (cliente: Cliente) => void,
-    errorCallback: (resultado: Operacion) => void
-  ): void;
+    obtenerSumatoriaTotalDeFacturasEnRutaDeCliente(cliente: Cliente, callback: (cliente: Cliente) => void, errorCallback: (error: Operacion) => void): void;
 
-  verificarSiElClienteTieneLimiteDeCreditoYDiasDeCreditoConfigurados(
-    cliente: Cliente
-  ): boolean;
+    procesarInformacionDeCuentaCorrienteDeCliente(codigoDeCliente: string, callbak: (cliente: Cliente) => void, errorCallback: (resultado: Operacion) => void): void;
 
-  verificarSiElLimiteDeCreditoDelClienteNoHaSidoSobrepasadoPorElMontoFacturadoEnElDia(
-    cliente: Cliente
-  ): boolean;
+    verificarSiElClienteTieneLimiteDeCreditoYDiasDeCreditoConfigurados(cliente: Cliente): boolean;
 
-  obtenerFechaDeVencimientoDeFacturaEnBaseADiasDeCreditoDelCliente(
-    cliente: Cliente,
-    callback: (cliente: Cliente) => void,
-    errorCallback: (error: Operacion) => void
-  ): void;
+    verificarSiElLimiteDeCreditoDelClienteNoHaSidoSobrepasadoPorElMontoFacturadoEnElDia(cliente: Cliente): boolean;
 
-  obtenerSumatoriaDePagosRealizadosPorClienteDuranteElDia(
-    cliente: Cliente,
-    callback: (cliente: Cliente) => void,
-    errorCallback: (resultado: Operacion) => void
-  ): void;
+    obtenerFechaDeVencimientoDeFacturaEnBaseADiasDeCreditoDelCliente(cliente: Cliente, callback: (cliente: Cliente) => void, errorCallback: (error: Operacion) => void): void;
 
-  clienteTieneFacturasAbiertasOVencidas(
-    facturasVencidas: FacturaVencidaDeCliente[]
-  ): boolean;
+    obtenerSumatoriaDePagosRealizadosPorClienteDuranteElDia(cliente: Cliente, callback: (cliente: Cliente) => void, errorCallback: (resultado: Operacion) => void): void;
 }

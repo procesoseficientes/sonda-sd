@@ -4,18 +4,28 @@ var EstadisticaDeVentaControlador = (function () {
         this.decimalesServicio = new ManejoDeDecimalesServicio();
         this.decimales = new ManejoDeDecimales();
     }
+    EstadisticaDeVentaControlador.prototype.mostrarUOcultarContenedorDeModuloDeMEtas = function (mostrarModuloDeMetas) {
+        var contenedorDeMetas = $("#UiGoalsContainer");
+        if (mostrarModuloDeMetas) {
+            contenedorDeMetas.css("display", "block");
+            this.obtenerInformacionDeEstadisticaDeVentaActual();
+        }
+        else {
+            contenedorDeMetas.css("display", "none");
+        }
+        contenedorDeMetas = null;
+    };
     EstadisticaDeVentaControlador.prototype.obtenerInformacionDeEstadisticaDeVentaActual = function () {
-        var _this = this;
+        var _this_1 = this;
         this.estadisticaDeVentaServicio.obtenerInformacionDeEstadisticaDeVenta(function (estadistica) {
-            _this.construirVisualizacionDeInformacionDeEstadisticaDeVenta(estadistica);
+            _this_1.construirVisualizacionDeInformacionDeEstadisticaDeVenta(estadistica);
         });
     };
     EstadisticaDeVentaControlador.prototype.construirVisualizacionDeInformacionDeEstadisticaDeVenta = function (estadisticaDeVenta) {
-        var _this = this;
+        var _this_1 = this;
         try {
-            this.decimalesServicio
-                .obtenerInformacionDeManejoDeDecimales(function (configuracionDeDecimales) {
-                _this.decimales = configuracionDeDecimales;
+            this.decimalesServicio.obtenerInformacionDeManejoDeDecimales(function (configuracionDeDecimales) {
+                _this_1.decimales = configuracionDeDecimales;
                 var teamName = $("#teamName");
                 var goalName = $("#goalName");
                 var ranking = $("#ranking");
@@ -33,18 +43,14 @@ var EstadisticaDeVentaControlador = (function () {
                 teamName.text(estadisticaDeVenta.teamName);
                 goalName.text(estadisticaDeVenta.goalName);
                 ranking.text(estadisticaDeVenta.ranking);
-                goalAmount
-                    .text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmount, _this.decimales.defaultDisplayDecimals));
-                accumulatedAmount
-                    .text(currencySymbol + " " + format_number((estadisticaDeVenta.accumulatedAmount + estadisticaDeVenta.soldToday), _this.decimales.defaultDisplayDecimals) + " (" + _this.obtenerPorcentajeDeMetaCubiertoPorVentas(estadisticaDeVenta) + "%) ");
+                goalAmount.text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmount, _this_1.decimales.defaultDisplayDecimals));
+                accumulatedAmount.text(currencySymbol + " " + format_number(estadisticaDeVenta.accumulatedAmount +
+                    estadisticaDeVenta.soldToday, _this_1.decimales.defaultDisplayDecimals) + " (" + _this_1.obtenerPorcentajeDeMetaCubiertoPorVentas(estadisticaDeVenta) + "%) ");
                 remainingDays.text("" + estadisticaDeVenta.remainingDays);
-                goalAmountOfDay
-                    .text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmountOfDay, _this.decimales.defaultDisplayDecimals));
-                soldToday
-                    .text(currencySymbol + " " + format_number(estadisticaDeVenta.soldToday, _this.decimales.defaultDisplayDecimals));
+                goalAmountOfDay.text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmountOfDay, _this_1.decimales.defaultDisplayDecimals));
+                soldToday.text(currencySymbol + " " + format_number(estadisticaDeVenta.soldToday, _this_1.decimales.defaultDisplayDecimals));
                 salesOrdersOfDay.text("(" + estadisticaDeVenta.salesOrdersOfDay + ")");
-                pendingToSaleToday
-                    .text(currencySymbol + " " + format_number(estadisticaDeVenta.pendingToSaleToday, _this.decimales.defaultDisplayDecimals));
+                pendingToSaleToday.text(currencySymbol + " " + format_number(estadisticaDeVenta.pendingToSaleToday, _this_1.decimales.defaultDisplayDecimals));
                 currencySymbol = null;
                 teamName = null;
                 goalName = null;
@@ -56,9 +62,6 @@ var EstadisticaDeVentaControlador = (function () {
                 soldToday = null;
                 salesOrdersOfDay = null;
                 pendingToSaleToday = null;
-            }, function (resultado) {
-                console
-                    .log("Error al obtener configuracion de decimales para estadistica de venta debido a: " + resultado.mensaje);
             });
         }
         catch (e) {
@@ -69,31 +72,13 @@ var EstadisticaDeVentaControlador = (function () {
     EstadisticaDeVentaControlador.prototype.obtenerPorcentajeDeMetaCubiertoPorVentas = function (estadisticaDeVenta) {
         var montoTotalAcumulado = 0;
         var porcentajeDeMetaCubierto = 0;
-        montoTotalAcumulado = estadisticaDeVenta.accumulatedAmount + estadisticaDeVenta.soldToday;
+        montoTotalAcumulado =
+            estadisticaDeVenta.accumulatedAmount + estadisticaDeVenta.soldToday;
         if (montoTotalAcumulado > 0 && estadisticaDeVenta.goalAmount > 0) {
-            porcentajeDeMetaCubierto = (montoTotalAcumulado * 100) / estadisticaDeVenta.goalAmount;
+            porcentajeDeMetaCubierto =
+                (montoTotalAcumulado * 100) / estadisticaDeVenta.goalAmount;
         }
         return porcentajeDeMetaCubierto;
-    };
-    EstadisticaDeVentaControlador.prototype.mostrarUOcultarContenedorDeModuloDeMetas = function () {
-        var contenedorDeMetas = $("#UiGoalsContainer");
-        var contenerDeImagenPrincipal = $("#UiMainImageContainer");
-        var mostrarModuloDeMetas = localStorage.getItem("USE_GOAL_MODULE");
-        var debeMostrarModuloDeMetas = false;
-        if (mostrarModuloDeMetas && mostrarModuloDeMetas == "1") {
-            debeMostrarModuloDeMetas = true;
-        }
-        if (debeMostrarModuloDeMetas) {
-            contenedorDeMetas.css("display", "block");
-            contenerDeImagenPrincipal.css("display", "none");
-            this.obtenerInformacionDeEstadisticaDeVentaActual();
-        }
-        else {
-            contenedorDeMetas.css("display", "none");
-            contenerDeImagenPrincipal.css("display", "block");
-        }
-        contenedorDeMetas = null;
-        contenerDeImagenPrincipal = null;
     };
     return EstadisticaDeVentaControlador;
 }());

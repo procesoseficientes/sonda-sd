@@ -1,5 +1,4 @@
-﻿/// <reference path="mensaje.ts" />
-class Publisher {
+﻿class Publisher {
 
     constructor(public mensajero: Messenger) {
 

@@ -1,36 +1,17 @@
-﻿/// <reference path="../entidades/cliente.ts" />
-/// <reference path="../tiposyestados/tipos.ts" />
+﻿interface IClienteServicio {
+    guardarScouting(scouting: Cliente, callbak: () => void, errCallback: (resultado: Operacion) => void): void;
 
-interface IClienteServicio {
+    obtenerClientesConEtiquetasNoSincronizados(callback: (clientes: Cliente[]) => void, errCallback: (resultado: Operacion) => void): void;
 
-    obtenerCliente(cliente: Cliente, configuracionDecimales: ManejoDeDecimales, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerListaDePrecioPorCliente(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerCuentaCorriente(cliente: Cliente, configuracionDecimales: ManejoDeDecimales, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerSiTieneFacturasVenciadas(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerLimiteDeCredito(cliente: Cliente, configuracionDecimales: ManejoDeDecimales,callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerSiTieneDiasDeCreditoVencidos(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerSaldoActual(cliente: Cliente, configuracionDecimales: ManejoDeDecimales,callback: (cliente: Cliente) => void, callbackError: (reultado: Operacion) => void): void;
-
-    validarDatosGeneralesCuentaCorriente(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    validarCuentaCorriente(cliente: Cliente, listasku: Sku[], ordenDeVentaTipo: any, configuracionDecimales: ManejoDeDecimales,callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    enviarSolicitudParaObtenerCuentaCorriente(socketIo:SocketIOClient.Socket,cliente: Cliente, opcionValidarSaldoCliente: string, ordenDeVentaTipo: string, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
-
-    obtenerEtiquetas(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
+    obtenerEtiquetasPorCliente(txResult: SqlTransaction, cliente: Cliente, indice: number, callback: (cliente: Cliente) => void, errCallback: (resultado: Operacion) => void): void;
     
-    guardarCambiosDeCliente(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void): void;
+    marcarClienteComoSincronizado(clientes: any, callback: () => void, errCallback: (resultado: Operacion) => void): void;
 
-    obtnerFormatoSqlDeInsertarClienteModificado(cliente: Cliente, sequence: string): string;
+    obtenerFormatoDeInsercionDeClienteNuevo(cliente: Cliente, callback: (formatoInsercion: string) => void): string;
 
-    obtenerEtiquetasNoAsociadasAlCliente(cliente: Cliente, callback: (etiquetas: Etiqueta[]) => void, callbackError: (resultado: Operacion) => void): void;
+    obtenerFormatoDeInsercionDeEtiquetaDeClienteNuevo(cliente: Cliente, etiqueta: Etiqueta): string;
 
-    obtenerClienteBo(cliente: Cliente, callback: (cliente: Cliente) => void, callbackError: (resultado: Operacion) => void);
-    
+    obtenerClientesParaValidacionEnBo(obtenerTodosLosClientes: boolean,callback: (clientes: Cliente[]) => void, errorCallback: (resultado: Operacion) => void): void;
+
+    cambiarEstadoAClientesParaReenviar(clientes: any, callback:()=>void,errorCallback:(resultado: Operacion)=>void): void;
 }

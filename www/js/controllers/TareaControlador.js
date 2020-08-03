@@ -1,768 +1,503 @@
-﻿var estadoListaTarea = "";
-var listadoDeListasAsignadas = [];
-var listadoDeListasAceptadas = [];
-var listadoDeListasCompletadas = [];
+﻿var TareaControlador = (function() {
+  function TareaControlador() {}
 
-function DelegarTareaControlador() {
-  $("#uiTxtFiltroClientesAsignados").on("keypress", function(e) {
-    if (e.keyCode === 13) {
-      setTimeout(FiltrarClienteAsignados(), 1500);
-      return false;
-    }
-  });
+  TareaControlador.prototype.delegarTareaControlador = function() {
+    var _this = this;
 
-  $("#UiBotonCamaraClientesAsignados").on("click", function() {
-    cordova.plugins.diagnostic.isCameraAuthorized(
-      function(enabled) {
-        if (enabled) {
-          LeerCodigoBarraConCamara(function(codigoLeido) {
-            var uiTxtFiltroClientesAceptadas = $(
-              "#uiTxtFiltroClientesAsignados"
-            );
-            uiTxtFiltroClientesAceptadas.val(codigoLeido);
-
-            if (codigoLeido !== "") {
-              FiltrarClienteAsignados();
-            }
-            uiTxtFiltroClientesAceptadas = null;
-          });
-        } else {
-          cordova.plugins.diagnostic.requestCameraAuthorization(
-            function(authorization) {
-              if (authorization === "DENIED") {
-                cordova.plugins.diagnostic.switchToSettings(
-                  function() {
-                    ToastThis(
-                      "Debe autorizar el uso de la Cámara para poder leer el Código."
-                    );
-                  },
-                  function(error) {
-                    notify(error);
-                  }
-                );
-              } else if (authorization === "GRANTED") {
-                LeerCodigoBarraConCamara(function(codigoLeido) {
-                  var uiTxtFiltroClientesAceptadas = $(
-                    "#uiTxtFiltroClientesAsignados"
-                  );
-                  uiTxtFiltroClientesAceptadas.val(codigoLeido);
-
-                  if (codigoLeido !== "") {
-                    FiltrarClienteAsignados();
-                  }
-                  uiTxtFiltroClientesAceptadas = null;
-                });
-              } else {
-                cordova.plugins.diagnostic.switchToSettings(
-                  function() {
-                    ToastThis(
-                      "Debe autorizar el uso de la Cámara para poder leer el Código."
-                    );
-                  },
-                  function(error) {
-                    notify(error);
-                  }
-                );
-              }
-            },
-            function(error) {
-              notify(error);
-            }
-          );
+    $("#UiBtnActualizarPlanDeRuta").on("click", function() {
+      InteraccionConUsuarioServicio.bloquearPantalla();
+      TareaServicio.recalcularSecuenciaDeTareas(function() {
+        var mensaje = "Plan actualizado exitosamente.";
+        if (gIsOnline === SiNo.No) {
+          mensaje +=
+            " No se actualizará el plan de ruta en el servidor por falta de conexión";
         }
-      },
-      function(error) {
-        notify(error);
-      }
-    );
-  });
-
-  $("#uiTxtFiltroClientesAceptadas").on("keypress", function(e) {
-    if (e.keyCode === 13) {
-      setTimeout(FiltrarClienteAceptadas(), 1500);
-      return false;
-    }
-  });
-
-  $("#UiBotonCamaraClientesAceptadas").on("click", function() {
-    cordova.plugins.diagnostic.isCameraAuthorized(
-      function(enabled) {
-        if (enabled) {
-          LeerCodigoBarraConCamara(function(codigoLeido) {
-            var uiTxtFiltroClientesAceptadas = $(
-              "#uiTxtFiltroClientesAceptadas"
-            );
-            uiTxtFiltroClientesAceptadas.val(codigoLeido);
-
-            if (codigoLeido !== "") {
-              FiltrarClienteAceptadas();
-            }
-            uiTxtFiltroClientesAceptadas = null;
-          });
-        } else {
-          cordova.plugins.diagnostic.requestCameraAuthorization(
-            function(authorization) {
-              if (authorization === "DENIED") {
-                cordova.plugins.diagnostic.switchToSettings(
-                  function() {
-                    ToastThis(
-                      "Debe autorizar el uso de la Cámara para poder leer el Código."
-                    );
-                  },
-                  function(error) {
-                    notify(error);
-                  }
-                );
-              } else if (authorization === "GRANTED") {
-                LeerCodigoBarraConCamara(function(codigoLeido) {
-                  var uiTxtFiltroClientesAceptadas = $(
-                    "#uiTxtFiltroClientesAceptadas"
-                  );
-                  uiTxtFiltroClientesAceptadas.val(codigoLeido);
-
-                  if (codigoLeido !== "") {
-                    FiltrarClienteAceptadas();
-                  }
-                  uiTxtFiltroClientesAceptadas = null;
-                });
-              } else {
-                cordova.plugins.diagnostic.switchToSettings(
-                  function() {
-                    ToastThis(
-                      "Debe autorizar el uso de la Cámara para poder leer el Código."
-                    );
-                  },
-                  function(error) {
-                    notify(error);
-                  }
-                );
-              }
-            },
-            function(error) {
-              notify(error);
-            }
-          );
-        }
-      },
-      function(error) {
-        notify(error);
-      }
-    );
-  });
-
-  $("#uiTxtFiltroClientesCompletadas").on("keypress", function(e) {
-    if (e.keyCode === 13) {
-      setTimeout(FiltrarClienteCompletadas(), 1500);
-      return false;
-    }
-  });
-
-  $("#UiBotonCamaraClientesCompletadas").on("click", function() {
-    LeerCodigoBarraConCamara(function(codigoLeido) {
-      var uiTxtFiltroClientesCompletadas = $("#uiTxtFiltroClientesCompletadas");
-      uiTxtFiltroClientesCompletadas.val(codigoLeido);
-
-      if (codigoLeido !== "") {
-        FiltrarClienteCompletadas();
-      }
-      uiTxtFiltroClientesCompletadas = null;
-    });
-  });
-}
-
-function FiltrarClienteAsignados() {
-  var tareasEcontradas = 0;
-  var idTarea = "";
-  var criterioDeFiltro = $("#uiTxtFiltroClientesAsignados").val();
-  for (var i = 0; i < listadoDeListasAsignadas.length; i++) {
-    $("#" + listadoDeListasAsignadas[i] + " li").each(function(e, object, res) {
-      var control = $("#" + object.id);
-      if (control.attr("rga") === criterioDeFiltro) {
-        tareasEcontradas++;
-        idTarea = object.id.substring(8, object.id.length);
-      }
-      control = null;
-    });
-  }
-  if (tareasEcontradas === 1) {
-    $("#uiTxtFiltroClientesAsignados").val("");
-    gettask(idTarea);
-  } else if (tareasEcontradas === 0) {
-    notify("No se encontraron clientes para el filtro aplicado");
-  }
-}
-
-function FiltrarClienteAceptadas() {
-  var tareasEcontradas = 0;
-  var idTarea = "";
-  var criterioDeFiltro = $("#uiTxtFiltroClientesAceptadas").val();
-  for (var i = 0; i < listadoDeListasAceptadas.length; i++) {
-    $("#" + listadoDeListasAceptadas[i] + " li").each(function(e, object, res) {
-      var control = $("#" + object.id);
-      if (control.attr("rga") === criterioDeFiltro) {
-        tareasEcontradas++;
-        idTarea = object.id.substring(8, object.id.length);
-      }
-      control = null;
-    });
-  }
-  if (tareasEcontradas === 1) {
-    $("#uiTxtFiltroClientesAceptadas").val("");
-    gettask(idTarea);
-  } else if (tareasEcontradas === 0) {
-    notify("No se encontraron clientes para el filtro aplicado");
-  }
-}
-
-function FiltrarClienteCompletadas() {
-  var tareasEcontradas = 0;
-  var idTarea = "";
-  var criterioDeFiltro = $("#uiTxtFiltroClientesCompletadas").val();
-  for (var i = 0; i < listadoDeListasCompletadas.length; i++) {
-    $("#" + listadoDeListasCompletadas[i] + " li").each(function(
-      e,
-      object,
-      res
-    ) {
-      var control = $("#" + object.id);
-      if (control.attr("rga") === criterioDeFiltro) {
-        tareasEcontradas++;
-        idTarea = object.id.substring(8, object.id.length);
-      }
-      control = null;
-    });
-  }
-  if (tareasEcontradas === 1) {
-    $("#uiTxtFiltroClientesCompletadas").val("");
-    gettask(idTarea);
-  } else if (tareasEcontradas === 0) {
-    notify("No se encontraron clientes para el filtro aplicado");
-  }
-}
-
-function LlenarListaDeTareas(estado) {
-  try {
-    window.contadorListas++;
-    if (localStorage.getItem("LISTA_TIPO_DOCUMENTO") === null) {
-      localStorage.setItem("LISTA_TIPO_DOCUMENTO", "TASK_TYPE");
-    }
-    var tipo = localStorage.getItem("LISTA_TIPO_DOCUMENTO");
-    //ToastThis("Cargando Tareas");
-    my_dialog("Sonda® " + SondaVersion, "Cargando Tareas...", "open");
-    SONDA_DB_Session.transaction(
-      function(tx) {
-        var strSql = "";
-        estadoListaTarea = estado;
-        if (tipo === "ALL") {
-          strSql +=
-            " SELECT *" +
-            ", (SELECT COUNT(TASK_ID) FROM PRESALES_ROUTE PD WHERE PD.TASK_STATUS = '" +
-            estado +
-            "') AS QTY " +
-            "FROM PRESALES_ROUTE PP " +
-            "LEFT JOIN TASK_AUX TU ON (PP.TASK_ID = TU.PRESALES_ROUTE_ID) " +
-            "LEFT JOIN CLIENTS C ON (PP.RELATED_CLIENT_CODE = C.CLIENT_ID) " +
-            "WHERE PP.TASK_STATUS = '" +
-            estado +
-            "' ";
-          strSql += " ORDER BY PP.TASK_SEQ";
-        } else {
-          strSql += " SELECT *,";
-          strSql +=
-            " (SELECT COUNT(PD." +
-            tipo +
-            ") FROM PRESALES_ROUTE PD WHERE PD." +
-            tipo +
-            " = PP." +
-            tipo +
-            " AND PD.TASK_STATUS = '" +
-            estado +
-            "') AS QTY";
-          strSql +=
-            " FROM PRESALES_ROUTE PP " +
-            "LEFT JOIN TASK_AUX TU ON (PP.TASK_ID = TU.PRESALES_ROUTE_ID) " +
-            "LEFT JOIN CLIENTS C ON (PP.RELATED_CLIENT_CODE = C.CLIENT_ID) " +
-            "WHERE PP.TASK_STATUS = '" +
-            estado +
-            "' ";
-          strSql += " ORDER BY PP." + tipo + ", PP.TASK_SEQ";
-        }
-
-        var nombreDeArcordion = obtenerNombreAcordionPorEstadoTarea(estado);
-
-        if (nombreDeArcordion === "") {
-          return;
-        }
-
-        var pAcordionElement = $("#" + nombreDeArcordion);
-        pAcordionElement.collapsibleset().trigger("create");
-
-        tx.executeSql(
-          strSql,
-          [],
-          function(tx, results) {
-            pAcordionElement.children().remove("div");
-
-            var codigoAcordionPorTipoTarea = "";
-            var nombreAcordion = "";
-            var vLi = "";
-            for (var i = 0; i <= results.rows.length - 1; i++) {
-              vLi = "";
-              var crearEtiqueta = false;
-
-              switch (tipo) {
-                case "TASK_TYPE":
-                  if (
-                    codigoAcordionPorTipoTarea !==
-                    results.rows.item(i).TASK_TYPE
-                  ) {
-                    codigoAcordionPorTipoTarea = results.rows.item(i).TASK_TYPE;
-                    crearEtiqueta = true;
-                  }
-                  break;
-                case "RELATED_CLIENT_CODE":
-                  if (
-                    codigoAcordionPorTipoTarea !==
-                    results.rows.item(i).RELATED_CLIENT_CODE
-                  ) {
-                    codigoAcordionPorTipoTarea = results.rows.item(i)
-                      .RELATED_CLIENT_CODE;
-                    crearEtiqueta = true;
-                  }
-                  break;
-                case "ALL":
-                  if (codigoAcordionPorTipoTarea !== "ALL") {
-                    codigoAcordionPorTipoTarea = "ALL";
-                    crearEtiqueta = true;
-                  }
-                  break;
-              }
-              if (crearEtiqueta) {
-                var acordion = obtenerAcordionParaListaTarea(
-                  codigoAcordionPorTipoTarea,
-                  estado,
-                  results.rows.item(i).QTY,
-                  results.rows.item(i).RELATED_CLIENT_NAME
-                );
-
-                pAcordionElement.append(acordion).collapsibleset("refresh");
-                pAcordionElement.trigger("create");
-              }
-
-              vLi = obtenerLiParaListaDeTareas(
-                results.rows.item(i).TASK_ID,
-                results.rows.item(i).TASK_TYPE,
-                results.rows.item(i).TASK_STATUS,
-                results.rows.item(i).RELATED_CLIENT_CODE,
-                results.rows.item(i).RELATED_CLIENT_NAME,
-                results.rows.item(i).TASK_ADDRESS,
-                results.rows.item(i).NO_PICKEDUP,
-                i,
-                results.rows.item(i).RGA_CODE
-              );
-
-              var uilista = $(
-                "#Lista" + estado + "-" + codigoAcordionPorTipoTarea
-              );
-              uilista.append(vLi);
-              uilista.listview("refresh");
-
-              var uiCantidadAcordion = $(
-                "#Cant" + estado + "-" + codigoAcordionPorTipoTarea
-              );
-              uiCantidadAcordion.text(parseInt(uilista["0"].childElementCount));
-
-              uilista = null;
-              if (i === 0) {
-                var uiAcordion = $(
-                  "#Acordion" + estado + "-" + codigoAcordionPorTipoTarea
-                );
-                uiAcordion.collapsible("option", "collapsed", false);
-                uiAcordion = null;
-              }
-            }
-            vLi = "";
-            my_dialog("", "", "close");
-            pAcordionElement = null;
-
-            //liberar la pantalla
-            if (contadorListas === 3) {
-              contadorListas = 0;
-              $.unblockUI();
-              document.addEventListener("menubutton", onMenuKeyDown, true);
-              document.addEventListener("backbutton", onBackKeyDown, true);
-              if (window.vistaCargandosePorPrimeraVez) {
-                notify(
-                  "La información de la Ruta ha sido cargada exitosamente..."
-                );
-              }
-            }
+        notify(mensaje);
+        EnviarData();
+        _this.UsuarioDeseaObtenerTareasPorEstado(
+          "'" + TareaEstado.Asignada + "','" + TareaEstado.Aceptada + "'",
+          function(listaTareas) {
+            _this.CrearListadoDeTareas(listaTareas, function() {
+              InteraccionConUsuarioServicio.desbloquearPantalla();
+            });
           },
-          function(err) {
-            my_dialog("", "", "close");
-            if (err.code !== 0) {
-              alert("(6)Error processing SQL: " + err.code);
-            }
+          function(error) {
+            InteraccionConUsuarioServicio.desbloquearPantalla();
+            notify(error);
           }
         );
-      },
-      function(err) {
-        if (err.code !== 0) {
-          alert("(1)Error processing SQL: " + err.code);
+      });
+    });
+
+    $("#UiBtnScanRgaCode").on("click", function() {
+      window.estaEnEscaneoDeRga = true;
+      var codigoRgaTxt = $("#uiTxtFiltroClientes");
+      _this.UsuarioDeseaEscanearCodigoRga(
+        function(codigoRga) {
+          window.estaEnEscaneoDeRga = false;
+          console.log(codigoRga);
+          _this.UsuarioDeseaObtenerTareasPorCodigoRga(
+            codigoRga,
+            function(listaTareas) {
+              if (listaTareas.length === 1) {
+                _this.CrearListadoDeTareas(listaTareas, function() {
+                  codigoRgaTxt.val("");
+                  codigoRgaTxt = null;
+                  if (_this.EsTareaDeVenta(listaTareas[0])) {
+                    InvoiceThisTask(
+                      listaTareas[0].TASK_ID,
+                      listaTareas[0].RELATED_CLIENT_CODE,
+                      listaTareas[0].RELATED_CLIENT_NAME,
+                      listaTareas[0].NIT,
+                      listaTareas[0].TASK_TYPE
+                    );
+                  }
+                });
+              } else if (listaTareas.length > 1) {
+                _this.CrearListadoDeTareas(listaTareas, function() {
+                  ToastThis("Se encontró más de un registro...");
+                });
+              } else if (listaTareas.length === 0) {
+                notify("No se encontraron clientes para el filtro aplicado");
+                _this.UsuarioDeseaObtenerTareasPorEstado(
+                  "'" +
+                    TareaEstado.Asignada +
+                    "','" +
+                    TareaEstado.Aceptada +
+                    "'",
+                  function(listaTareas) {
+                    _this.CrearListadoDeTareas(listaTareas, function() {});
+                  },
+                  function(error) {
+                    codigoRgaTxt.val("");
+                    codigoRgaTxt = null;
+                    notify(error);
+                  }
+                );
+              }
+            },
+            function(error) {
+              codigoRgaTxt.val("");
+              codigoRgaTxt = null;
+              notify(error);
+            }
+          );
+        },
+        function() {
+          _this.UsuarioDeseaObtenerTareasPorEstado(
+            "'" + TareaEstado.Asignada + "','" + TareaEstado.Aceptada + "'",
+            function(listaTareas) {
+              _this.CrearListadoDeTareas(listaTareas, function() {
+                //..
+              });
+            },
+            function(error) {
+              codigoRgaTxt.val("");
+              codigoRgaTxt = null;
+              notify(error);
+            }
+          );
+        },
+        function(error) {
+          codigoRgaTxt.val("");
+          codigoRgaTxt = null;
+          notify(error);
+        }
+      );
+    });
+
+    $("#UiBtnMostrarTareasAsignadas").on("click", function() {
+      _this.UsuarioDeseaObtenerTareasPorEstado(
+        "'" + TareaEstado.Asignada + "','" + TareaEstado.Aceptada + "'",
+        function(listaTareas) {
+          _this.CrearListadoDeTareas(listaTareas, function() {
+            //..
+          });
+        },
+        function(error) {
+          notify(error);
+        }
+      );
+    });
+
+    $("#UiBtnMostrarTareasCompletadas").on("click", function() {
+      _this.UsuarioDeseaObtenerTareasPorEstado(
+        "'" + TareaEstado.Completada + "'",
+        function(listaTareas) {
+          _this.CrearListadoDeTareas(listaTareas, function() {
+            //..
+          });
+        },
+        function(error) {
+          notify(error);
+        }
+      );
+    });
+
+    $("#uiTxtFiltroClientes").on("keyup", function(e) {
+      if (e.keyCode === 13) {
+        var codigoRga = $("#uiTxtFiltroClientes");
+        if (codigoRga.val() === "" || codigoRga.val() === " ") {
+          notify("El campo de filtro no debe estar vacio...");
+          codigoRga.focus();
+        } else {
+          _this.UsuarioDeseaObtenerTareasPorCodigoRga(
+            codigoRga.val(),
+            function(listaTareas) {
+              if (listaTareas.length === 1) {
+                _this.CrearListadoDeTareas(listaTareas, function() {
+                  codigoRga.val("");
+                  if (_this.EsTareaDeVenta(listaTareas[0])) {
+                    InvoiceThisTask(
+                      listaTareas[0].TASK_ID,
+                      listaTareas[0].RELATED_CLIENT_CODE,
+                      listaTareas[0].RELATED_CLIENT_NAME,
+                      listaTareas[0].NIT,
+                      listaTareas[0].TASK_TYPE
+                    );
+                  }
+                });
+              } else if (listaTareas.length > 1) {
+                _this.CrearListadoDeTareas(listaTareas, function() {
+                  ToastThis("Se encontró más de un registro...");
+                });
+              } else if (listaTareas.length === 0) {
+                notify("No se encontraron clientes para el filtro aplicado");
+                _this.UsuarioDeseaObtenerTareasPorEstado(
+                  "'" +
+                    TareaEstado.Asignada +
+                    "','" +
+                    TareaEstado.Aceptada +
+                    "'",
+                  function(listaTareas) {
+                    _this.CrearListadoDeTareas(listaTareas, function() {
+                      //..
+                    });
+                  },
+                  function(error) {
+                    notify(error);
+                  }
+                );
+              }
+            },
+            function(error) {
+              notify(error);
+            }
+          );
         }
       }
-    );
-  } catch (e) {
-    my_dialog("", "", "close");
-    notify(e.message);
-  }
-}
-
-function obtenerLiParaListaDeTareas(
-  idTarea,
-  tipoDeTarea,
-  estadoTarea,
-  codigoCliente,
-  nombreCliente,
-  direccionCliente,
-  noReolectado,
-  indiceDeLista,
-  codeRga
-) {
-  var vLi = "";
-  var totales = "";
-  var pClick = "gettask(" + idTarea + ");";
-  vLi += "";
-  vLi +=
-    '<li style="opacity: 1" class="ui-alt-icon ui-nodisc-icon" id="LITAREA-' +
-    idTarea +
-    '" rga="' +
-    codeRga +
-    '"> ' +
-    '<a href="#" onclick=' +
-    pClick +
-    ' id="TAREA-' +
-    idTarea +
-    '" >';
-
-  vLi +=
-    '<p><span class="small-roboto">' +
-    (indiceDeLista + 1) +
-    ') </span> <span class="small-roboto" id="UiEtiquetaTskCliente-' +
-    idTarea +
-    '">' +
-    codigoCliente +
-    " " +
-    nombreCliente +
-    "</span></p>";
-  vLi +=
-    '<p><span class="small-roboto" id="UiEtiquetaTskClienteDireccion-' +
-    idTarea +
-    '">' +
-    direccionCliente +
-    "</span></p>";
-  vLi += "<p style='display: none'>" + codeRga + "</p>";
-
-  switch (estadoTarea) {
-    case TareaEstado.Asignada:
-      vLi +=
-        '<span class="ui-li-count small-roboto" style="background-color:yellow"><img src="css/styles/images/icons-png/alert-black.png"></span>';
-      break;
-    case TareaEstado.Aceptada:
-      vLi +=
-        '<span class="ui-li-count small-roboto" style="background-color:lime"><img src="css/styles/images/icons-png/check-black.png"></span>';
-      break;
-    case TareaEstado.Completada:
-      vLi += totales;
-      vLi +=
-        '<span class="ui-li-count small-roboto" style="background-color:lightsteelblue"><img src="css/styles/images/icons-png/tag-black.png"></span>';
-      break;
-    default:
-      vLi +=
-        '<span class="ui-li-count ui-btn small-roboto" style="background-color:silver">Sin Status ' +
-        estadoTarea +
-        "</span>";
-      break;
-  }
-
-  switch (noReolectado) {
-    case 1:
-      vLi +=
-        '<p><span class="small-roboto" style="text-shadow: none; color:#ffffff; background-color:orangered">No Recolectado. ' +
-        noReolectado +
-        "</span></p>";
-      break;
-    case 0:
-      vLi +=
-        '<p><span class="small-roboto" style="background-color:silver"></span></p>';
-      break;
-    default:
-      vLi +=
-        '<p><span class="small-roboto" style="background-color:silver"></span></p>';
-      break;
-  }
-  vLi += "</a>";
-  vLi += "</li>";
-  return vLi;
-}
-
-function obtenerNombreAcordionPorEstadoTarea(estadoDeTarea) {
-  var nombreDeArcordion = "";
-
-  switch (estadoDeTarea) {
-    case "ASSIGNED":
-      nombreDeArcordion = "UiAcordionPadreTareasAsignadas";
-      break;
-    case "ACCEPTED":
-      nombreDeArcordion = "UiAcordionPadreTareasAceptadas";
-      break;
-    case "COMPLETED":
-      nombreDeArcordion = "UiAcordionPadreTareasCompletadas";
-      break;
-  }
-
-  return nombreDeArcordion;
-}
-
-function obtenerNombreFiltro(estadoDeTarea) {
-  var nombreFiltro = "";
-
-  switch (estadoDeTarea) {
-    case "ASSIGNED":
-      nombreFiltro = "uiTxtFiltroClientesAsignados";
-      break;
-    case "ACCEPTED":
-      nombreFiltro = "uiTxtFiltroClientesAceptadas";
-      break;
-    case "COMPLETED":
-      nombreFiltro = "uiTxtFiltroClientesCompletadas";
-      break;
-  }
-
-  return nombreFiltro;
-}
-
-function obtenerAcordionParaListaTarea(
-  codigoAcordionPorTipoTarea,
-  estadoDeTarea,
-  cantidad,
-  nombreCliente
-) {
-  var nombreAcordion = "";
-  switch (codigoAcordionPorTipoTarea) {
-    case "ALL":
-      nombreAcordion = "Cant.";
-      break;
-    case TareaTipo.Preventa:
-      nombreAcordion = TareaTipoDescripcion.Preventa;
-      break;
-    case TareaTipo.Venta:
-      nombreAcordion = TareaTipoDescripcion.Venta;
-      break;
-    case TareaTipo.Scouting:
-      nombreAcordion = TareaTipoDescripcion.Scouting;
-      break;
-    case TareaTipo.Entrega:
-      nombreAcordion = TareaTipoDescripcion.Entrega;
-      break;
-    case TareaTipo.Borrador:
-      nombreAcordion = TareaTipoDescripcion.Borrador;
-      break;
-    case TareaTipo.TomaDeInventario:
-      nombreAcordion = TareaTipoDescripcion.TomaDeInventario;
-      break;
-    default:
-      nombreAcordion = "Cant. -" + nombreCliente;
-      break;
-  }
-
-  var nombreLista =
-    "Lista" + estadoDeTarea + "-" + codigoAcordionPorTipoTarea + "";
-  switch (estadoDeTarea) {
-    case "ASSIGNED":
-      listadoDeListasAsignadas.push(nombreLista);
-      break;
-    case "ACCEPTED":
-      listadoDeListasAceptadas.push(nombreLista);
-      break;
-    case "COMPLETED":
-      listadoDeListasCompletadas.push(nombreLista);
-      break;
-  }
-  var acordion = "";
-  acordion +=
-    "<div data-role='collapsible' id='Acordion" +
-    estadoDeTarea +
-    "-" +
-    codigoAcordionPorTipoTarea +
-    "'>";
-  acordion +=
-    "<h5>" +
-    nombreAcordion +
-    "<span class='ui-li-count' id='Cant" +
-    estadoDeTarea +
-    "-" +
-    codigoAcordionPorTipoTarea +
-    "'>" +
-    cantidad +
-    "</span></h5>";
-  acordion +=
-    "<ul data-role='listview' data-mini='true' data-filter='true' data-input='#" +
-    obtenerNombreFiltro(estadoDeTarea) +
-    "' data-filter-placeholder='Buscar' data-filter-theme='a' data-divider-theme='c' id='Lista" +
-    estadoDeTarea +
-    "-" +
-    codigoAcordionPorTipoTarea +
-    "' ></ul>";
-  acordion += "</div>";
-
-  return acordion;
-}
-
-function UsuarioDeseaVerListaPorTipo() {
-  var listaDeTipos = [];
-  listaDeTipos.push({
-    text: "Todos",
-    value: "ALL"
-  });
-  listaDeTipos.push({
-    text: "Tarea",
-    value: "TASK_TYPE"
-  });
-  listaDeTipos.push({
-    text: "Cliente",
-    value: "RELATED_CLIENT_CODE"
-  });
-  var configoptions = {
-    title: "Listado de productos",
-    items: listaDeTipos,
-    doneButtonLabel: "Ok",
-    cancelButtonLabel: "Cancelar"
+    });
   };
 
-  window.plugins.listpicker.showPicker(configoptions, function(item) {
-    localStorage.setItem("LISTA_TIPO_DOCUMENTO", item);
-    LlenarListaDeTareas(estadoListaTarea);
-  });
-}
+  TareaControlador.prototype.EsTareaDeVenta = function(tarea) {
+    // ReSharper disable once CoercedEqualsUsing
+    return tarea.TASK_TYPE == TareaTipo.Venta;
+  };
 
-var contadorListas = 0;
-function cargarListaDeTareas() {
-  BloquearPantalla();
-  LlenarListaDeTareas("ASSIGNED");
-  LlenarListaDeTareas("ACCEPTED");
-  LlenarListaDeTareas("COMPLETED");
-}
-
-function actualizarListadoDeTareas(
-  idTarea,
-  tipoDeTarea,
-  estadoDeTarea,
-  codigoCliente,
-  nombreCliente,
-  direccionCliente,
-  noReolectado,
-  estadoDeTareaAnterior,
-  rgaCode
-) {
-  var nombreDeArcordion = obtenerNombreAcordionPorEstadoTarea(estadoDeTarea);
-
-  if (nombreDeArcordion === "") {
-    return;
-  }
-
-  var pAcordionElement = $("#" + nombreDeArcordion);
-  pAcordionElement.collapsibleset().trigger("create");
-
-  var uiCantidadAcordion;
-  var cantidadAcordion = 0;
-  var uiLista;
-
-  var uiAcordionPorTipo = $("#Acordion" + estadoDeTarea + "-" + tipoDeTarea);
-
-  if (
-    uiAcordionPorTipo === undefined ||
-    uiAcordionPorTipo === null ||
-    uiAcordionPorTipo.length === 0
+  TareaControlador.prototype.CrearListadoDeTareas = function(
+    listaTareas,
+    callBack
   ) {
-    var acordion = obtenerAcordionParaListaTarea(
-      tipoDeTarea,
-      estadoDeTarea,
-      1,
-      nombreCliente
+    try {
+      var este = this;
+      var objetoListaTareas = $("#skus_listview_sales_route");
+      objetoListaTareas.children().remove("li");
+
+      var listadoDeTareasDeVenta = listaTareas.filter(function(tareaVenta) {
+        return tareaVenta.TASK_TYPE == TareaTipo.Venta;
+      });
+
+      var listadoDeTareasDeEntrega = listaTareas.filter(function(tareaEntrega) {
+        return tareaEntrega.TASK_TYPE == TareaTipo.Entrega;
+      });
+
+      var li = "";
+      for (var i = 0; i < listadoDeTareasDeVenta.length; i++) {
+        var tarea = listadoDeTareasDeVenta[i];
+        var xonclick1 = "";
+
+        if (este.EsPrimeraIteracion(i)) {
+          li += '<li data-role="list-divider">De Venta</li>';
+        }
+
+        if (!este.VerificarSiTraeGps(tarea)) {
+          xonclick1 = "notify('No hay punto GPS');";
+          li +=
+            '<li data-mini="true" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-forbidden">';
+        } else {
+          xonclick1 = "TaskNavigateTo('" + tarea.EXPECTED_GPS + "',null);";
+          li +=
+            '<li data-mini="true" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-navigation">';
+        }
+
+        var xonclick2 =
+          "gTaskOnRoutePlan = 1; InvoiceThisTask(" +
+          tarea.TASK_ID +
+          ",'" +
+          tarea.RELATED_CLIENT_CODE +
+          "','" +
+          tarea.RELATED_CLIENT_NAME +
+          "','" +
+          tarea.NIT +
+          "','" +
+          tarea.TASK_TYPE +
+          "','" +
+          tarea.TASK_STATUS +
+          "');";
+
+        li +=
+          '<a href="#" onclick="' +
+          xonclick2 +
+          '" id="' +
+          "TA_" +
+          tarea.TASK_ID +
+          '">';
+        li += "<h2>";
+        li += '<span class="small-roboto">';
+        li += i + 1 + ")</span>&nbsp";
+        li +=
+          '<span class="small-roboto">' +
+          tarea.RELATED_CLIENT_CODE +
+          "</span><br>";
+        li +=
+          '<span class="small-roboto">' + tarea.RELATED_CLIENT_NAME + "</span>";
+        li += "</h2>";
+        li += "<p>" + tarea.TASK_ADDRESS + "</p>";
+        li += "<p style='display: none'>" + tarea.RGA_CODE + "</p>";
+        if (tarea.BUY_TYPE === "Crédito") {
+          li +=
+            "<p>" +
+            tarea.BUY_TYPE +
+            ": " +
+            window.accounting.formatMoney(
+              tarea.CURRENT_BALANCE - tarea.CREDIT_AMOUNT
+            ) +
+            "</p>";
+        } else {
+          li += "<p>" + tarea.BUY_TYPE + "</p>";
+        }
+        li += "</a>";
+        li += '<a href="#" onclick="' + xonclick1 + '">';
+        li += "</a>";
+        li += "</li>";
+
+        xonclick1 = null;
+        xonclick2 = null;
+        tarea = null;
+      }
+
+      for (var j = 0; j < listadoDeTareasDeEntrega.length; j++) {
+        var tareaEntrega = listadoDeTareasDeEntrega[j];
+        var onClick = "";
+
+        if (este.EsPrimeraIteracion(j)) {
+          li += '<li data-role="list-divider">De Entrega</li>';
+        }
+
+        if (!este.VerificarSiTraeGps(tareaEntrega)) {
+          onClick = "notify('No hay punto GPS');";
+          li +=
+            '<li data-mini="true" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-forbidden">';
+        } else {
+          onClick = "TaskNavigateTo('" + tareaEntrega.EXPECTED_GPS + "',null);";
+          li +=
+            '<li data-mini="true" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-navigation">';
+        }
+
+        var deliveryTaskClick =
+          "gTaskOnRoutePlan = 1; InvoiceThisTask(" +
+          tareaEntrega.TASK_ID +
+          ",'" +
+          tareaEntrega.RELATED_CLIENT_CODE +
+          "','" +
+          tareaEntrega.RELATED_CLIENT_NAME +
+          "','" +
+          tareaEntrega.NIT +
+          "','" +
+          tareaEntrega.TASK_TYPE +
+          "');";
+
+        li +=
+          '<a href="#" onclick="' +
+          deliveryTaskClick +
+          '" id="' +
+          "TA_" +
+          tareaEntrega.TASK_ID +
+          '">';
+        li += "<h2>";
+        li += '<span class="small-roboto">';
+        li += j + 1 + ")</span>&nbsp";
+        li +=
+          '<span class="small-roboto">' +
+          tareaEntrega.RELATED_CLIENT_CODE +
+          "</span><br>";
+        li +=
+          '<span class="small-roboto">' +
+          tareaEntrega.RELATED_CLIENT_NAME +
+          "</span>";
+        li += "</h2>";
+        li += "<p>" + tareaEntrega.TASK_ADDRESS + "</p>";
+        li += "<p style='display: none'>" + tareaEntrega.RGA_CODE + "</p>";
+        li += "</a>";
+        li += '<a href="#" onclick="' + onClick + '">';
+        li += "</a>";
+        li += "</li>";
+
+        onClick = null;
+        tareaEntrega = null;
+      }
+
+      if (li !== "") {
+        //TODO: Validar si es necesario el refresh.
+        objetoListaTareas.append(li);
+        objetoListaTareas.listview("refresh");
+      }
+      li = null;
+      objetoListaTareas = null;
+      document.getElementById("lblClientsToVisit").innerText =
+        "Plan de ruta (" +
+        este.ObtenerCantidadTotalDeTareas(
+          listadoDeTareasDeEntrega,
+          listadoDeTareasDeVenta
+        ) +
+        ")";
+      callBack();
+    } catch (e) {
+      InteraccionConUsuarioServicio.desbloquearPantalla();
+      notify("Error al crear el listado de tareas debido a: " + e.message);
+    }
+  };
+
+  TareaControlador.prototype.EsPrimeraIteracion = function(numeroDeIteracion) {
+    // ReSharper disable once CoercedEqualsUsing
+    return numeroDeIteracion == 0;
+  };
+
+  TareaControlador.prototype.VerificarSiTraeGps = function(tarea) {
+    // ReSharper disable once CoercedEqualsUsing
+    return tarea.EXPECTED_GPS != "0,0";
+  };
+
+  TareaControlador.prototype.ObtenerCantidadTotalDeTareas = function(
+    tareasDeVenta,
+    tareasDeEntrega
+  ) {
+    return tareasDeVenta.length + tareasDeEntrega.length;
+  };
+
+  TareaControlador.prototype.UsuarioDeseaObtenerTareasPorEstado = function(
+    status,
+    callBack,
+    errorCallBack
+  ) {
+    TareaServicio.ObtenerTareasPorStatus(
+      status,
+      null,
+      function(listaTareas) {
+        callBack(listaTareas);
+      },
+      function(error) {
+        errorCallBack(error);
+      }
     );
-    pAcordionElement.append(acordion).collapsibleset("refresh");
-    pAcordionElement.trigger("create");
-  } else {
-    //if (estadoDeTarea !== estadoDeTareaAnterior) {
-    //    var uiListaT = $("#Lista" + estadoDeTarea + "-" + tipoDeTarea);
-    //    uiCantidadAcordion = $("#Cant" + estadoDeTarea + "-" + tipoDeTarea);
-    //    //cantidadAcordion = uiCantidadAcordion.text();
-    //    uiCantidadAcordion.text(parseInt(uiListaT["0"].childElementCount));
-    //}
-  }
+  };
 
-  if (estadoDeTarea !== estadoDeTareaAnterior) {
-    var uiTarea = $("#TAREA-" + idTarea);
-    //uiTarea.remove();
-    uiTarea.closest("li").remove();
-    uiTarea = null;
+  TareaControlador.prototype.UsuarioDeseaEscanearCodigoRga = function(
+    callBack,
+    returnCallBack,
+    errorCallBack
+  ) {
+    try {
+      cordova.plugins.barcodeScanner.scan(
+        function(result) {
+          if (!result.cancelled) {
+            $("#uiTxtFiltroClientes").text(result.text);
+            callBack(result.text);
+          } else {
+            returnCallBack();
+          }
+        },
+        function(error) {
+          console.log(
+            "Error al intentar leer el codigo RGA del cliente debido a: " +
+              error
+          );
+          errorCallBack(
+            "Error al intentar leer el codigo RGA del cliente debido a: " +
+              error
+          );
+        }
+      );
+    } catch (e) {
+      console.log(
+        "Error al intentar leer el codigo RGA del cliente debido a: " +
+          e.message
+      );
+      errorCallBack(
+        "Error al intentar leer el codigo RGA del cliente debido a: " +
+          e.message
+      );
+    }
+  };
 
-    uiLista = $("#Lista" + estadoDeTarea + "-" + tipoDeTarea);
-    //uiLista.find("#TAREA-" + idTarea).remove();
-    uiLista.listview("refresh");
-
-    var li = obtenerLiParaListaDeTareas(
-      idTarea,
-      tipoDeTarea,
-      estadoDeTarea,
-      codigoCliente,
-      nombreCliente,
-      direccionCliente,
-      noReolectado,
-      parseInt(cantidadAcordion),
-      rgaCode
+  TareaControlador.prototype.UsuarioDeseaObtenerTareasPorCodigoRga = function(
+    codigoRga,
+    callBack,
+    errorCallBack
+  ) {
+    TareaServicio.ObtenerTareasPorCodigoRga(
+      codigoRga,
+      function(listaTareas) {
+        callBack(listaTareas);
+      },
+      function(error) {
+        errorCallBack(error);
+      }
     );
-    uiLista.append(li);
-    uiLista.listview("refresh");
-
-    uiLista = null;
-  }
-  uiLista = $("#Lista" + estadoDeTarea + "-" + tipoDeTarea);
-  if (uiLista["0"] !== undefined) {
-    uiCantidadAcordion = $("#Cant" + estadoDeTarea + "-" + tipoDeTarea);
-    uiCantidadAcordion.text(parseInt(uiLista["0"].childElementCount));
-    uiCantidadAcordion = null;
-  }
-
-  uiLista = null;
-
-  uiLista = $("#Lista" + estadoDeTareaAnterior + "-" + tipoDeTarea);
-  if (uiLista["0"] !== undefined) {
-    uiCantidadAcordion = $("#Cant" + estadoDeTareaAnterior + "-" + tipoDeTarea);
-    uiCantidadAcordion.text(parseInt(uiLista["0"].childElementCount));
-    uiCantidadAcordion = null;
-  }
-
-  uiLista = null;
-
-  uiAcordionPorTipo = null;
-  pAcordionElement = null;
-}
-
-function actualizarDatosDeTareaDom(
-  tareaId,
-  idCliente,
-  nombreCliente,
-  direccionCliente
-) {
-  var uiEtiquetaTskCliente = $("#UiEtiquetaTskCliente-" + tareaId);
-  var uiEtiquetaTskClienteDireccion = $(
-    "#UiEtiquetaTskClienteDireccion-" + tareaId
-  );
-  uiEtiquetaTskCliente.text(idCliente + " " + nombreCliente);
-  uiEtiquetaTskClienteDireccion.text(direccionCliente);
-
-  uiEtiquetaTskCliente = null;
-  uiEtiquetaTskClienteDireccion = null;
-}
+  };
+  //#region DelegarSocketsDeTareaControlador funct
+  /**
+   * Función para recibir data del servidor
+   * @param {socket} socket Socket para comunicarse con el servidor
+   */
+  TareaControlador.prototype.DelegarSocketsDeTareaControlador = function(
+    socket
+  ) {
+    socket.on("InsertNewTasksSD_Response", data => {
+      switch (data.option) {
+        case "InsertNewTasksSD_Success":
+          console.log(data.data);
+          data.data.forEach(tarea => {
+            TareaServicio.ActualizarTaskIdEnTarea(
+              tarea.taskId,
+              tarea.taskIdHh,
+              () => {
+                TareaServicio.ActualizarTaskIdEnFactura(
+                  tarea.taskId,
+                  tarea.taskIdHh,
+                  () => {},
+                  error => {
+                    notify(
+                      "No se pudo actualizar factura en el móvil debido a:" +
+                        error
+                    );
+                  }
+                );
+              },
+              error => {
+                notify(
+                  "No se pudo actualizar tarea en el móvil debido a:" + error
+                );
+              }
+            );
+          });
+          break;
+        case "InsertNewTasksSD_Error":
+          notify("No se han podido sincronizar tareas debido a: " + data.error);
+          break;
+      }
+    });
+  };
+  //#endregion
+  return TareaControlador;
+})();

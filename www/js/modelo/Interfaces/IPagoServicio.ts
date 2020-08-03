@@ -1,13 +1,34 @@
 ﻿interface IPagoServicio {
-    formarPagoUnico(cliente: Cliente, ordenDeVenta: OrdenDeVenta, tipoDePago: TipoDePago, callback: (pago: PagoEncabezado) => void, errCallBack: (resultado: Operacion) => void): void;
 
-    formarPagoUnicoDesdeLista(cliente: Cliente, listaSku: Sku[], tipoDePago: TipoDePago, numeroDeDocumento: string, imagen1: string, imagen2: string, callback: (pago: PagoEncabezado) => void, errCallBack: (resultado: Operacion) => void): void;
+    guardarDocumentoDePago(documentoDePago: PagoDeFacturaVencidaEncabezado, callback: () => void, errorCallback: (error: Operacion) => void): void;
 
-    obtenerFormatoDeImpresionDePago(cliente: Cliente, ordenDeVenta: OrdenDeVenta, pago: PagoEncabezado, callback: (formato: string) => void, callbackError: (resultado: Operacion) => void): void;
+    obtenerFormatoSqlDeInsercionDeEncabezadoDeDocumentoDePago(documentoDePago: PagoDeFacturaVencidaEncabezado): string;
 
-    guardarPago(pago: PagoEncabezado, esPagoFalso: boolean, callback: (pago) => void, callbackError: (resultado: Operacion) => void): void;
+    obtenerFormatoSqlDeInsercionDeDetalleDeDocumentoDePago(detalleDeDocumentoDePago: PagoDeFacturaVencidaDetalle): string;
 
-    obtnerFormatoSqlDeInsertarParaPagoEncabezado(pago: PagoEncabezado): string;
+    obtenerDocumentosDePagoNoPosteadosEnElServidor(callback: (documentosDePagoNoPosteadosEnElServidor: Array<PagoDeFacturaVencidaEncabezado>) => void): void;
 
-    obtnerFormatoSqlDeInsertarParaPagoDetalle(pago: PagoDetalle): string;
+    obtenerEncabezadoDeDocumentosNoPosteadosEnElServidor(callback: (documentosDePagoNoPosteadosEnElServidor: Array<PagoDeFacturaVencidaEncabezado>) => void): void;
+
+    obtenerDetalleDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteadosEnElServidor: Array<PagoDeFacturaVencidaEncabezado>, posicionActualDeDocumentoProcesado: number, callback: (documentosDePagoNoPosteadosEnElServidor: Array<PagoDeFacturaVencidaEncabezado>, transaccionSql: SqlTransaction) => void, transaccionActual: SqlTransaction);
+
+    marcarDocumentosDePagoComoPosteadosEnElServidor(documentosDePagoPosteadosEnElServidor: any): void;
+
+    obtenerFormatoDeActualizacionDePosteoDeEncabezadoDeDocumentoDePago(documentoPosteado: any): string;
+
+    obtenerFormatoDeActualizacionDePosteoDeDetalleDeDocumentoDePago(documentoPosteado: any): string;
+
+    imprimirPago(pago: PagoDeFacturaVencidaEncabezado, callback: () => void, errorCallback: (error: any) => void): void;
+
+    obtenerFormatoDeActualizacionDeSecuenciaDeDocumentos(documentoDePago: PagoDeFacturaVencidaEncabezado): string;
+
+    obtenerParametroDePorcentajeDePagoMinimoDeFacturasVencidas(grupoParametro, tipoParametro, callback: (aplicaParametroDePorcentajeMinimoDePago: boolean, valorDePorcentajeMinimoDePago: number) => void, errorCallback: (resultado: Operacion) => void): void;
+
+    verificarSiAplicaParametroDePorcentajeMinimoDePagoDeFacturasVencidas(resultadoDeConsulta: SqlResultSet): boolean;
+
+    obtenerFormatoSqlDeActualizacionDeMontoPendienteDePagoEnFacturaOriginal(detalleDeDocumentoDePago: PagoDeFacturaVencidaDetalle): string;
+
+    obtenerSecuenciaDeDocumentoDePago(callback: (secuenciaDeDocumento: any) => void, errorCallback: (resultado: Operacion) => void): void;
+
+    obtenerFormatoDeActualizacionDeBalanceDeCliente(pago: PagoDeFacturaVencidaEncabezado): string;
 }

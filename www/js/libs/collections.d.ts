@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @namespace Top level namespace for collections, a TypeScript data structure library.
  */
 declare module collections {

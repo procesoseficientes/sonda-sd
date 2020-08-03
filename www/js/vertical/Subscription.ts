@@ -2,12 +2,12 @@
 
     public id: string;
 
-    constructor(public tag: string, public actionCallback: (message: TMessage, subscriber:any) => void, public  subcriber:any) {
+    constructor(public tag: string, public actionCallback: (message: TMessage, subscriber: any) => void, public subcriber: any) {
         this.id = this.newGuid();
         this.tag = "--";
     }
 
-    invoke(message: TMessage):boolean {
+    invoke(message: TMessage): boolean {
         this.actionCallback(message, this.subcriber);
         return true;
     }

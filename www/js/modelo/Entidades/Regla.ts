@@ -6,7 +6,7 @@
     action: string = "";
     nameAction: string = "";
     typeAction: string = "";
-    enabled: string= "";
+    enabled: string = "";
     code: string = "";
     enventOrder: number = 0;
 }

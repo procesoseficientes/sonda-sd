@@ -1,4 +1,5 @@
-﻿/// <reference path="../tiposyestados/tipos.ts" />
+﻿/// <reference path="../tiposyestados/tiposyestados.ts" />
+
 class Operacion {
     resultado: ResultadoOperacionTipo;
     codigo: number;

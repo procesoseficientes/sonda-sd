@@ -1,7 +1,5 @@
-﻿class Mensaje  {
+﻿class Mensaje {
     contenido: string;
-    cliente: Cliente;
-    tareaTipo: EstaEnLinea;
 
-    constructor(public sender:any) {  }
+    constructor(public sender: any) { }
 }
