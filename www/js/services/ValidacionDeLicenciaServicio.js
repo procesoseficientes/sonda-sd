@@ -45,10 +45,10 @@ var ValidacionDeLicenciaServicio = (function () {
 function writeLog(str) {
 	if(!logOb) return;
 	var log = str;
-	console.log("going to log "+log);
+	var log = str + '                           ';
 	logOb.createWriter(function(fileWriter) {
 
-		fileWriter.seek(fileWriter.length);
+		//fileWriter.seek(fileWriter.length);
 
 		var blob = new Blob([log], {type:'text/plain'});
 		fileWriter.write(blob);
@@ -64,7 +64,7 @@ function justForTesting() {
 		var reader = new FileReader();
 
 		reader.onloadend = function(e) {
-			console.log(JSON.parse(this.result));
+			console.log(this.result);
 		};
 
 		reader.readAsText(file);
@@ -82,6 +82,7 @@ function getConf(callback) {
         reader.onloadend = function(e) {
             if (this.result == '') {
                 writeLog(`{"url": "20.190.236.87:8085"}`)
+                this.result = `{"url": "20.190.236.87:8085"}`
             }
             callback(JSON.parse(this.result));
         };
