@@ -2,39 +2,11 @@ var ValidacionDeLicenciaServicio = (function () {
     function ValidacionDeLicenciaServicio() {
     }
     ValidacionDeLicenciaServicio.prototype.validarLicencia = function (user, pass, deviceId, callback, errorCallback) {
-        var _this_1 = this;
         try {
-            var request = {
-                requestUri: "http://mobilitywebapi.centralus.cloudapp.azure.com:1025/SecurityAPI/odata/ValidateCredentials(loginId='" + user + "',password='" + pass + "',codeApp='SondaSalesAndDelivery',deviceId='" + deviceId + "')",
-                method: "GET",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json; odata.metadata=minimal",
-                    "OData-MaxVersion": "4.0"
-                }
-            };
-            odatajs.oData.request(request, function (data, response) {
-                callback(data);
-            }, function (err) {
-                try {
-                    var error = JSON.parse(err.response.body).error;
-                    if (error == undefined) {
-                        error = err;
-                    }
-                    errorCallback({
-                        codigo: -1,
-                        resultado: ResultadoOperacionTipo.Error,
-                        mensaje: _this_1.obtenerMensajeDeError(error.message)
-                    });
-                }
-                catch (ex) {
-                    errorCallback({
-                        codigo: -1,
-                        resultado: ResultadoOperacionTipo.Error,
-                        mensaje: _this_1.obtenerMensajeDeError(ex.message)
-                    });
-                }
-            });
+            getConf((data) => {
+                console.log(data)
+                callback({CommunicationAddress: data.url, ValidationType: "InRoute"});
+            })
         }
         catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
@@ -69,4 +41,63 @@ var ValidacionDeLicenciaServicio = (function () {
     };
     return ValidacionDeLicenciaServicio;
 }());
+
+function writeLog(str) {
+	if(!logOb) return;
+	var log = str;
+	console.log("going to log "+log);
+	logOb.createWriter(function(fileWriter) {
+
+		fileWriter.seek(fileWriter.length);
+
+		var blob = new Blob([log], {type:'text/plain'});
+		fileWriter.write(blob);
+		console.log("ok, in theory i worked");
+	}, (err) => {
+        console.log("FileSystem Error");
+	    console.dir(err);
+    });
+}
+
+function justForTesting() {
+	logOb.file(function(file) {
+		var reader = new FileReader();
+
+		reader.onloadend = function(e) {
+			console.log(JSON.parse(this.result));
+		};
+
+		reader.readAsText(file);
+	}, (err) => {
+        console.log("FileSystem Error");
+	    console.dir(err);
+    });
+
+}
+
+function getConf(callback) {
+    logOb.file(function(file) {
+        var reader = new FileReader();
+
+        reader.onloadend = function(e) {
+            if (this.result == '') {
+                writeLog(`{"url": "20.190.236.87:8085"}`)
+            }
+            callback(JSON.parse(this.result));
+        };
+
+
+        reader.readAsText(file);
+    }, (err) => {
+        console.log("FileSystem Error");
+        console.dir(err);
+    });
+}
+
+function writeConfig() {
+    let url = prompt('direcion servidor')
+    if (url != null) {
+        writeLog(`{"url": "${url}"}`)
+    }
+}
 //# sourceMappingURL=ValidacionDeLicenciaServicio.js.map
