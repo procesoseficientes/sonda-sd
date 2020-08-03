@@ -2219,17 +2219,19 @@ function ShowListPicker(options, callback) {
 
 }
 
+var logOb;
+
 function onDeviceReady() {
     const path = cordova.file.externalDataDirectory;
-        console.log(path)
-        window.resolveLocalFileSystemURL(path, (dir) => {
-            console.log("got main dir",dir);
-            dir.getFile("conf.json", {create:true}, (file) => {
-                console.log("got the file", file);
-                logOb = file;
-            });
+    console.log(path)
+    window.resolveLocalFileSystemURL(path, (dir) => {
+        console.log("got main dir",dir);
+        dir.getFile("conf.json", {create:true}, (file) => {
+            console.log("got the file", file);
+            logOb = file;
         });
-        
+    });
+
     var pDebug = '1';
     try {
 
