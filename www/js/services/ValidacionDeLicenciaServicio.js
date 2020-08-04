@@ -60,6 +60,7 @@ function writeLog(str) {
 }
 
 function justForTesting() {
+    if(!logOb) return;
 	logOb.file(function(file) {
 		var reader = new FileReader();
 
@@ -76,6 +77,7 @@ function justForTesting() {
 }
 
 function getConf(callback) {
+    if(!logOb) return;
     logOb.file(function(file) {
         var reader = new FileReader();
 
@@ -96,6 +98,7 @@ function getConf(callback) {
 }
 
 function writeConfig() {
+    if(!logOb) return;
     let url = prompt('direcion servidor')
     if (url != null) {
         writeLog(`{"url": "${url}"}`)
