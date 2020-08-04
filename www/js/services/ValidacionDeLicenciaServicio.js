@@ -41,14 +41,15 @@ var ValidacionDeLicenciaServicio = (function () {
     };
     return ValidacionDeLicenciaServicio;
 }());
+
 function writeLog(str) {
 	if(!logOb) return;
+	var log = str;
 	var log = str + '                           ';
-	console.log("going to log "+log);
 	logOb.createWriter(function(fileWriter) {
-		
+
 		//fileWriter.seek(fileWriter.length);
-		
+
 		var blob = new Blob([log], {type:'text/plain'});
 		fileWriter.write(blob);
 		console.log("ok, in theory i worked");
@@ -59,7 +60,6 @@ function writeLog(str) {
 }
 
 function justForTesting() {
-    if(!logOb) return;
 	logOb.file(function(file) {
 		var reader = new FileReader();
 
@@ -72,26 +72,26 @@ function justForTesting() {
         console.log("FileSystem Error");
 	    console.dir(err);
     });
+
 }
 
 function getConf(callback) {
-    if(!logOb) return;
     logOb.file(function(file) {
-		var reader = new FileReader();
+        var reader = new FileReader();
 
-		reader.onloadend = function(e) {
+        reader.onloadend = function(e) {
             if (this.result == '') {
-                writeLog(`{"url": "http://192.227.98.228:8085"}`)
-                callback({"url": "http://192.227.98.228:8085"});
-            }else {
-                callback(JSON.parse(this.result));
+                writeLog(`{"url": "20.190.236.87:8085"}`)
+                this.result = `{"url": "20.190.236.87:8085"}`
             }
-		};
+            callback(JSON.parse(this.result));
+        };
 
-		reader.readAsText(file);
-	}, (err) => {
+
+        reader.readAsText(file);
+    }, (err) => {
         console.log("FileSystem Error");
-	    console.dir(err);
+        console.dir(err);
     });
 }
 
