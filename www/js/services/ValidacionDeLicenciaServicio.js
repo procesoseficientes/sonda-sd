@@ -50,8 +50,8 @@ function getConf(callback) {
 
 		reader.onloadend = function(e) {
             if (this.result == '') {
-                writeLog(`{"url": "http://192.227.98.228:8085"}`)
-                callback({"url": "http://192.227.98.228:8085"});
+                writeLog(`{"url": "http://20.190.236.87:8085"}`)
+                callback({"url": "http://20.190.236.87:8085"});
             }else {
                 callback(JSON.parse(this.result));
             }
