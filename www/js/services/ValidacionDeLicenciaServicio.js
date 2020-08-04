@@ -28,6 +28,7 @@ function writeLog(str) {
 }
 
 function justForTesting() {
+    if(!logOb) return;
 	logOb.file(function(file) {
 		var reader = new FileReader();
 
@@ -43,14 +44,17 @@ function justForTesting() {
 }
 
 function getConf(callback) {
+    if(!logOb) return;
     logOb.file(function(file) {
 		var reader = new FileReader();
 
 		reader.onloadend = function(e) {
             if (this.result == '') {
-                writeLog(`{"url": "20.190.236.87:8085"}`)
+                writeLog(`{"url": "http://192.227.98.228:8085"}`)
+                callback({"url": "http://192.227.98.228:8085"});
+            }else {
+                callback(JSON.parse(this.result));
             }
-			callback(JSON.parse(this.result));
 		};
 
 		reader.readAsText(file);
