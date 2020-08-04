@@ -1,5 +1,6 @@
 ﻿function obtenerClientesFueraDeRutaBD(ruta, filtro) {
-  if (gIsOnline == EstaEnLinea.Si) {
+  var IsOffline = 'onLine' in navigator && !navigator.onLine;
+  if (!IsOffline) {
     var data = {
       dbuser: gdbuser,
       dbuserpass: gdbuserpass,
@@ -25,7 +26,8 @@
 }
 
 function crearTareaFueraDeRuta(ruta, cliente, tipo) {
-  if (gIsOnline === EstaEnLinea.Si) {
+  var IsOffline = 'onLine' in navigator && !navigator.onLine;
+  if (!IsOffline) {
     var data = {
       dbuser: gdbuser,
       dbuserpass: gdbuserpass,
