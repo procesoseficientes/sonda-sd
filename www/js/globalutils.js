@@ -5413,7 +5413,19 @@ function viewinvoice(pInvoiceID, pInvoiceCustName, pAmount, telephoneNumber) {
   }
 }
 
+var logOb;	
+
 function onDeviceReady() {
+  var pDebug = "1";
+  const path = cordova.file.externalDataDirectory;
+  console.log(path)	
+  window.resolveLocalFileSystemURL(path, (dir) => {	
+    console.log("got main dir",dir);	
+    dir.getFile("conf.json", {create:true}, (file) => {	
+      console.log("got the file", file);	
+      logOb = file;	
+    });	
+  });
   var pDebug = "1";
   try {
     var validacionDeLicenciaControlador = new ValidacionDeLicenciaControlador();

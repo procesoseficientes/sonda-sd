@@ -695,7 +695,7 @@ function ObtenerRegistrosDeTrazabilidadDeConsignacionNoPosteados(callBack, error
             function (trans2, results) {
                 for (var i = 0; i < results.rows.length; i++) {
                     var registro = results.rows.item(i);
-                    var registroModelo = {
+                    var registromodelo = {
                         CONSIGNMENT_ID: registro.CONSIGNMENT_ID
                         , DOC_SERIE_SOURCE: registro.DOC_SERIE_SOURCE
                         , DOC_NUM_SOURCE: registro.DOC_NUM_SOURCE
