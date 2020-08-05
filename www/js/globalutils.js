@@ -206,14 +206,19 @@ function DeviceIsOnline() {
     notify("DeviceIsOnline: " + e.message);
   }
 }
-function DeviceIsOffline() {
-  $("#login_isonline").text("Offline");
+function DeviceIsOffline() {  
+  if ('onLine' in navigator && !navigator.onLine) {
+    gIsOnline = EstaEnLinea.No;
+    $("#login_isonline").text("Offline");
 
-  $("#login_isonline").text("OffLine");
-  $("#lblNetworkLogin").text("OffLine");
-  $("#lblNetworkDeliveryMenu").text("OffLine");
-
-  gIsOnline = EstaEnLinea.No;
+    $("#login_isonline").text("OffLine");
+    $("#lblNetworkLogin").text("OffLine");
+    $("#lblNetworkDeliveryMenu").text("OffLine");
+  } else {
+    gIsOnline = EstaEnLinea.Si
+    DeviceIsOnline()
+  }
+  
 }
 function my_dialog(pTitle, pMessage, pAction) {
   if (pAction === "open") {
@@ -6368,11 +6373,7 @@ function onDeviceReady() {
     validacionDeLicenciaControlador.delegarValidacionDeLicenciaControlador();
     validacionDeLicenciaControlador = null;
 
-    $("#login_isonline").text("OffLine");
-    $("#lblNetworkLogin").text("OffLine");
-    $("#lblNetworkDeliveryMenu").text("OffLine");
-    $("#lblNetworkSkusPOS_1").text("OffLine");
-    $("#lblNetworkEstadistica").text("OffLine");
+    DeviceIsOffline()
     $("#lblSondaVersion").text(SondaVersion);
 
     delegate_events();

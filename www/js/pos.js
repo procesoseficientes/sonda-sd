@@ -1616,7 +1616,7 @@ function ConfirmPostInvoice() {
                 function(tx, results) {
                   my_dialog("", "", "close");
                   if (results.rows.length === 0) {
-                    if (gImageURI_1.length > 0) {
+                    if (true) {
                       if (
                         parseInt(efectivo) === 0 &&
                         facturaCompletaEnConsignacion === true &&

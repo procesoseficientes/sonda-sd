@@ -236,8 +236,9 @@ var ConfirmacionControlador = (function () {
         }, "Sonda\u00AE SD " + SondaVersion, ["NO", "SI"]);
     };
     ConfirmacionControlador.prototype.usuarioDeseaSolicitarFirmaElectronica = function (IsContingencyDocument) {
+        var isOffline = 'onLine' in navigator && !navigator.onLine;
         if (IsContingencyDocument === void 0) { IsContingencyDocument = 0; }
-        if (gIsOnline === 0) {
+        if (isOffline) {
             notify("No hay conexión con el servidor");
         }
         else {
@@ -313,9 +314,11 @@ var ConfirmacionControlador = (function () {
     };
     ConfirmacionControlador.prototype.iniciarProcesoSolicitudDeFirmaElectronica = function () {
         var _this_1 = this;
+        var isOffline = 'onLine' in navigator && !navigator.onLine;
         navigator.notification.confirm("\u00BFDesea solicitar firma electr\u00F3nica?", function (buttonIndex) {
             if (buttonIndex === 2) {
-                if (gIsOnline === 1) {
+                debugger;
+                if (!isOffline) {
                     _this_1.usuarioDeseaSolicitarFirmaElectronica();
                 }
                 else {
