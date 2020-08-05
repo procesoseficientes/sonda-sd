@@ -44,24 +44,25 @@ function justForTesting() {
 }
 
 function getConf(callback) {
-    if(!logOb) return;
-    logOb.file(function(file) {
-		var reader = new FileReader();
-
-		reader.onloadend = function(e) {
-            if (this.result == '') {
-                writeLog(`{"url": "http://20.190.236.87:8085"}`)
-                callback({"url": "http://20.190.236.87:8085"});
-            }else {
-                callback(JSON.parse(this.result));
-            }
-		};
-
-		reader.readAsText(file);
-	}, (err) => {
-        console.log("FileSystem Error");
-	    console.dir(err);
-    });
+    setTimeout(() => {
+        logOb.file(function(file) {
+            var reader = new FileReader();
+    
+            reader.onloadend = function(e) {
+                if (this.result == '') {
+                    writeLog(`{"url": "http://52.149.161.64:8085/"}`)
+                    callback({"url": "http://52.149.161.64:8085/"});
+                }else {
+                    callback(JSON.parse(this.result));
+                }
+            };
+    
+            reader.readAsText(file);
+        }, (err) => {
+            console.log("FileSystem Error");
+            console.dir(err);
+        });
+    }, 1000);
 }
 
 function writeConfig() {

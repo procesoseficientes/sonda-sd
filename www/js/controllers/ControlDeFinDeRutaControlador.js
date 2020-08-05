@@ -22,13 +22,14 @@ var ControlDeFinDeRutaControlador = (function () {
             if (gIsOnline === SiNo.Si) {
                 navigator.notification.confirm("¿Está seguro de finalizar ruta?", function (buttonIndex) {
                     if (buttonIndex === 2) {
+                        localStorage.setItem("APP_IS_READY", "0");
                         my_dialog("Por favor espere...", "Finalizando ruta", "open");
                         var data = {
-                            'routeid': gCurrentRoute,
-                            'default_warehouse': gDefaultWhs,
-                            'dbuser': gdbuser,
-                            'dbuserpass': gdbuserpass,
-                            "optionPrint": SiNo.Si
+                            routeid: gCurrentRoute,
+                            default_warehouse: gDefaultWhs,
+                            dbuser: gdbuser,
+                            dbuserpass: gdbuserpass,
+                            optionPrint: SiNo.Si
                         };
                         socket.emit("SetActiveRoute", data);
                         EnviarBorradoresDeBonificaciones(OrigenDeEnvioDeBorradoresDeBonificacion.FinDeRuta);
@@ -52,13 +53,13 @@ var ControlDeFinDeRutaControlador = (function () {
             etiquetaDeNotificacionDeFaltaDeDocumentosParaFinDeRuta = null;
             var agregarTablaDeInformacion_1 = false;
             var htmlDeTablaDeInformacionDeFinDeRuta_1 = new Array();
-            htmlDeTablaDeInformacionDeFinDeRuta_1
-                .push("<table id=\"ContenedorDeInformacionDeFinDeRuta\" class=\"table-stroke\">\n                                                      <thead>\n                                                        <tr>\n                                                          <th>No. Documento</th>\n                                                          <th>Tipo</th>\n                                                          <th>Estado</th>\n                                                          <th>Hora De Env\u00EDo</th>\n                                                        </tr>\n                                                      </thead>\n                                                      <tbody>");
+            htmlDeTablaDeInformacionDeFinDeRuta_1.push("<table id=\"ContenedorDeInformacionDeFinDeRuta\" class=\"table-stroke\">\n                                                      <thead>\n                                                        <tr>\n                                                          <th>No. Documento</th>\n                                                          <th>Tipo</th>\n                                                          <th>Estado</th>\n                                                          <th>Hora De Env\u00EDo</th>\n                                                        </tr>\n                                                      </thead>\n                                                      <tbody>");
             documentosDeFinDeRuta.map(function (contenedorDeDocumentos) {
                 if (contenedorDeDocumentos.habilitadoParaReporte) {
                     contenedorDeDocumentos.documentos.map(function (documentoObtenido) {
                         agregarTablaDeInformacion_1 = true;
-                        htmlDeTablaDeInformacionDeFinDeRuta_1.push("<tr>\n                                                        <td style=\"text-align: left;\">\n                                                           " + documentoObtenido.DOC_NO + "\n                                                        </td>\n                                                        <td style=\"text-align: center;\">\n                                                            " + documentoObtenido.DOC_TYPE + "\n                                                        </td>\n                                                        <td style=\"text-align: center;\">\n                                                            " + ((documentoObtenido.DOC_STATUS == 2)
+                        htmlDeTablaDeInformacionDeFinDeRuta_1.push("<tr>\n                                                        <td style=\"text-align: left;\">\n                                                           " + documentoObtenido.DOC_NO + "\n                                                        </td>\n                                                        <td style=\"text-align: center;\">\n                                                            " + documentoObtenido.DOC_TYPE + "\n                                                        </td>\n                                                        <td style=\"text-align: center;\">\n                                                            " + (documentoObtenido.DOC_STATUS ==
+                            2
                             ? "Enviado"
                             : "Pendiente") + "\n                                                        </td>\n                                                        <td style=\"text-align: right;\">\n                                                            " + documentoObtenido.DOC_POSTED_DATE + "\n                                                        </td>\n                                                    </tr>");
                     });
@@ -70,8 +71,7 @@ var ControlDeFinDeRutaControlador = (function () {
                 this.generarInformacionDePedidosParaResumenDeInformacionDeFinDeRuta(documentosDeFinDeRuta);
             }
             else {
-                contenedorDeTablaDeInformacionDeFinDeRuta
-                    .append("<p id=\"EtiquetaDeNotificacionDeFaltaDeDocumentosParaFinDeRuta\">No se encontraron documentos para el fin de ruta </p>");
+                contenedorDeTablaDeInformacionDeFinDeRuta.append("<p id=\"EtiquetaDeNotificacionDeFaltaDeDocumentosParaFinDeRuta\">No se encontraron documentos para el fin de ruta </p>");
             }
         }
         catch (e) {
@@ -186,7 +186,10 @@ var ControlDeFinDeRutaControlador = (function () {
             if (contenedorDeDocumentos.habilitadoParaReporte) {
                 cantidadTotalDeDocumentos += contenedorDeDocumentos.documentos.length;
                 contenedorDeDocumentos.documentos.map(function (documentoObtenido) {
-                    if (documentoObtenido.DOC_STATUS !== EstadoEnvioDoc.EnviadoConAcuseDeRecibido && documentoObtenido.DOC_STATUS !== EstadoEnvioDoc.EnviadoConAcuseDeRecibido.toString()) {
+                    if (documentoObtenido.DOC_STATUS !==
+                        EstadoEnvioDoc.EnviadoConAcuseDeRecibido &&
+                        documentoObtenido.DOC_STATUS !==
+                            EstadoEnvioDoc.EnviadoConAcuseDeRecibido.toString()) {
                         cantidadDeDocumentosPendientesDeEnvio++;
                     }
                 });
