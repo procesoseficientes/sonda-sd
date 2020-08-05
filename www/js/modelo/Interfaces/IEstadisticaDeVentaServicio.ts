@@ -1,23 +1,11 @@
 ﻿interface IEstadisticaDeVentaServicio {
-  agregarEstadisticaDeVenta(data: any): void;
 
-  obtenerInformacionDeEstadisticaDeVenta(
-    callback: (estadistica: EstadisticaDeVenta) => void
-  ): void;
+    agregarEstadisticaDeVenta(data: any): void;
 
-  obtenerEstadisticaDeVenta(
-    callback: (estadisticaDeVenta: EstadisticaDeVenta) => void,
-    errorCallback: (resultado: Operacion) => void
-  ): void;
+    obtenerInformacionDeEstadisticaDeVenta(callback: (estadistica: EstadisticaDeVenta) => void): void;
 
-  obtenerInformacionDeVentasDelDia(
-    estadisticaDeVenta: EstadisticaDeVenta,
-    callback: (estadistica: EstadisticaDeVenta) => void,
-    errorCallback: (resultado: Operacion) => void
-  ): void;
+    obtenerEstadisticaDeVenta(callback: (estadisticaDeVenta: EstadisticaDeVenta) => void, errorCallback: (resultado: Operacion) => void): void;
 
-  agregarEstadisticaDeVentaPorClienteFueraDeRuta(
-    data: any,
-    callback: () => void
-  ): void;
+    obtenerInformacionDeVentasDelDia(estadisticaDeVenta: EstadisticaDeVenta, callback: (estadistica: EstadisticaDeVenta) => void, errorCallback: (resultado: Operacion) => void): void;
+    
 }

@@ -6,28 +6,28 @@ var ListaDePagoControlador = (function () {
         this.decimalesServicio = new ManejoDeDecimalesServicio();
     }
     ListaDePagoControlador.prototype.delegarListaDePagoControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         $("#UiBtnShowPaymentsList").on("click", function (e) {
             e.preventDefault();
-            _this_1.irAPantalla("UiPaymentListPage");
+            _this.irAPantalla("UiPaymentListPage");
         });
         $("#UiPaymentListPage").on("pageshow", function (e) {
             e.preventDefault();
-            _this_1.cargarDatosPrincipales();
+            _this.cargarDatosPrincipales();
         });
         $("#UiBtnBackFromPaymentListPage").on("click", function (e) {
             e.preventDefault();
-            _this_1.irAPantalla("menu_page");
+            _this.irAPantalla("menu_page");
         });
         $("#UiBtnRefreshPaymentsList").on("click", function (e) {
             e.preventDefault();
-            _this_1.cargarDatosPrincipales();
+            _this.cargarDatosPrincipales();
         });
         $("#UiPaymentListPage").on("click", "#UiPaymentsList a", function (e) {
             e.preventDefault();
             var id = e.currentTarget.id;
             if (id) {
-                _this_1.mostrarOpcionesDeDocumentoDePagoSeleccionado(parseInt(id));
+                _this.mostrarOpcionesDeDocumentoDePagoSeleccionado(parseInt(id));
             }
         });
     };
@@ -46,17 +46,17 @@ var ListaDePagoControlador = (function () {
         filtroDeListado = null;
     };
     ListaDePagoControlador.prototype.cargarDatosPrincipales = function () {
-        var _this_1 = this;
+        var _this = this;
         this.simboloDeMoneda = localStorage.getItem("CURRENCY_SYMBOL") || "Q";
         this.documentosDePago.length = 0;
         InteraccionConUsuarioServicio.bloquearPantalla();
         this.restablecerFiltroPrincipal();
         this.decimalesServicio.obtenerInformacionDeManejoDeDecimales(function (decimales) {
-            _this_1.configuracionDeDecimales = decimales;
-            _this_1.pagoServicio
+            _this.configuracionDeDecimales = decimales;
+            _this.pagoServicio
                 .obtenerEncabezadoDeDocumentosDePagoParaReporte(function (documentos) {
-                _this_1.documentosDePago = documentos;
-                _this_1.construirListadoDeRecibosEmitidos(_this_1.documentosDePago, function () {
+                _this.documentosDePago = documentos;
+                _this.construirListadoDeRecibosEmitidos(_this.documentosDePago, function () {
                     InteraccionConUsuarioServicio.desbloquearPantalla();
                 });
             }, function (resultado) {
@@ -66,7 +66,7 @@ var ListaDePagoControlador = (function () {
         });
     };
     ListaDePagoControlador.prototype.construirListadoDeRecibosEmitidos = function (documentosDePago, callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var contenedorDeListadoDeDocumentosDePago = $("#UiPaymentsList");
             contenedorDeListadoDeDocumentosDePago.children().remove("li");
@@ -81,8 +81,8 @@ var ListaDePagoControlador = (function () {
                 cadenaHtmlDeDocumentosDePago_1.push(" <label>No. " + pago.docNum + " </label>");
                 cadenaHtmlDeDocumentosDePago_1.push(" <label>" + pago.codeCustomer + " </label>");
                 cadenaHtmlDeDocumentosDePago_1.push(" <label>" + pago.nameCustomer + " </label>");
-                cadenaHtmlDeDocumentosDePago_1.push(" <span class=\"ui-li-count\">" + _this_1
-                    .simboloDeMoneda + ". " + format_number(pago.paymentAmount, _this_1.configuracionDeDecimales.defaultDisplayDecimals) + "</span>");
+                cadenaHtmlDeDocumentosDePago_1.push(" <span class=\"ui-li-count\">" + _this
+                    .simboloDeMoneda + ". " + format_number(pago.paymentAmount, _this.configuracionDeDecimales.defaultDisplayDecimals) + "</span>");
                 cadenaHtmlDeDocumentosDePago_1.push(" </a>");
                 cadenaHtmlDeDocumentosDePago_1.push(" </li>");
             });
@@ -104,7 +104,7 @@ var ListaDePagoControlador = (function () {
         callback();
     };
     ListaDePagoControlador.prototype.mostrarOpcionesDeDocumentoDePagoSeleccionado = function (numeroDeDocumento) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var configuracionDeOpciones = {
                 title: "Seleccione una opción:",
@@ -124,13 +124,13 @@ var ListaDePagoControlador = (function () {
                     switch (opcionSeleccionada) {
                         case OpcionDisponibleParaDocumentoDePagoSeleccionado.Reimprimir:
                             InteraccionConUsuarioServicio.bloquearPantalla();
-                            _this_1.imprimirDocumentoDePagoSeleccionado(pagoSeleccionado_1);
+                            _this.imprimirDocumentoDePagoSeleccionado(pagoSeleccionado_1);
                             break;
                         case OpcionDisponibleParaDocumentoDePagoSeleccionado.VerDetalle:
                             InteraccionConUsuarioServicio.bloquearPantalla();
-                            _this_1.verDetalleDeDocumentoDePagoSeleccionado(pagoSeleccionado_1, function () {
+                            _this.verDetalleDeDocumentoDePagoSeleccionado(pagoSeleccionado_1, function () {
                                 InteraccionConUsuarioServicio.desbloquearPantalla();
-                                _this_1.irAPantalla("UiPaymentDetailPage");
+                                _this.irAPantalla("UiPaymentDetailPage");
                             });
                             break;
                     }
@@ -147,15 +147,15 @@ var ListaDePagoControlador = (function () {
         }
     };
     ListaDePagoControlador.prototype.imprimirDocumentoDePagoSeleccionado = function (pago) {
-        var _this_1 = this;
+        var _this = this;
         this.pagoServicio
             .obtenerInformacionDeSecuenciaDeDocumentoDePago(function (secuencia) {
             pago.branchName = secuencia.nombreSucursal;
             pago.branchAddress = secuencia.direccionSucursal;
             pago.reprint = true;
-            _this_1.pagoServicio.imprimirPago(pago, function () {
+            _this.pagoServicio.imprimirPago(pago, function () {
                 pago.isReprint = true;
-                _this_1.pagoServicio.imprimirPago(pago, function () {
+                _this.pagoServicio.imprimirPago(pago, function () {
                     InteraccionConUsuarioServicio.desbloquearPantalla();
                 }, function (error) {
                     InteraccionConUsuarioServicio.desbloquearPantalla();

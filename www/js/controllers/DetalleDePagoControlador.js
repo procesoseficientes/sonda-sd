@@ -4,15 +4,15 @@ var DetalleDePagoControlador = (function () {
         this.tokenPago = mensajero.subscribe(this.pagoEntregado, getType(PagoMensaje), this);
     }
     DetalleDePagoControlador.prototype.delegarDetalleDePagoControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         $("#UiPaymentDetailPage").on("pageshow", function (e) {
             e.preventDefault();
-            _this_1.cargarDatosPrincipales();
+            _this.cargarDatosPrincipales();
         });
         $("#UiBtnBackFromPaymentDetailPage").on("click", function (e) {
             e.preventDefault();
-            _this_1.irAPantalla("UiPaymentListPage");
-            _this_1.documentoDePago = new PagoDeFacturaVencidaEncabezado();
+            _this.irAPantalla("UiPaymentListPage");
+            _this.documentoDePago = new PagoDeFacturaVencidaEncabezado();
         });
     };
     DetalleDePagoControlador.prototype.pagoEntregado = function (mensaje, subscriber) {
@@ -42,7 +42,7 @@ var DetalleDePagoControlador = (function () {
         });
     };
     DetalleDePagoControlador.prototype.construirVisualizacionDeDetalleDeFacturasCanceladas = function (documentoDePago, callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var contenedorDeDetalleDePago = $("#UiListOfInvoicesPaid");
             contenedorDeDetalleDePago.children().remove("li");
@@ -53,8 +53,8 @@ var DetalleDePagoControlador = (function () {
                 cadenaHtmlDeDetalleDocumentosDePago_1.push(" <label>No. " + detalle.invoiceId + " </label>");
                 cadenaHtmlDeDetalleDocumentosDePago_1.push(" <label>Vencimiento: " + detalle.dueDate.toString().split(" ")[0] + " </label>");
                 cadenaHtmlDeDetalleDocumentosDePago_1.push(" <label>Emisi\u00F3n: " + detalle.createdDate.toString().split(" ")[0] + " </label>");
-                cadenaHtmlDeDetalleDocumentosDePago_1.push(" <label>Saldo: " + _this_1.simboloDeMoneda + ". " + format_number(detalle.pendingToPaid, _this_1.configuracionDeDecimales.defaultDisplayDecimals) + " </label>");
-                cadenaHtmlDeDetalleDocumentosDePago_1.push(" <span class=\"ui-li-count\">" + _this_1.simboloDeMoneda + ". " + format_number(detalle.payedAmount, _this_1.configuracionDeDecimales.defaultDisplayDecimals) + "</span>");
+                cadenaHtmlDeDetalleDocumentosDePago_1.push(" <label>Saldo: " + _this.simboloDeMoneda + ". " + format_number(detalle.pendingToPaid, _this.configuracionDeDecimales.defaultDisplayDecimals) + " </label>");
+                cadenaHtmlDeDetalleDocumentosDePago_1.push(" <span class=\"ui-li-count\">" + _this.simboloDeMoneda + ". " + format_number(detalle.payedAmount, _this.configuracionDeDecimales.defaultDisplayDecimals) + "</span>");
                 cadenaHtmlDeDetalleDocumentosDePago_1.push(" </a>");
                 cadenaHtmlDeDetalleDocumentosDePago_1.push(" </li>");
             });

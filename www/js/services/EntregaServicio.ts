@@ -5,8 +5,8 @@
                 throw new Error("El número de teléfono del cliente no es correcto");
             }
             plugins.CallNumber.callNumber(callback,
-                (error: any) => {
-                    errCallback({ codigo: -1, mensaje: error.message } as Operacion);
+                (error) => {
+                    throw new Error(error.message);
                 }, tarea.phoneCustomer);
 
         } catch (e) {
@@ -34,18 +34,19 @@
         catch (e) {
             errCallback(<Operacion>{ codigo: -1, mensaje: e.message });
         }
+
     }
 
-    obtenerDocumentosParaEntrega(tarea: Tarea, callback: (documentosAEntregar: DemandaDeDespachoEncabezado[]) => void,
+    obtenerDocumentosParaEntrega(codigoDeCliente: string, callback: (documentosAEntregar: DemandaDeDespachoEncabezado[]) => void,
         errorCallback: (error: Operacion) => void) {
         try {
-            this.obtenerEncabezadosDeDocumentosDeDemandaDeDespacho(tarea, callback, errorCallback);
+            this.obtenerEncabezadosDeDocumentosDeDemandaDeDespacho(codigoDeCliente, callback, errorCallback);
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message } as Operacion);
         }
     }
 
-    obtenerEncabezadosDeDocumentosDeDemandaDeDespacho(tarea: Tarea, callback: (encabezadosDeDocumentos: DemandaDeDespachoEncabezado[]) => void, errorCallback: (error: Operacion) => void) {
+    obtenerEncabezadosDeDocumentosDeDemandaDeDespacho(codigoDeCliente: string, callback: (encabezadosDeDocumentos: DemandaDeDespachoEncabezado[]) => void, errorCallback: (error: Operacion) => void) {
         try {
             let documentos: DemandaDeDespachoEncabezado[] = [];
 
@@ -60,7 +61,7 @@
                 sql.push(" ,HAS_MASTERPACK, POSTED_STATUS, OWNER, CLIENT_OWNER, MASTER_ID_SELLER");
                 sql.push(" ,SELLER_OWNER, SOURCE_TYPE, INNER_SALE_STATUS, INNER_SALE_RESPONSE");
                 sql.push(" ,DEMAND_TYPE, TRANSFER_REQUEST_ID, ADDRESS_CUSTOMER, STATE_CODE, PROCESS_STATUS, DISCOUNT");
-                sql.push(` FROM NEXT_PICKING_DEMAND_HEADER WHERE CLIENT_CODE = '${tarea.relatedClientCode}' AND ADDRESS_CUSTOMER = ${tarea.taskAddress ? `'${tarea.taskAddress}'` : null} `);
+                sql.push(` FROM NEXT_PICKING_DEMAND_HEADER WHERE CLIENT_CODE = '${codigoDeCliente}' `);
 
 
                 readTrans.executeSql(sql.join(""), [], (readTransResult: SqlTransaction, results: SqlResultSet) => {
@@ -118,11 +119,11 @@
 
                     this.obtenerDetalleDeDocumentosDeDemandaDeDespacho(documentos, callback, errorCallback, 0, readTransResult);
 
-                }, (_readTransResult: SqlTransaction, error: SqlError) => {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message } as Operacion);
+                }, (readTransResult: SqlTransaction, error: SqlError) => {
+                    throw new Error(error.message);
                 });
             }, (errorTrans: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: errorTrans.message } as Operacion);
+                throw new Error(errorTrans.message);
             });
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message } as Operacion);
@@ -145,7 +146,7 @@
                 sql.push(" ,QTY,LINE_NUM,ERP_OBJECT_TYPE,PRICE,WAS_IMPLODED,QTY_IMPLODED");
                 sql.push(" ,MASTER_ID_MATERIAL,MATERIAL_OWNER,ATTEMPTED_WITH_ERROR,IS_POSTED_ERP");
                 sql.push(" ,POSTED_ERP,ERP_REFERENCE,POSTED_STATUS,POSTED_RESPONSE");
-                sql.push(" ,INNER_SALE_STATUS,INNER_SALE_RESPONSE,TONE,CALIBER, IS_BONUS, DISCOUNT, CODE_PACK_UNIT_STOCK, SALES_PACK_UNIT, CONVERSION_FACTOR ");
+                sql.push(" ,INNER_SALE_STATUS,INNER_SALE_RESPONSE,TONE,CALIBER, IS_BONUS, DISCOUNT ");
                 sql.push(` FROM NEXT_PICKING_DEMAND_DETAIL WHERE PICKING_DEMAND_HEADER_ID = ${documentoActual.pickingDemandHeaderId}`);
 
                 transaccion.executeSql(sql.join(""),
@@ -180,18 +181,16 @@
                             detalleDemanda.caliber = detalleDemandaTemp.CALIBER;
                             detalleDemanda.isBonus = detalleDemandaTemp.IS_BONUS;
                             detalleDemanda.discount = detalleDemandaTemp.DISCOUNT;
-                            detalleDemanda.codePackUnitStock = detalleDemandaTemp.CODE_PACK_UNIT_STOCK;
-                            detalleDemanda.salesPackUnit = detalleDemandaTemp.SALES_PACK_UNIT;
-                            detalleDemanda.conversionFactor = detalleDemandaTemp.CONVERSION_FACTOR;
 
                             documentoActual.detalleDeDemandaDeDespacho.push(detalleDemanda);
                         }
                         documentos[indice] = documentoActual;
                         this.obtenerDetalleDeDocumentosDeDemandaDeDespacho(documentos, callback, errorCallback, indice + 1, transReturn);
                     },
-                    (_transReturn: SqlTransaction, error: SqlError) => {
-                        errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message } as Operacion);
+                    (transReturn: SqlTransaction, error: SqlError) => {
+                        throw new Error(error.message);
                     });
+
             } else {
                 callback(documentos);
             }
@@ -210,7 +209,7 @@
             this.borrarDetalleDeFacturaTemporal(() => {
                 detalleDeDemandaDeDespacho.map((detalle, i) => {
                     this.agregarProductoDeDemandaDeDespachoAFacturacion(detalle, i, (error) => {
-                        errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.mensaje } as Operacion);
+                        throw new Error(error.mensaje);
                     });
                 });
                 callback();
@@ -228,14 +227,11 @@
 
             sql.push(`INSERT INTO INVOICE_DETAIL(INVOICE_NUM, SKU, SKU_NAME, QTY, PRICE, DISCOUNT, TOTAL_LINE`);
             sql.push(`, REQUERIES_SERIE, SERIE, SERIE_2, LINE_SEQ, IS_ACTIVE, COMBO_REFERENCE`);
-            sql.push(`, PARENT_SEQ, EXPOSURE, PHONE, TAX_CODE, ON_HAND, IS_BONUS, PACK_UNIT, CODE_PACK_UNIT_STOCK, CONVERSION_FACTOR) VALUES(`);
+            sql.push(`, PARENT_SEQ, EXPOSURE, PHONE, TAX_CODE, ON_HAND, IS_BONUS) VALUES(`);
             sql.push(`-9999, '${producto.materialId}', '${producto.materialDescription}', ${producto.qty}`);
             sql.push(`, ${producto.isBonus && producto.isBonus > 0 ? 0 : producto.price}, ${producto.discount && producto.discount > 0 ? producto.discount : 0}, ${producto.isBonus && producto.isBonus > 0 ? 0 : this.obtenerTotalDeLineaDeProducto(producto)}`);
             sql.push(`, ${0}, '0','0',${indice == 0 ? 0 : indice + 1},3, '${producto.materialId}', ${indice == 0 ? 0 : indice}`);
-            sql.push(`,1,'',NULL, ${producto.qty}, ${producto.isBonus && producto.isBonus > 0 ? producto.isBonus : 0},`);
-            sql.push(`'${producto.codePackUnitStock}', `);
-            sql.push(`'${producto.salesPackUnit}', `);
-            sql.push(`${producto.conversionFactor}`);
+            sql.push(`,1,'',NULL, ${producto.qty}, ${producto.isBonus && producto.isBonus > 0 ? producto.isBonus : 0}`);
             sql.push(`)`);
 
             trans.executeSql(sql.join(""));
@@ -276,10 +272,22 @@
 
                 callback();
             }, (error: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al cambiar el estado del documento de entrega ${demandHeaderId} debido a: ${error.message}` } as Operacion);
+                throw new Error(error.message);
             });
         } catch (e) {
-            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al cambiar el estado del documento de entrega debido a: " + e.message } as Operacion);
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al cambiar el estado a un documento de entrega" + e.message } as Operacion);
+        }
+    }
+
+    cambiarEstadoDeDocumentoDeDemandaDeDespacho(idDeDemandaDeDespacho: number, estado: string, callback: () => void, errorCallback: (resultado: Operacion) => void) {
+        try {
+            SONDA_DB_Session.transaction((trans: SqlTransaction) => {
+                trans.executeSql(`UPDATE `);
+            }, (error: SqlError) => {
+                throw new Error(error.message);
+            });
+        } catch (e) {
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message } as Operacion);
         }
     }
 
@@ -345,7 +353,7 @@
                         sql.push(` , 0`);
                         sql.push(` , 0`);
                         sql.push(` , 0`);
-                        sql.push(` , '${new Date().toLocaleString()}'`);
+                        sql.push(` , '${(new Date).toLocaleString()}'`);
                         sql.push(` , 'E'`);
                         sql.push(` )`);
                     }
@@ -369,6 +377,7 @@
         }
     }
 
+
     obtenerSkuDeInventario(callback: (listaSku: Sku[]) => void, errorCallback: (resultado: Operacion) => void) {
         try {
             SONDA_DB_Session.readTransaction((readTrans: SqlTransaction) => {
@@ -390,16 +399,17 @@
                     callback(listaSku);
                     listaSku = null;
                 }, (readTransResult: SqlTransaction, error: SqlError) => {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al obtener el inventario: ${error.message}` } as Operacion);
+                    throw new Error(error.message);
                 });
                 sql = null;
             }, (errorTrans: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al obtener el inventario: ${errorTrans.message}` } as Operacion);
+                throw new Error(errorTrans.message);
             });
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al obtener el inventario: ${e.message}` } as Operacion);
         }
     }
+
 
     obtenerEntregasCanceladasParaSincronizacion(callback: (documentosASincronizar: EntregaCancelada[]) => void,
         errorCallback: (error: Operacion) => void) {
@@ -456,7 +466,7 @@
     marcarEntregaCanceladaComoPosteadasEnElServidor(entregasCanceladasDevueltasPorElServidor: any) {
         try {
             this.actualizarEntregasCanceladasComoPosteadas(entregasCanceladasDevueltasPorElServidor, 0, (resultado: Operacion) => {
-                notify(resultado.mensaje);
+                throw new Error(resultado.mensaje);
             });
         } catch (e) {
             notify(e.message);
@@ -479,7 +489,7 @@
                         }
                     });
                 }, (error: SqlError) => {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `No se pudieron actualizar las entregas canceladas posteadas en el servidor debido a: ${error.message}` } as Operacion);
+                    throw new Error(error.message);
                 });
             } else {
                 if (callback) {
@@ -515,11 +525,11 @@
                 sql.push(`,0`);
                 sql.push(`, '${demandaDeDespachoEncabezado.reasonCancel}'`);
                 sql.push(`)`);
-
+                console.log(sql.join(""));
                 trans.executeSql(sql.join(""));
                 callback();
             }, (error: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al insertar la entrega cancelada: ${error.message}` } as Operacion);
+                throw new Error(error.message);
             });
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al insertar la entrega cancelada: ${e.message}` } as Operacion);
@@ -530,11 +540,13 @@
         try {
             SONDA_DB_Session.transaction((trans: SqlTransaction) => {
                 let sql: string[] = [];
+                // ReSharper disable once UsageOfPossiblyUnassignedValue
                 sql.push("DELETE FROM INVOICE_DETAIL WHERE INVOICE_NUM = -9999");
+                console.log(sql.join(""));
                 trans.executeSql(sql.join(""));
                 callback();
             }, (error: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al borrar el detalle temporal: ${error.message}` } as Operacion);
+                throw new Error(error.message);
             });
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al borrar el detalle temporal: ${e.message}` } as Operacion);
@@ -545,11 +557,13 @@
         try {
             SONDA_DB_Session.transaction((trans: SqlTransaction) => {
                 let sql: string[] = [];
+                // ReSharper disable once UsageOfPossiblyUnassignedValue
                 sql.push("DELETE FROM INVOICE_DETAIL WHERE INVOICE_NUM = -9999 AND QTY <=0");
+                console.log(sql.join(""));
                 trans.executeSql(sql.join(""));
                 callback();
             }, (error: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al borrar el detalle temporal: ${error.message}` } as Operacion);
+                throw new Error(error.message);
             });
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `Error al borrar el detalle temporal: ${e.message}` } as Operacion);
@@ -698,7 +712,9 @@
                         }
                     },
                     (transResult, error) => {
+
                         errorCallBack({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al obtener canastas: " + error.message } as Operacion);
+
                     });
             },
                 (error: SqlError) => {
@@ -760,7 +776,7 @@
     marcarDemandasDeDespachoPorTareaComoPosteadasEnElServidor(demandasDeDespachoPorTareaDevueltasPorElServidor: any) {
         try {
             this.actualizarDemandasDeDespachoPorTareaComoPosteadas(demandasDeDespachoPorTareaDevueltasPorElServidor, 0, (resultado: Operacion) => {
-                notify(resultado.mensaje);
+                throw new Error(resultado.mensaje);
             });
         } catch (e) {
             notify(e.message);
@@ -782,7 +798,7 @@
                         }
                     });
                 }, (error: SqlError) => {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `No se ha podido actualizar la demanda de despacho por tarea posteada en el servidor debido a: ${error.message}` } as Operacion);
+                    throw new Error(error.message);
                 });
             } else {
                 if (callback) {
@@ -822,13 +838,13 @@
                             demandaDeDespachoADevolver.reasonCancel = entregaAnulada.reasonCancel;
 
                             callback(demandaDeDespachoADevolver);
-
+                            
                         } else {
                             errorCallback({
                                 codigo: -1,
                                 resultado: ResultadoOperacionTipo.Error,
                                 mensaje:
-                                    `No se ha podido encontrar la información necesaria del documento de despacho asociado a la entrega.`
+                                `No se ha podido encontrar la información necesaria del documento de despacho asociado a la entrega.`
                             } as Operacion);
                         }
                     },
@@ -837,8 +853,8 @@
                             codigo: -1,
                             resultado: ResultadoOperacionTipo.Error,
                             mensaje: `Error al obtener el documento de despacho asociado a la entrega debido a: ${
-                                error
-                                    .message}`
+                            error
+                                .message}`
                         } as Operacion);
                     });
 
@@ -920,8 +936,8 @@
                     codigo: error.code,
                     resultado: ResultadoOperacionTipo.Error,
                     mensaje:
-                        `Error al obtener el detalle del documento de despacho asociado a la entrega debido a: ${
-                        error.message}`
+                    `Error al obtener el detalle del documento de despacho asociado a la entrega debido a: ${
+                    error.message}`
                 } as Operacion);
             });
     }
@@ -930,7 +946,7 @@
         try {
             let sql: string = "";
             SONDA_DB_Session.transaction((trans: SqlTransaction) => {
-
+                
                 sql = `UPDATE PICKING_DEMAND_BY_TASK SET 
                     IS_POSTED = ${SiNo.No}
                     , PICKING_DEMAND_STATUS = '${EstadoEntrega.Pendiente}' 

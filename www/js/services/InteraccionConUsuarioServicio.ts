@@ -1,75 +1,55 @@
 ﻿class InteraccionConUsuarioServicio implements IInteraccionConUsuarioServicio {
-  static pantallaEstaBloqueada = false;
 
-  static bloquearPantalla() {
-    if (this.pantallaEstaBloqueada) {
-      return;
-    }
+    static pantallaEstaBloqueada = false;
 
-    let imagenCarga = $("#imgCargandoInicioDeRuta");
-    let anchura = $(window).width() / 2;
-    let objetoImagen;
+    static bloquearPantalla() {
+        if (this.pantallaEstaBloqueada) return;
 
-    imagenCarga.height(anchura / 2);
-    imagenCarga.width(anchura / 2);
+        let imagenCarga = $("#imgCargandoInicioDeRuta");
+        let anchura = ($(window).width() / 2);
+        let objetoImagen;
 
-    let margenIzquiero = $(window).width() / 2;
-    let margenSuperior = $(window).height() / 2;
 
-    if (imagenCarga.attr("id") !== undefined) {
-      objetoImagen = imagenCarga;
-    }
+        imagenCarga.height(anchura / 2);
+        imagenCarga.width(anchura / 2);
 
-    $.blockUI({
-      message: objetoImagen,
-      css: {
-        top: margenSuperior - anchura / 2 / 2 + "px",
-        left: margenIzquiero - anchura / 2 / 2 + "px",
-        width: anchura / 2 + "px",
-        height: anchura / 2 + "px"
-      }
-    });
-    document.removeEventListener("menubutton", onMenuKeyDown, false);
-
-    document.removeEventListener("backbutton", onBackKeyDown, false);
-    document.addEventListener(
-      "backbutton",
-      InteraccionConUsuarioServicio.bloqueoFunc,
-      false
-    );
-    imagenCarga = null;
-    this.pantallaEstaBloqueada = true;
-  }
-
-  static desbloquearPantalla() {
-    if (!this.pantallaEstaBloqueada) return;
-
-    $.unblockUI();
-    document.addEventListener("menubutton", onMenuKeyDown, false);
-    document.removeEventListener(
-      "backbutton",
-      InteraccionConUsuarioServicio.bloqueoFunc,
-      false
-    );
-    document.addEventListener("backbutton", onBackKeyDown, false);
-    this.pantallaEstaBloqueada = false;
-  }
-
-  static bloqueoFunc(e) {
-    e.preventDefault();
-    return false;
-  }
-
-  static confirmarAccion(mensaje: string, callback: () => void) {
-    navigator.notification.confirm(
-      mensaje || "¿Confirma realizar la acción?",
-      buttonIndex => {
-        if (buttonIndex === BotonSeleccionado.Si) {
-          callback();
+        let margenIzquiero = ($(window).width() / 2);
+        let margenSuperior = ($(window).height() / 2);
+        
+        if (imagenCarga.attr("id") !== undefined) {
+            objetoImagen = imagenCarga;
         }
-      },
-      `Sonda® SD ${SondaVersion}`,
-      ["No", "Si"]
-    );
-  }
+
+        $.blockUI({
+            message: objetoImagen,
+            css: {
+                top: (margenSuperior - ((anchura / 2) / 2)) + 'px',
+                left: (margenIzquiero - ((anchura / 2) / 2)) + 'px',
+                width: (anchura / 2) + 'px',
+                height: (anchura / 2) + 'px'
+            }
+        });
+        document.removeEventListener("menubutton", onMenuKeyDown, false);
+
+        document.removeEventListener("backbutton", onBackKeyDown, false);
+        document.addEventListener("backbutton", InteraccionConUsuarioServicio.bloqueoFunc, false);
+        validator.isEmail('foo@bar.com');
+        imagenCarga = null;
+        this.pantallaEstaBloqueada = true;
+    }
+
+    static desbloquearPantalla() {
+        if (!this.pantallaEstaBloqueada) return;
+
+        $.unblockUI();
+        document.addEventListener("menubutton", onMenuKeyDown, false);
+        document.removeEventListener("backbutton", InteraccionConUsuarioServicio.bloqueoFunc, false);
+        document.addEventListener("backbutton", onBackKeyDown, false);
+        this.pantallaEstaBloqueada = false;
+    }
+
+    static bloqueoFunc(e) {
+        e.preventDefault();
+        return false;
+    }
 }

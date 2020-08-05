@@ -6,7 +6,7 @@ var ManifiestoControlador = (function () {
         this.perdioConexionEnProcesoDeManifiesto = false;
     }
     ManifiestoControlador.prototype.delegarManifiestoControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         $("#UiBtnShowScanManifestPage").on("click", function () {
             $.mobile.changePage("#UiPageScanManifest", {
                 transition: "flow",
@@ -16,29 +16,30 @@ var ManifiestoControlador = (function () {
             });
         });
         $("#UiPageScanManifest").on("pageshow", function () {
-            _this_1.suscribirEventoDePerdidaDeConexionAlServidor(manifiestoControlador);
-            _this_1.limpiarCampos();
+            _este = _this;
+            _this.suscribirEventoDePerdidaDeConexionAlServidor(_este);
+            _this.limpiarCampos();
         });
         $("#UiBtnBackFromScanManifest").on("click", function () {
-            _this_1.regresarAPantallaAnterior("menu_page");
+            _this.regresarAPantallaAnterior("menu_page");
         });
         $("#UiBtnCleanScanManifest").on("click", function () {
-            _this_1.limpiarCampos();
+            _this.limpiarCampos();
         });
         $("#UiBtnStartDeliveryRouteFromScanManifest").on("click", function () {
-            _this_1.regresarAPantallaAnterior("menu_page");
+            _this.regresarAPantallaAnterior("menu_page");
         });
         $("#UiBtnScanManifest").on("click", function () {
-            _this_1.ejecutarProcesoDeEscaneoDeCodigoDeManifiesto();
+            _this.ejecutarProcesoDeEscaneoDeCodigoDeManifiesto();
         });
         $("#UiTxtManifestHeaderId").on("keyup", function (e) {
-            if (_this_1.verificarSiPresionoTeclaEnter(e)) {
+            if (_this.verificarSiPresionoTeclaEnter(e)) {
                 e.preventDefault();
-                _this_1.iniciarProcesoDeManifiestoEscaneado();
+                _this.iniciarProcesoDeManifiestoEscaneado();
             }
         });
         $("#UiBtnProcessManifest").on("click", function () {
-            _this_1.iniciarProcesoDeManifiestoEscaneado();
+            _this.iniciarProcesoDeManifiestoEscaneado();
         });
     };
     ManifiestoControlador.prototype.limpiarCampos = function () {
@@ -69,10 +70,10 @@ var ManifiestoControlador = (function () {
         }
     };
     ManifiestoControlador.prototype.delegarSockets = function (socketIo) {
-        var _this_1 = this;
+        var _this = this;
         this.delegarSocketPrincipalDeProcesoDeManifiesto();
         socketIo.on("get_manifest_for_sonda_sd_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         my_dialog("", "", "close");
@@ -80,8 +81,8 @@ var ManifiestoControlador = (function () {
                         InteraccionConUsuarioServicio.desbloquearPantalla();
                         break;
                     case "add_header":
-                        _this_1.manifiestoServicio.almacenarEncabezadoDeManifiesto(data.manifestHeader, function () {
-                            _this_1.establecerInformacionDeEncabezadoDeManifiesto(data.manifestHeader);
+                        _this.manifiestoServicio.almacenarEncabezadoDeManifiesto(data.manifestHeader, function () {
+                            _this.establecerInformacionDeEncabezadoDeManifiesto(data.manifestHeader);
                         }, function (resultado) {
                             my_dialog("", "", "close");
                             notify(resultado.mensaje);
@@ -91,7 +92,7 @@ var ManifiestoControlador = (function () {
                         ToastThis("Encabezado del manifiesto " + data.manifestId + " obtenido exitosamente.");
                         break;
                     case "add_detail":
-                        _this_1.manifiestoServicio.almacenarDetalleDeManifiesto(data.manifestDetail, function () {
+                        _this.manifiestoServicio.almacenarDetalleDeManifiesto(data.manifestDetail, function () {
                         }, function (resultado) {
                             my_dialog("", "", "close");
                             notify(resultado.mensaje);
@@ -99,13 +100,13 @@ var ManifiestoControlador = (function () {
                         break;
                     case "get_manifest_detail_completed":
                         ToastThis("Detalle del manifiesto " + data.manifestId + " obtenido exitosamente.");
-                        _this_1.establecerInformacionDeCantidadDeEntregas(data.manifestId);
-                        _this_1.manifiestoServicio.limpiarTareasDeEntrega();
+                        _this.establecerInformacionDeCantidadDeEntregas(data.manifestId);
+                        _this.manifiestoServicio.limpiarTareasDeEntrega();
                         break;
                 }
         });
         socketIo.on("get_delivery_tasks_for_sonda_sd_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         my_dialog("", "", "close");
@@ -121,7 +122,7 @@ var ManifiestoControlador = (function () {
                 }
         });
         socketIo.on("get_next_picking_demand_header_by_manifest_for_sonda_sd_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         my_dialog("", "", "close");
@@ -129,7 +130,7 @@ var ManifiestoControlador = (function () {
                         InteraccionConUsuarioServicio.desbloquearPantalla();
                         break;
                     case "add_header":
-                        _this_1.manifiestoServicio.almacenarDemandaDeDespachoEncabezado(data.nextPickingHeader, function (resultado) {
+                        _this.manifiestoServicio.almacenarDemandaDeDespachoEncabezado(data.nextPickingHeader, function (resultado) {
                             my_dialog("", "", "close");
                             notify(resultado.mensaje);
                         });
@@ -140,7 +141,7 @@ var ManifiestoControlador = (function () {
                 }
         });
         socketIo.on("get_next_picking_demand_detail_by_Manifest_for_sonda_sd_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         my_dialog("", "", "close");
@@ -148,19 +149,19 @@ var ManifiestoControlador = (function () {
                         InteraccionConUsuarioServicio.desbloquearPantalla();
                         break;
                     case "add_detail":
-                        _this_1.manifiestoServicio.almacenarDemandaDeDespachoDetalle(data.nextPickingDetail, function (resultado) {
+                        _this.manifiestoServicio.almacenarDemandaDeDespachoDetalle(data.nextPickingDetail, function (resultado) {
                             my_dialog("", "", "close");
                             notify(resultado.mensaje);
                         });
                         break;
                     case "complete":
                         ToastThis("Demanda de despacho detalles completados....");
-                        _this_1.almacenarDataDeDemandasPorTarea();
+                        _this.almacenarDataDeDemandasPorTarea();
                         break;
                 }
         });
         socketIo.on("get_serial_number_by_Manifest_for_sonda_sd_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         my_dialog("", "", "close");
@@ -168,19 +169,19 @@ var ManifiestoControlador = (function () {
                         InteraccionConUsuarioServicio.desbloquearPantalla();
                         break;
                     case "add":
-                        _this_1.manifiestoServicio.almacenarDemandaDeDespachoDetallePorNumeroDeSerie(data.serial_number, function (resultado) {
+                        _this.manifiestoServicio.almacenarDemandaDeDespachoDetallePorNumeroDeSerie(data.serial_number, function (resultado) {
                             my_dialog("", "", "close");
                             notify(resultado.mensaje);
                         });
                         break;
                     case "complete":
                         ToastThis("Demanda de despacho detalles por número de serie completados....");
-                        _this_1.limpiarCampos();
+                        _this.limpiarCampos();
                         break;
                 }
         });
         socketIo.on("get_baskets_information_for_manifest_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         my_dialog("", "", "close");
@@ -188,7 +189,7 @@ var ManifiestoControlador = (function () {
                         InteraccionConUsuarioServicio.desbloquearPantalla();
                         break;
                     case "add":
-                        _this_1.manifiestoServicio.almacenarInformacionDeCanastasPorManifiesto(data.basket_information, function (resultado) {
+                        _this.manifiestoServicio.almacenarInformacionDeCanastasPorManifiesto(data.basket_information, function (resultado) {
                             my_dialog("", "", "close");
                             notify(resultado.mensaje);
                         });
@@ -200,17 +201,17 @@ var ManifiestoControlador = (function () {
                 }
         });
         socketIo.on("change_manifest_status_from_sonda_sd_response", function (data) {
-            if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+            if (!_este.perdioConexionEnProcesoDeManifiesto)
                 switch (data.option) {
                     case "fail":
                         notify(data.message);
                         InteraccionConUsuarioServicio.desbloquearPantalla();
                         break;
                     case "updateManifest":
-                        _this_1.manifiestoServicio.marcarManifiestoComoPosteadoEnElServidor(data.manifestId, function (resultado) {
+                        _this.manifiestoServicio.marcarManifiestoComoPosteadoEnElServidor(data.manifestId, function (resultado) {
                             notify(resultado.mensaje);
                         });
-                        manifiestoControlador.procesandoManifiesto = false;
+                        _este.procesandoManifiesto = false;
                         var intervalo_1 = 0;
                         var tiempoEspera_1 = setInterval(function () {
                             if (intervalo_1 === 5) {
@@ -224,9 +225,9 @@ var ManifiestoControlador = (function () {
         });
     };
     ManifiestoControlador.prototype.regresarAPantallaAnterior = function (pantalla) {
-        if (manifiestoControlador.perdioConexionEnProcesoDeManifiesto && manifiestoControlador.procesandoManifiesto) {
-            manifiestoControlador.manifiestoServicio.limpiarTareasDeEntrega();
-            manifiestoControlador.perdioConexionEnProcesoDeManifiesto = false;
+        if (_este.perdioConexionEnProcesoDeManifiesto && _este.procesandoManifiesto) {
+            _este.manifiestoServicio.limpiarTareasDeEntrega();
+            _este.perdioConexionEnProcesoDeManifiesto = false;
         }
         this.desvincularEventoDePerdidaDeConexionAlServidor(this);
         $.mobile.changePage("#" + pantalla, {
@@ -308,11 +309,11 @@ var ManifiestoControlador = (function () {
             'dbuserpass': gdbuserpass,
             "currentGpsUser": gCurrentGPS
         };
-        if (manifiestoControlador.perdioConexionEnProcesoDeManifiesto) {
-            manifiestoControlador.delegarSocketPrincipalDeProcesoDeManifiesto();
-            manifiestoControlador.perdioConexionEnProcesoDeManifiesto = false;
+        if (_este.perdioConexionEnProcesoDeManifiesto) {
+            _este.delegarSocketPrincipalDeProcesoDeManifiesto();
+            _este.perdioConexionEnProcesoDeManifiesto = false;
         }
-        manifiestoControlador.procesandoManifiesto = true;
+        _este.procesandoManifiesto = true;
         SocketControlador.socketIo.emit("process_manifest_from_sonda_sd", data);
         txtIdManifiesto = null;
     };
@@ -368,18 +369,18 @@ var ManifiestoControlador = (function () {
         });
     };
     ManifiestoControlador.prototype.usuarioPerdioConexionAlServidor = function () {
-        if (!manifiestoControlador.procesandoManifiesto) {
+        if (!_este.procesandoManifiesto) {
             return;
         }
-        manifiestoControlador.perdioConexionEnProcesoDeManifiesto = true;
-        manifiestoControlador.manifiestoServicio.limpiarTareasDeEntrega();
+        _este.perdioConexionEnProcesoDeManifiesto = true;
+        _este.manifiestoServicio.limpiarTareasDeEntrega();
         my_dialog("", "", "close");
         notify("Ha perdido la conexión al servidor, por favor, verifique y vuelva a intentar.");
         SocketControlador.socketIo.off("process_manifest_from_sonda_sd_response");
         InteraccionConUsuarioServicio.desbloquearPantalla();
     };
     ManifiestoControlador.prototype.delegarSocketPrincipalDeProcesoDeManifiesto = function () {
-        var _this_1 = this;
+        var _this = this;
         SocketControlador.socketIo.on("process_manifest_from_sonda_sd_response", function (data) {
             switch (data.option) {
                 case "success":
@@ -392,7 +393,7 @@ var ManifiestoControlador = (function () {
                     InteraccionConUsuarioServicio.desbloquearPantalla();
                     break;
                 case "all_processes_has_been_completed":
-                    _this_1.cambiarEstadoManifiesto3plEnElServidor(data.manifestId, EstadoDeManifiesto.Asignado.toString());
+                    _this.cambiarEstadoManifiesto3plEnElServidor(data.manifestId, EstadoDeManifiesto.Asignado.toString());
                     break;
             }
         });

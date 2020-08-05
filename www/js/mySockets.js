@@ -4,14 +4,12 @@ function finalizarRuta(callback, errcallBack) {
     SONDA_DB_Session.transaction(
       function(tx) {
         try {
-          var query =
-            "SELECT name FROM sqlite_master WHERE type='table' AND [name] NOT IN('SEQUENCE_CONTROL')";
+          var query = "SELECT name FROM sqlite_master WHERE type='table'";
           tx.executeSql(
             query,
             [],
             function(txRet, results) {
               if (results.rows.length > 1) {
-                //INFO: this loop starts at 1 because index 0 corresponds to the master information table
                 for (var index = 1; index < results.rows.length; index++) {
                   var tableName = results.rows.item(index).name;
                   txRet.executeSql("DELETE FROM " + tableName);
@@ -53,143 +51,139 @@ function actualizarEstadoDeTarea(
   callBack,
   estadoDeTarea
 ) {
-  DispositivoServicio.obtenerUbicacion(function() {
-    var sql = [];
-    SONDA_DB_Session.transaction(
-      function(_tx) {
-        var tx = _tx;
-        if (!vieneDeListadoDeDocumentosDeEntrega) {
-          sql.push("UPDATE TASK SET POSTED_GPS = '" + gCurrentGPS + "'");
+  var pSql = null;
+  var sql = [];
+  SONDA_DB_Session.transaction(
+    function(tx) {
+      if (!vieneDeListadoDeDocumentosDeEntrega) {
+        sql.push("UPDATE TASK SET POSTED_GPS = '" + gCurrentGPS + "'");
 
-          if (
-            completadaConExito === SiNo.No ||
-            completadaConExito === SiNo.Si
-          ) {
-            sql.push(
-              ", COMPLETED_SUCCESSFULLY = " + parseInt(completadaConExito)
-            );
-          }
-
-          if (razon) {
-            sql.push(", REASON = '" + razon + "'");
-          }
-
-          if (estadoDeTarea && estadoDeTarea === TareaEstado.Aceptada) {
-            sql.push(
-              ", ACCEPTED_STAMP = CASE WHEN ACCEPTED_STAMP IS NULL THEN '" +
-                getDateTime() +
-                "' ELSE ACCEPTED_STAMP END, TASK_STATUS = 'ACCEPTED'"
-            );
-          }
-
-          if (estadoDeTarea && estadoDeTarea === TareaEstado.Completada) {
-            sql.push(
-              ", COMPLETED_STAMP = CASE WHEN COMPLETED_STAMP IS NULL THEN '" +
-                getDateTime() +
-                "' ELSE COMPLETED_STAMP END, TASK_STATUS = 'COMPLETED'"
-            );
-          }
-
+        if (completadaConExito === SiNo.No || completadaConExito === SiNo.Si) {
           sql.push(
-            ", IS_POSTED = CASE WHEN IS_POSTED = -1 THEN IS_POSTED ELSE 2 END"
-          );
-          sql.push(" WHERE TASK_ID = " + parseInt(taskId));
-          
-          tx.executeSql(sql.join(""));
-        } else {
-          sql.push(
-            "SELECT COUNT(*) AS QTY_DOCS_PENDING FROM NEXT_PICKING_DEMAND_HEADER AS DH INNER JOIN TASK AS T "
-          );
-          sql.push(
-            "ON(T.RELATED_CLIENT_CODE = DH.CLIENT_CODE AND T.TASK_ADDRESS = DH.ADDRESS_CUSTOMER) WHERE T.TASK_ID = " +
-              taskId +
-              " AND DH.PROCESS_STATUS = '" +
-              EstadoEntrega.Pendiente +
-              "'"
-          );
-          tx.executeSql(
-            sql.join(""),
-            [],
-            function(transReturn, results) {
-              sql.length = 0;
-              if (NoTieneDocumentosPendientesDeEntrega(results)) {
-                sql.push("UPDATE TASK SET POSTED_GPS = '" + gCurrentGPS + "'");
-
-                if (completadaConExito) {
-                  sql.push(
-                    ", COMPLETED_SUCCESSFULLY = " + parseInt(completadaConExito)
-                  );
-                }
-
-                if (razon) {
-                  sql.push(", REASON = '" + razon + "'");
-                }
-
-                if (estadoDeTarea && estadoDeTarea === TareaEstado.Aceptada) {
-                  sql.push(
-                    ", ACCEPTED_STAMP = CASE WHEN ACCEPTED_STAMP IS NULL THEN '" +
-                      getDateTime() +
-                      "' ELSE ACCEPTED_STAMP END, TASK_STATUS = 'ACCEPTED'"
-                  );
-                }
-
-                if (estadoDeTarea && estadoDeTarea === TareaEstado.Completada) {
-                  sql.push(
-                    ", COMPLETED_STAMP = CASE WHEN COMPLETED_STAMP IS NULL THEN '" +
-                      getDateTime() +
-                      "' ELSE COMPLETED_STAMP END, TASK_STATUS = 'COMPLETED'"
-                  );
-                }
-
-                sql.push(
-                  ", IS_POSTED = 2 WHERE TASK_ID = " +
-                    parseInt(taskId) +
-                    " AND TASK_STATUS <> 'COMPLETED'"
-                );
-
-                tx.executeSql(sql.join(""));
-
-                TareaServicio.recalcularSecuenciaDeTareas(function() {
-                  EnviarData();
-                });
-              } else {
-                sql.push(
-                  "UPDATE TASK SET POSTED_GPS = '" +
-                    gCurrentGPS +
-                    "', TASK_STATUS = '" +
-                    TareaEstado.Asignada +
-                    "'"
-                );
-
-                sql.push(
-                  ", IS_POSTED = 2 WHERE TASK_ID = " +
-                    parseInt(taskId) +
-                    " AND TASK_STATUS <> 'COMPLETED'"
-                );
-
-                tx.executeSql(sql.join(""));
-              }
-            },
-            function(transResult, error) {
-              EnviarData();
-              callBack();
-            }
+            ", COMPLETED_SUCCESSFULLY = " + parseInt(completadaConExito)
           );
         }
-      },
-      function(
-        err //fail
-      ) {
-        EnviarData();
-        callBack();
-      },
-      function() //success
-      {
-        EnviarData();
-        callBack();
+
+        if (razon) {
+          sql.push(", REASON = '" + razon + "'");
+        }
+
+        if (estadoDeTarea && estadoDeTarea === TareaEstado.Aceptada) {
+          sql.push(
+            ", ACCEPTED_STAMP = CASE WHEN ACCEPTED_STAMP IS NULL THEN '" +
+              getDateTime() +
+              "' ELSE ACCEPTED_STAMP END, TASK_STATUS = 'ACCEPTED'"
+          );
+        }
+
+        if (estadoDeTarea && estadoDeTarea === TareaEstado.Completada) {
+          sql.push(
+            ", COMPLETED_STAMP = CASE WHEN COMPLETED_STAMP IS NULL THEN '" +
+              getDateTime() +
+              "' ELSE COMPLETED_STAMP END, TASK_STATUS = 'COMPLETED'"
+          );
+        }
+
+        sql.push(
+          ", IS_POSTED = 2 WHERE TASK_ID = " +
+            parseInt(taskId) +
+            " AND TASK_STATUS <> 'COMPLETED'"
+        );
+
+        tx.executeSql(sql.join(""));
+      } else {
+        sql.push(
+          "SELECT COUNT(*) AS QTY_DOCS_PENDING FROM NEXT_PICKING_DEMAND_HEADER AS DH INNER JOIN TASK AS T "
+        );
+        sql.push(
+          "ON(T.RELATED_CLIENT_CODE = DH.CLIENT_CODE) WHERE T.TASK_ID = " +
+            taskId +
+            " AND DH.PROCESS_STATUS = '" +
+            EstadoEntrega.Pendiente +
+            "'"
+        );
+        tx.executeSql(
+          sql.join(""),
+          [],
+          function(transReturn, results) {
+            sql.length = 0;
+            if (NoTieneDocumentosPendientesDeEntrega(results)) {
+              sql.push("UPDATE TASK SET POSTED_GPS = '" + gCurrentGPS + "'");
+
+              if (completadaConExito) {
+                sql.push(
+                  ", COMPLETED_SUCCESSFULLY = " + parseInt(completadaConExito)
+                );
+              }
+
+              if (razon) {
+                sql.push(", REASON = '" + razon + "'");
+              }
+
+              if (estadoDeTarea && estadoDeTarea === TareaEstado.Aceptada) {
+                sql.push(
+                  ", ACCEPTED_STAMP = CASE WHEN ACCEPTED_STAMP IS NULL THEN '" +
+                    getDateTime() +
+                    "' ELSE ACCEPTED_STAMP END, TASK_STATUS = 'ACCEPTED'"
+                );
+              }
+
+              if (estadoDeTarea && estadoDeTarea === TareaEstado.Completada) {
+                sql.push(
+                  ", COMPLETED_STAMP = CASE WHEN COMPLETED_STAMP IS NULL THEN '" +
+                    getDateTime() +
+                    "' ELSE COMPLETED_STAMP END, TASK_STATUS = 'COMPLETED'"
+                );
+              }
+
+              sql.push(
+                ", IS_POSTED = 2 WHERE TASK_ID = " +
+                  parseInt(taskId) +
+                  " AND TASK_STATUS <> 'COMPLETED'"
+              );
+
+              tx.executeSql(sql.join(""));
+
+              TareaServicio.recalcularSecuenciaDeTareas(function() {
+                EnviarData();
+              });
+            } else {
+              sql.push(
+                "UPDATE TASK SET POSTED_GPS = '" +
+                  gCurrentGPS +
+                  "', TASK_STATUS = '" +
+                  TareaEstado.Asignada +
+                  "', IS_POSTED = 2"
+              );
+
+              sql.push(
+                " WHERE TASK_ID = " +
+                  parseInt(taskId) +
+                  " AND TASK_STATUS <> 'COMPLETED'"
+              );
+
+              tx.executeSql(sql.join(""));
+            }
+          },
+          function(transResult, error) {
+            EnviarData();
+            callBack();
+          }
+        );
       }
-    );
-  });
+    },
+    function(
+      err //fail
+    ) {
+      EnviarData();
+      callBack();
+    },
+    function() //success
+    {
+      EnviarData();
+      callBack();
+    }
+  );
 }
 
 function AgregarTipoDeImpuesto(tipoDeImpuesto) {

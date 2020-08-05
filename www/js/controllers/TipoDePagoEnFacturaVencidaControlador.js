@@ -8,28 +8,28 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         this.tokenDetalleDeTiposDePagoRealizados = mensajero.subscribe(this.detalleDePagosDelDocumentoActualEntregados, getType(DetalleDeTipoDePagoMensaje), this);
     }
     TipoDePagoEnFacturaVencidaControlador.prototype.delegarTipoDePagoEnFacturaVencidaControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         var este = this;
         $("#UiOverdueInvoicePaymentDetailPage").on("pageshow", function (e) {
             e.preventDefault();
-            _this_1.cargarDatosIniciales();
+            _this.cargarDatosIniciales();
         });
         $("#UiBtnGoBackFromOverdueInvoicePaymentDetailPage").on("click", function (e) {
             e.preventDefault();
-            _this_1.enviarInformacionDeDetalleDePagos(function () {
-                _this_1.irAPantalla("UiOverdueInvoicePaymentPage");
+            _this.enviarInformacionDeDetalleDePagos(function () {
+                _this.irAPantalla("UiOverdueInvoicePaymentPage");
             });
         });
         $("#UiBtnApplyPayment").on("click", function (e) {
             e.preventDefault();
-            _this_1.obtenerAutorizacionDeUsuarioParaProcesarPago(function () {
-                _this_1.validarPagoIngresado();
+            _this.obtenerAutorizacionDeUsuarioParaProcesarPago(function () {
+                _this.validarPagoIngresado();
             });
         });
         $("#UiBtnTakeFrontImage").on("click", function (e) {
             e.preventDefault();
             DispositivoServicio.TomarFoto(function (imagen) {
-                _this_1.imagenFrontalDelDocumentoDePago = imagen;
+                _this.imagenFrontalDelDocumentoDePago = imagen;
             }, function (mensajeDeError) {
                 if (mensajeDeError !== "Camera cancelled.")
                     notify(mensajeDeError);
@@ -38,7 +38,7 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         $("#UiBtnTakeBackImage").on("click", function (e) {
             e.preventDefault();
             DispositivoServicio.TomarFoto(function (imagen) {
-                _this_1.imagenPosteriorDelDocumentoDePago = imagen;
+                _this.imagenPosteriorDelDocumentoDePago = imagen;
             }, function (mensajeDeError) {
                 if (mensajeDeError !== "Camera cancelled.")
                     notify(mensajeDeError);
@@ -46,29 +46,29 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         });
         $("#UiCmbPaymentType").on("change", function (e) {
             e.preventDefault();
-            _this_1.expandirContenedorDeInformacionDeTipoDePagoSeleccionado(e);
+            _this.expandirContenedorDeInformacionDeTipoDePagoSeleccionado(e);
         });
         $("#UiOverdueInvoicePaymentDetailPage").on("click", "#UiBanckCheksDetail a", function (e) {
             var id = e.currentTarget.id;
             if (id) {
-                _this_1.obtenerAutorizacionDeUsuarioParaEliminarPago(function () {
-                    _this_1.eliminarPagoSeleccionado(id);
+                _this.obtenerAutorizacionDeUsuarioParaEliminarPago(function () {
+                    _this.eliminarPagoSeleccionado(id);
                 });
             }
         });
         $("#UiOverdueInvoicePaymentDetailPage").on("click", "#UiDepositsDetail a", function (e) {
             var id = e.currentTarget.id;
             if (id) {
-                _this_1.obtenerAutorizacionDeUsuarioParaEliminarPago(function () {
-                    _this_1.eliminarPagoSeleccionado(id);
+                _this.obtenerAutorizacionDeUsuarioParaEliminarPago(function () {
+                    _this.eliminarPagoSeleccionado(id);
                 });
             }
         });
         $("#UiOverdueInvoicePaymentDetailPage").on("click", "#UiCashDetail a", function (e) {
             var id = e.currentTarget.id;
             if (id) {
-                _this_1.obtenerAutorizacionDeUsuarioParaEliminarPago(function () {
-                    _this_1.eliminarPagoSeleccionado(id);
+                _this.obtenerAutorizacionDeUsuarioParaEliminarPago(function () {
+                    _this.eliminarPagoSeleccionado(id);
                 });
             }
         });
@@ -127,7 +127,7 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         campoDeNumeroDeDocumentoDeChequeODeposito = null;
     };
     TipoDePagoEnFacturaVencidaControlador.prototype.cargarDatosIniciales = function () {
-        var _this_1 = this;
+        var _this = this;
         var tipoDePago = $("#UiCmbPaymentType");
         tipoDePago.val(TipoDePagoFacturaVencida.Efectivo);
         tipoDePago.selectmenu("refresh", true);
@@ -137,10 +137,10 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         this.limpiarCampoDePagoEnEfectivo();
         this.simboloDeMoneda = localStorage.getItem("CURRENCY_SYMBOL") || "Q";
         this.decimalesServicio.obtenerInformacionDeManejoDeDecimales(function (decimales) {
-            _this_1.configuracionDeDecimales = decimales;
-            _this_1.cambiarVisualizacionDeContenedorDeCamposParaChequesODepositos(false);
-            _this_1.calcularMontosDeLosDiferentesTiposDePagos();
-            _this_1.generarListadoDeTiposDePagos();
+            _this.configuracionDeDecimales = decimales;
+            _this.cambiarVisualizacionDeContenedorDeCamposParaChequesODepositos(false);
+            _this.calcularMontosDeLosDiferentesTiposDePagos();
+            _this.generarListadoDeTiposDePagos();
         });
     };
     TipoDePagoEnFacturaVencidaControlador.prototype.calcularMontosDeLosDiferentesTiposDePagos = function () {
@@ -374,13 +374,13 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         }
     };
     TipoDePagoEnFacturaVencidaControlador.prototype.generarListadoDePagoEnEfectivo = function (pagoEnEfectivo) {
-        var _this_1 = this;
+        var _this = this;
         var contenedorEfectivo = $("#UiCashDetail");
         var pagosEfectivo = [];
         pagoEnEfectivo.forEach(function (pago) {
             pagosEfectivo.push(" <li>");
             pagosEfectivo.push(" <a href=\"#\">");
-            pagosEfectivo.push(" <h1>" + _this_1.simboloDeMoneda + ". " + format_number(pago.amount, _this_1.configuracionDeDecimales.defaultDisplayDecimals) + "</h1>");
+            pagosEfectivo.push(" <h1>" + _this.simboloDeMoneda + ". " + format_number(pago.amount, _this.configuracionDeDecimales.defaultDisplayDecimals) + "</h1>");
             pagosEfectivo.push(" </a>");
             pagosEfectivo.push(" <a href=\"#\" id=\"" + pago.paymentType + "|0\"></a>");
             pagosEfectivo.push(" </li>");
@@ -396,11 +396,11 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         cadenaHtmlDeObjetoAInsertar = null;
     };
     TipoDePagoEnFacturaVencidaControlador.prototype.generarListadoDePagoEnDepositos = function (pagoEnDepositos) {
-        var _this_1 = this;
+        var _this = this;
         var contenedorDepositos = $("#UiDepositsDetail");
         var pagosEnDeposito = [];
         pagoEnDepositos.forEach(function (pago) {
-            pagosEnDeposito.push(_this_1.obtenerCadenaHtmlDePagoEnChequeODeposito(pago));
+            pagosEnDeposito.push(_this.obtenerCadenaHtmlDePagoEnChequeODeposito(pago));
         });
         var cadenaHtmlDeObjetoAInsertar = pagosEnDeposito.join("");
         if (cadenaHtmlDeObjetoAInsertar !== "") {
@@ -413,11 +413,11 @@ var TipoDePagoEnFacturaVencidaControlador = (function () {
         cadenaHtmlDeObjetoAInsertar = null;
     };
     TipoDePagoEnFacturaVencidaControlador.prototype.generarListadoDePagoEnCheques = function (pagoEnCheques) {
-        var _this_1 = this;
+        var _this = this;
         var contenedorCheques = $("#UiBanckCheksDetail");
         var pagosEnCheque = [];
         pagoEnCheques.forEach(function (pago) {
-            pagosEnCheque.push(_this_1.obtenerCadenaHtmlDePagoEnChequeODeposito(pago));
+            pagosEnCheque.push(_this.obtenerCadenaHtmlDePagoEnChequeODeposito(pago));
         });
         var cadenaHtmlDeObjetoAInsertar = pagosEnCheque.join("");
         if (cadenaHtmlDeObjetoAInsertar !== "") {

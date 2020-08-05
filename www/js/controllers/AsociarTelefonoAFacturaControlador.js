@@ -3,11 +3,11 @@ var AsociarTelefonoAFacturaControlador = (function () {
         this.asociarTelefonoAFacturaServicio = new AsociarTelefonoAFacturaServicio();
     }
     AsociarTelefonoAFacturaControlador.prototype.delegarAsociacionDeTelefonoAFacturaControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         var este = this;
         $("#UiPagetoAssociatePhoneNumerWithInvoice").on("pageshow", function () {
             ParametroServicio.ObtenerParametro("INVOICE", "TELEPHONE_NUMBER_LENGTH", function (parametro) {
-                _this_1.parametroDeCantidadDeDigitosDeNumeroTelefonico = parametro;
+                _this.parametroDeCantidadDeDigitosDeNumeroTelefonico = parametro;
                 var uiTxtTelephoneNumber = $("#UiTxtTelephoneNumber");
                 uiTxtTelephoneNumber.attr("maxlength", parseInt(parametro.Value));
                 uiTxtTelephoneNumber.attr("pattern", "[0-9]{" + parseInt(parametro.Value) + "}");

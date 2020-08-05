@@ -189,16 +189,16 @@ var CuentaCorrienteServicio = (function () {
         }
     };
     CuentaCorrienteServicio.prototype.procesarInformacionDeCuentaCorrienteDeCliente = function (codigoDeCliente, callbak, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var cliente_1 = new Cliente();
             cliente_1.clientId = codigoDeCliente;
             this.obtenerCuentaCorrienteDeCliente(cliente_1, function (cuentaCorrienteDeCliente) {
                 cliente_1.currentAccountingInformation = cuentaCorrienteDeCliente;
-                _this_1.obtenerSumatoriaTotalDeFacturasEnRutaDeCliente(cliente_1, function (clienteConMontoDeFacturasDelDiaActual) {
-                    clienteConMontoDeFacturasDelDiaActual.canBuyOnCredit = _this_1.verificarSiElClienteTieneLimiteDeCreditoYDiasDeCreditoConfigurados(clienteConMontoDeFacturasDelDiaActual);
+                _this.obtenerSumatoriaTotalDeFacturasEnRutaDeCliente(cliente_1, function (clienteConMontoDeFacturasDelDiaActual) {
+                    clienteConMontoDeFacturasDelDiaActual.canBuyOnCredit = _this.verificarSiElClienteTieneLimiteDeCreditoYDiasDeCreditoConfigurados(clienteConMontoDeFacturasDelDiaActual);
                     if (clienteConMontoDeFacturasDelDiaActual.canBuyOnCredit) {
-                        _this_1.obtenerFechaDeVencimientoDeFacturaEnBaseADiasDeCreditoDelCliente(clienteConMontoDeFacturasDelDiaActual, function (clienteCompleto) {
+                        _this.obtenerFechaDeVencimientoDeFacturaEnBaseADiasDeCreditoDelCliente(clienteConMontoDeFacturasDelDiaActual, function (clienteCompleto) {
                             callbak(clienteCompleto);
                         }, function (error) {
                             errorCallback({

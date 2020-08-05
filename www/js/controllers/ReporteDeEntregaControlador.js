@@ -11,26 +11,26 @@ var ReporteDeEntregaControlador = (function () {
         this.manejoDeDecimalesServicio = new ManejoDeDecimalesServicio();
     }
     ReporteDeEntregaControlador.prototype.delegarReporteDeEntregaControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         $("#UiDeliveryReportPage").on("pageshow", function () {
-            _this_1.manejoDeDecimalesServicio
+            _this.manejoDeDecimalesServicio
                 .obtenerInformacionDeManejoDeDecimales(function (configuracionDeDecimales) {
-                _this_1.configuracionDeDecimales = configuracionDeDecimales;
-                _this_1.simboloDeMoneda = localStorage.getItem("CURRENCY_SYMBOL")
+                _this.configuracionDeDecimales = configuracionDeDecimales;
+                _this.simboloDeMoneda = localStorage.getItem("CURRENCY_SYMBOL")
                     ? localStorage.getItem("CURRENCY_SYMBOL")
                     : "Q";
-                _this_1.usuarioFacturaEnRuta = localStorage.getItem("INVOICE_IN_ROUTE")
+                _this.usuarioFacturaEnRuta = localStorage.getItem("INVOICE_IN_ROUTE")
                     ? localStorage.getItem("INVOICE_IN_ROUTE") == "1"
                     : false;
-                _this_1.obtenerListasDeEntregas();
+                _this.obtenerListasDeEntregas();
             });
         });
         $("#UiBtnBackFromDeliveryReport").on("click", function () {
-            _this_1.irAPantalla("menu_page");
+            _this.irAPantalla("menu_page");
         });
         $("#UiDeliveryReportPage").on("click", "#UiContEntregasProcesadas a", function (e) {
             var identificadorDeNotaDeEntrega = e.currentTarget.attributes["id"].nodeValue;
-            _this_1.usuarioDeseaAnularEntrega(identificadorDeNotaDeEntrega);
+            _this.usuarioDeseaAnularEntrega(identificadorDeNotaDeEntrega);
         });
     };
     ReporteDeEntregaControlador.prototype.irAPantalla = function (pantalla) {
@@ -42,20 +42,20 @@ var ReporteDeEntregaControlador = (function () {
         });
     };
     ReporteDeEntregaControlador.prototype.obtenerListasDeEntregas = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.limpiarObjetosDeListadoDeEntregas(function () {
-                _this_1.reporteDeEntregaServicio
+                _this.reporteDeEntregaServicio
                     .obtenerEntregasProcesadas(function (entregasProcesadas) {
-                    _this_1.listadoDeEntregasParaReporte.entregasProcesadas = entregasProcesadas;
-                    _this_1.reporteDeEntregaServicio
+                    _this.listadoDeEntregasParaReporte.entregasProcesadas = entregasProcesadas;
+                    _this.reporteDeEntregaServicio
                         .obtenerEntregasPendientes(function (entregasPendientes) {
-                        _this_1.listadoDeEntregasParaReporte.entregasPendientes = entregasPendientes;
-                        _this_1.reporteDeEntregaServicio
+                        _this.listadoDeEntregasParaReporte.entregasPendientes = entregasPendientes;
+                        _this.reporteDeEntregaServicio
                             .obtenerEntregasCanceladas(function (entregasCanceladas) {
-                            _this_1.listadoDeEntregasParaReporte
+                            _this.listadoDeEntregasParaReporte
                                 .entregasCanceladas = entregasCanceladas;
-                            _this_1.generarListadoDeEntregas();
+                            _this.generarListadoDeEntregas();
                         }, function (resultado) {
                             notify(resultado.mensaje);
                         });
@@ -98,7 +98,7 @@ var ReporteDeEntregaControlador = (function () {
         }
     };
     ReporteDeEntregaControlador.prototype.generarListadoDeEntregas = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
             var lblCantidadEntregasProcesadas = $("#UiLblCantidadEntregasProcesadas");
             var lblCantidadEntregasPendientes = $("#UiLblCantidadEntregasPendientes");
@@ -107,8 +107,8 @@ var ReporteDeEntregaControlador = (function () {
             lblCantidadEntregasPendientes.text(this.listadoDeEntregasParaReporte.entregasPendientes.length);
             lblCantidadEntregasNoProcesadas.text(this.listadoDeEntregasParaReporte.entregasCanceladas.length);
             this.generarListadoDeEntregasProcesadas(this.listadoDeEntregasParaReporte.entregasProcesadas, function () {
-                _this_1.generarListadoDeEntregasPendientes(_this_1.listadoDeEntregasParaReporte.entregasPendientes, function () {
-                    _this_1.generarListadoDeEntregasCanceladas(_this_1.listadoDeEntregasParaReporte
+                _this.generarListadoDeEntregasPendientes(_this.listadoDeEntregasParaReporte.entregasPendientes, function () {
+                    _this.generarListadoDeEntregasCanceladas(_this.listadoDeEntregasParaReporte
                         .entregasCanceladas, function () {
                     });
                 });
@@ -122,7 +122,7 @@ var ReporteDeEntregaControlador = (function () {
         }
     };
     ReporteDeEntregaControlador.prototype.generarListadoDeEntregasProcesadas = function (entregasProcesadas, callback) {
-        var _this_1 = this;
+        var _this = this;
         var li = [];
         var detalleEntregasProcesadas = $("#UiDetalleEntregasProcesadas");
         try {
@@ -145,18 +145,18 @@ var ReporteDeEntregaControlador = (function () {
                 li.push("</td>");
                 li.push("</tr>");
                 li.push("<tr>");
-                li.push("<td style=\"width: 50%; text-align: left\"><b>Factura:</b> " + _this_1
+                li.push("<td style=\"width: 50%; text-align: left\"><b>Factura:</b> " + _this
                     .obtenerTextoAMostrarEnColumnaDeFactura(entrega) + "</td>");
-                li.push("<td style=\"width: 50%; text-align: left\"><b>Monto:</b>" + _this_1.simboloDeMoneda + " " + format_number(trunc_number(entrega.totalAmount, _this_1.configuracionDeDecimales.defaultCalculationsDecimals), _this_1.configuracionDeDecimales.defaultDisplayDecimals) + "</td>");
+                li.push("<td style=\"width: 50%; text-align: left\"><b>Monto:</b>" + _this.simboloDeMoneda + " " + format_number(trunc_number(entrega.totalAmount, _this.configuracionDeDecimales.defaultCalculationsDecimals), _this.configuracionDeDecimales.defaultDisplayDecimals) + "</td>");
                 li.push("</tr>");
                 li.push("<tr>");
-                li.push("<td colspan=\"2\"><b>Prod. Entregados: </b> " + format_number(entrega.qtyToDelivery, _this_1.configuracionDeDecimales.defaultDisplayDecimalsForSkuQty) + " ");
+                li.push("<td colspan=\"2\"><b>Prod. Entregados: </b> " + format_number(entrega.qtyToDelivery, _this.configuracionDeDecimales.defaultDisplayDecimalsForSkuQty) + " ");
                 if (entrega.isCanceled == SiNo.Si) {
                     li.push("<span style=\"color: red\">ANULADA <br/> " + entrega.reasonCancel + " </span>");
                 }
                 li.push("</td>");
                 li.push("</tr>");
-                if (!_this_1.usuarioFacturaEnRuta) {
+                if (!_this.usuarioFacturaEnRuta) {
                     li.push("<tr>");
                     li.push("<td colspan=\"2\">");
                     li.push("<a href=\"#\" id=\"" + entrega.docNum + "\" class=\"ui-btn ui-btn-b ui-corner-all\" style=\"text-align: center\">");
@@ -186,7 +186,7 @@ var ReporteDeEntregaControlador = (function () {
         return entrega.invoiceId ? entrega.invoiceId.toString() : "N/A";
     };
     ReporteDeEntregaControlador.prototype.generarListadoDeEntregasPendientes = function (entregasPendientes, callback) {
-        var _this_1 = this;
+        var _this = this;
         var li = [];
         var detalleEntregasPendientes = $("#UiDetalleEntregasPendientes");
         try {
@@ -202,11 +202,11 @@ var ReporteDeEntregaControlador = (function () {
                 li.push("</tr>");
                 li.push("<tr>");
                 li.push("<td style=\"width: 50%; text-align: left\"><b>Factura:</b> N/A</td>");
-                li.push("<td style=\"width: 50%; text-align: left\"><b>Monto:</b>" + _this_1
-                    .simboloDeMoneda + " " + format_number(trunc_number(entregaPendiente.totalAmount, _this_1.configuracionDeDecimales.defaultCalculationsDecimals), _this_1.configuracionDeDecimales.defaultDisplayDecimals) + "</td>");
+                li.push("<td style=\"width: 50%; text-align: left\"><b>Monto:</b>" + _this
+                    .simboloDeMoneda + " " + format_number(trunc_number(entregaPendiente.totalAmount, _this.configuracionDeDecimales.defaultCalculationsDecimals), _this.configuracionDeDecimales.defaultDisplayDecimals) + "</td>");
                 li.push("</tr>");
                 li.push("<tr>");
-                li.push("<td colspan=\"2\"><b>Prod. A Entregar: </b> " + format_number(entregaPendiente.qtyPending, _this_1.configuracionDeDecimales.defaultDisplayDecimalsForSkuQty) + " ");
+                li.push("<td colspan=\"2\"><b>Prod. A Entregar: </b> " + format_number(entregaPendiente.qtyPending, _this.configuracionDeDecimales.defaultDisplayDecimalsForSkuQty) + " ");
                 if (entregaPendiente.isCanceled == SiNo.Si) {
                     li.push("<span style=\"color: red\">ANULADA <br/> " + entregaPendiente.reasonCancel + " </span>");
                 }
@@ -230,7 +230,7 @@ var ReporteDeEntregaControlador = (function () {
         }
     };
     ReporteDeEntregaControlador.prototype.generarListadoDeEntregasCanceladas = function (entregasCanceladas, callback) {
-        var _this_1 = this;
+        var _this = this;
         var li = [];
         var detalleEntregasNoProcesadas = $("#UiDetalleEntregasNoProcesadas");
         try {
@@ -246,8 +246,8 @@ var ReporteDeEntregaControlador = (function () {
                 li.push("</tr>");
                 li.push("<tr>");
                 li.push("<td style=\"width: 50%; text-align: left\"><b>Factura:</b> N/A</td>");
-                li.push("<td style=\"width: 50%; text-align: left\"><b>Monto:</b>" + _this_1
-                    .simboloDeMoneda + " " + format_number(trunc_number(entregaCancelada.totalAmount, _this_1.configuracionDeDecimales.defaultCalculationsDecimals), _this_1.configuracionDeDecimales.defaultDisplayDecimals) + "</td>");
+                li.push("<td style=\"width: 50%; text-align: left\"><b>Monto:</b>" + _this
+                    .simboloDeMoneda + " " + format_number(trunc_number(entregaCancelada.totalAmount, _this.configuracionDeDecimales.defaultCalculationsDecimals), _this.configuracionDeDecimales.defaultDisplayDecimals) + "</td>");
                 li.push("</tr>");
                 li.push("<tr>");
                 li.push("<td colspan=\"2\"><b>Raz\u00F3n: </b> " + entregaCancelada.reasonCancel + "</td>");
@@ -273,7 +273,7 @@ var ReporteDeEntregaControlador = (function () {
         return lista !== "";
     };
     ReporteDeEntregaControlador.prototype.usuarioDeseaAnularEntrega = function (identificadorDeNotaDeEntrega) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var notaDeEntregaAProcesar_1 = this.listadoDeEntregasParaReporte.entregasProcesadas
                 .find(function (notaDeEntrega) {
@@ -286,10 +286,10 @@ var ReporteDeEntregaControlador = (function () {
                 }
                 else {
                     this.preguntarSiEstaSeguroDeAnularLaEntrega(function () {
-                        _this_1.preguntarRazonDeAnulacionDeNotaDeEntrega(function (razonDeAnulacion) {
+                        _this.preguntarRazonDeAnulacionDeNotaDeEntrega(function (razonDeAnulacion) {
                             notaDeEntregaAProcesar_1.isCanceled = SiNo.Si;
                             notaDeEntregaAProcesar_1.reasonCancel = razonDeAnulacion;
-                            _this_1.anularEntrega(notaDeEntregaAProcesar_1);
+                            _this.anularEntrega(notaDeEntregaAProcesar_1);
                         }, function (resultado) {
                             notify(resultado.mensaje);
                             return;
@@ -308,7 +308,7 @@ var ReporteDeEntregaControlador = (function () {
         }
     };
     ReporteDeEntregaControlador.prototype.preguntarRazonDeAnulacionDeNotaDeEntrega = function (callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         this.reporteDeEntregaServicio.obtenerRazonesDeAnulacionDeEntrega(function (razonesDeAnulacion) {
             var listaRazones = [];
             razonesDeAnulacion.map(function (razon) {
@@ -323,7 +323,7 @@ var ReporteDeEntregaControlador = (function () {
             window.plugins.listpicker.showPicker(configOptions, function (item) {
                 callback(item);
             }, function (error) {
-                if (!_this_1.esErrorPorDefecto(error))
+                if (!_this.esErrorPorDefecto(error))
                     errorCallback({
                         codigo: -1,
                         resultado: ResultadoOperacionTipo.Error,
@@ -344,11 +344,11 @@ var ReporteDeEntregaControlador = (function () {
         }, "Sonda\u00AE " + SondaVersion, ["No", "Si"]);
     };
     ReporteDeEntregaControlador.prototype.anularEntrega = function (entregaAAnular) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.entregaServicio
                 .obtenerDatosDeDemandaDeDespachoAsociadaAEntregaAnulada(this.usuarioFacturaEnRuta, entregaAAnular, function (demandaDeDespachoAProcesar) {
-                _this_1.ejecutarProcesoDeAnulacionDeEntrega(demandaDeDespachoAProcesar);
+                _this.ejecutarProcesoDeAnulacionDeEntrega(demandaDeDespachoAProcesar);
             }, function (resultado) {
                 notify(resultado.mensaje);
                 return;
@@ -360,20 +360,20 @@ var ReporteDeEntregaControlador = (function () {
         }
     };
     ReporteDeEntregaControlador.prototype.ejecutarProcesoDeAnulacionDeEntrega = function (demandaDeDespachoAProcesar) {
-        var _this_1 = this;
+        var _this = this;
         this.entregaServicio
             .ejecutarProcesoDeAnulacionDeEntrega(this.usuarioFacturaEnRuta, demandaDeDespachoAProcesar, function () {
             EnviarData();
-            _this_1.actualizarListasDeEntregas();
+            _this.actualizarListasDeEntregas();
         }, function (resultado) {
             notify(resultado.mensaje);
             return;
         });
     };
     ReporteDeEntregaControlador.prototype.actualizarListasDeEntregas = function () {
-        var _this_1 = this;
+        var _this = this;
         this.limpiarObjetosDeListadoDeEntregas(function () {
-            _this_1.generarListadoDeEntregas();
+            _this.generarListadoDeEntregas();
             EnviarData();
         });
     };

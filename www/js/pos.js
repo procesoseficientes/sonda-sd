@@ -73,7 +73,44 @@ function UploadPhoto(invoiceId, pAutId, pAutSerial, gpicture, pId) {
     notify(e.message);
   }
 }
-function UploadPhotoDeposit(pTransId, pimageUri) {}
+function UploadPhotoDeposit(pTransId, pimageUri) {
+  var pPrimaryServerUrl = "http://200.6.253.242:8090/SONDA_DEPOSIT_IMAGE.aspx";
+
+  //my_dialog("Imagenes","Procesando...","open");
+
+  var options = new FileUploadOptions();
+  options.fileKey = "file";
+  options.fileName = pimageUri.substr(pimageUri.lastIndexOf("/") + 1);
+  options.mimeType = "image/jpeg";
+  options.chunkedMode = true;
+
+  var queryStr = pPrimaryServerUrl;
+
+  var params = {};
+  params.pTRANS_ID = pTransId;
+
+  options.params = params;
+
+  var ft = new FileTransfer();
+  ft.upload(
+    pimageUri,
+    encodeURI(queryStr),
+    function UploadSuccess(r) {
+      //notify('uploaded');
+    },
+    function UploadFail(error) {
+      notify(
+        "An error has occurred: Code = " +
+          error.code +
+          " SOURCE= " +
+          error.source +
+          " TARGET=" +
+          error.target
+      );
+    },
+    options
+  );
+}
 function take_picture_deposit() {
   navigator.camera.getPicture(
     function(imageURI) {
@@ -659,14 +696,12 @@ function startpos() {
     showLoadMsg: false
   });
 }
-
 function start_invoicing() {
   vieneDeListadoDeDocumentosDeEntrega = false;
   ClearUpInvoice();
   window.gClientCode = "C000000";
 
   $("#lblClientCode").text("C000000");
-
   $.mobile.changePage("#pos_client_page", {
     transition: "pop",
     reverse: false,
@@ -674,7 +709,6 @@ function start_invoicing() {
     showLoadMsg: false
   });
 }
-
 function pos_sku_swipeHandler(event) {
   try {
     if (event.type === "swipeleft") {
@@ -901,17 +935,11 @@ function PopulateInvoiceSKUsList() {
                     configuracionDeDecimales.defaultDisplayDecimals
                   ) +
                   "</span>";
-
-                if (
-                  results.rows.item(i).PACK_UNIT &&
-                  results.rows.item(i).PACK_UNIT.toUpperCase() != "NULL"
-                ) {
-                  vLI =
-                    vLI +
-                    '<span class="small-roboto">UM:' +
-                    results.rows.item(i).PACK_UNIT +
-                    "</span></a>";
-                }
+                vLI =
+                  vLI +
+                  '<span class="small-roboto">UM:' +
+                  results.rows.item(i).PACK_UNIT +
+                  "</span></a>";
 
                 if (!vieneDeListadoDeDocumentosDeEntrega) {
                   if (pREQUERIES_SERIE === 0) {
@@ -1489,7 +1517,7 @@ function ProcessVoidInvoice(
             pCurrentNoteID += 1;
             localStorage.setItem("POS_CURRENT_CREDIT_NOTE", pCurrentNoteID);
             if (err.code !== 0) {
-              alert("ERROR, 8.2.4: " + err.code);
+              alert("ERROR, 8.2.1: " + err.code);
             }
           }
         );
@@ -1499,7 +1527,7 @@ function ProcessVoidInvoice(
         pCurrentNoteID += 1;
         localStorage.setItem("POS_CURRENT_CREDIT_NOTE", pCurrentNoteID);
         if (err.code !== 0) {
-          alert("ERROR, 8.2.4: " + err.code);
+          alert("ERROR, 8.2.2: " + err.code);
         }
       }
     );
@@ -1616,7 +1644,8 @@ function ConfirmPostInvoice() {
                 function(tx, results) {
                   my_dialog("", "", "close");
                   if (results.rows.length === 0) {
-                    if (true) {
+                    console.log(gImageURI_1);
+                    if (gImageURI_1.length > 0) {
                       if (
                         parseInt(efectivo) === 0 &&
                         facturaCompletaEnConsignacion === true &&
@@ -1626,7 +1655,6 @@ function ConfirmPostInvoice() {
                           "Esta seguro de Grabar la Consignación actual?",
                           function(buttonIndex) {
                             if (buttonIndex === 2) {
-                              InteraccionConUsuarioServicio.bloquearPantalla();
                               actualizarEstadoDeTarea(
                                 gTaskId,
                                 1,
@@ -1638,7 +1666,6 @@ function ConfirmPostInvoice() {
                                       UsuarioDeseaGrabarConsignacion(function(
                                         conConsignacion
                                       ) {
-                                        InteraccionConUsuarioServicio.desbloquearPantalla();
                                         $.mobile.changePage(
                                           "#confirmation_consignment",
                                           {
@@ -1655,8 +1682,6 @@ function ConfirmPostInvoice() {
                                 },
                                 TareaEstado.Completada
                               );
-                            } else {
-                              estaEnConfirmacionDeFacturacion = false;
                             }
                           },
                           "Sonda SD " + SondaVersion,
@@ -1672,7 +1697,6 @@ function ConfirmPostInvoice() {
                         );
                         document.getElementById("txtCash_summ").focus();
                         efectivo = null;
-                        estaEnConfirmacionDeFacturacion = false;
                       } else if (
                         parseInt(efectivo) > 0 &&
                         facturaCompletaEnConsignacion === true &&
@@ -1683,7 +1707,6 @@ function ConfirmPostInvoice() {
                         );
                         document.getElementById("txtCash_summ").focus();
                         efectivo = null;
-                        estaEnConfirmacionDeFacturacion = false;
                       } else if (
                         (parseInt(efectivo) > 0 &&
                           facturaCompletaEnConsignacion === false) ||
@@ -1692,10 +1715,9 @@ function ConfirmPostInvoice() {
                           clienteProcesadoConInformacionDeCuentaCorriente.totalInvoicedIsOnCredit)
                       ) {
                         navigator.notification.confirm(
-                          "¿Confirma facturar?",
+                          "Confirma Facturar?",
                           function(buttonIndex) {
                             if (buttonIndex === 2) {
-                              InteraccionConUsuarioServicio.bloquearPantalla();
                               actualizarEstadoDeTarea(
                                 gTaskId,
                                 1,
@@ -2296,8 +2318,6 @@ function ConfirmPostInvoice() {
                                 },
                                 TareaEstado.Completada
                               );
-                            } else {
-                              estaEnConfirmacionDeFacturacion = false;
                             }
                           },
                           "Sonda® SD " + SondaVersion,
@@ -2307,14 +2327,12 @@ function ConfirmPostInvoice() {
                     } else {
                       efectivo = null;
                       notify("ERROR, Aun Debe tomar la imagen frontal");
-                      estaEnConfirmacionDeFacturacion = false;
                     }
                   } else {
                     efectivo = null;
                     notify(
                       "ERROR, Aun Debe ingresar la información de series/imei"
                     );
-                    estaEnConfirmacionDeFacturacion = false;
                   }
                 },
                 function(err) {
@@ -2322,7 +2340,6 @@ function ConfirmPostInvoice() {
                     alert("Error processing SQL: " + err.code);
                   }
                   pReturnValue = -2;
-                  estaEnConfirmacionDeFacturacion = false;
                   return pReturnValue;
                 }
               );
@@ -2332,7 +2349,6 @@ function ConfirmPostInvoice() {
                 alert("Error processing SQL: " + err.code);
               }
               pReturnValue = -3;
-              estaEnConfirmacionDeFacturacion = false;
               return pReturnValue;
             }
           );
@@ -2344,12 +2360,10 @@ function ConfirmPostInvoice() {
               format_number(gInvocingTotal, 2)
           );
           efectivo = null;
-          estaEnConfirmacionDeFacturacion = false;
         }
       } else {
         notify("ERROR, Debe de ingresar un valor numerico");
         efectivo = null;
-        estaEnConfirmacionDeFacturacion = false;
       }
     } else {
       if (PagoConsignacionesControlador.EstaEnPagoDeConsignacion) {
@@ -2361,11 +2375,9 @@ function ConfirmPostInvoice() {
       }
 
       efectivo = null;
-      estaEnConfirmacionDeFacturacion = false;
     }
   } catch (e) {
     notify("ConfirmPostInvoice: " + e.message);
-    estaEnConfirmacionDeFacturacion = false;
   }
 }
 
@@ -2454,20 +2466,11 @@ function ProcesarDocumentoDeEntrega(callback, errorCallback) {
                 ? gInvoiceNUM
                 : demandaDeDespachoEnProcesoDeEntrega &&
                   demandaDeDespachoEnProcesoDeEntrega.erpReferenceDocNum
-                ? demandaDeDespachoEnProcesoDeEntrega.erpReferenceDocNum
-                : null;
-            notaDeEntregaEncabezado.deliveryImage =
-              imagenDeEntregaControlador.imagenesCapturadas[0] || null;
-            notaDeEntregaEncabezado.deliveryImage2 =
-              imagenDeEntregaControlador.imagenesCapturadas[1] || null;
-            notaDeEntregaEncabezado.deliveryImage3 =
-              imagenDeEntregaControlador.imagenesCapturadas[2] || null;
-            notaDeEntregaEncabezado.deliveryImage4 =
-              imagenDeEntregaControlador.imagenesCapturadas[3] || null;
+                  ? demandaDeDespachoEnProcesoDeEntrega.erpReferenceDocNum
+                  : null;
+            notaDeEntregaEncabezado.deliveryImage = gImageURI_1;
             notaDeEntregaEncabezado.billedFromSonda = usuarioFacturaEnRuta;
             notaDeEntregaEncabezado.discount = gDiscount;
-            notaDeEntregaEncabezado.deliverySignature =
-              firmaControlador.firmaCapturada || null;
 
             notaDeEntregaServicio.obtenerDocumentoDeNotaDeEntregaConDetalleParaGuardar(
               notaDeEntregaEncabezado,
@@ -2508,7 +2511,65 @@ function ProcesarDocumentoDeEntrega(callback, errorCallback) {
   );
 }
 
-function UploadOfflinePhoto(pINVOICE_NUM, pIMG1, pIMG2, pIMG3) {}
+function UploadOfflinePhoto(pINVOICE_NUM, pIMG1, pIMG2, pIMG3) {
+  var pPrimaryServerURL = baseURL + "SONDA_POS_IMAGE.aspx";
+  var pimageURI = "";
+
+  try {
+    for (i = 1; i <= 3; i++) {
+      switch (i) {
+        case 1:
+          pimageURI = pIMG1;
+          break;
+        case 2:
+          pimageURI = pIMG2;
+          break;
+        case 3:
+          pimageURI = pIMG3;
+          break;
+      }
+
+      if (pimageURI.length >= 2) {
+        var options = new FileUploadOptions();
+        options.fileKey = "file";
+        options.fileName = pimageURI.substr(pimageURI.lastIndexOf("/") + 1);
+        options.mimeType = "image/jpeg";
+        options.chunkedMode = true;
+
+        var query_str = pPrimaryServerURL;
+
+        var params = {};
+        params.pINVOICE_NUM = pINVOICE_NUM;
+        params.pID = i;
+
+        options.params = params;
+
+        var ft = new FileTransfer();
+
+        ft.upload(
+          pimageURI,
+          encodeURI(query_str),
+          function UploadSuccess(r) {
+            //notify('ok');
+          },
+          function UploadFail(error) {
+            notify(
+              "An error has occurred: Code = " +
+                error.code +
+                " SOURCE= " +
+                error.source +
+                " TARGET=" +
+                error.target
+            );
+          },
+          options
+        );
+      }
+    }
+  } catch (e) {
+    notify("UploadOfflinePhoto: " + e.message);
+  }
+}
 function CheckforOffline() {
   try {
     $("#UiBtnSynDeviceOnServer").click();
@@ -2610,224 +2671,146 @@ function PostInvoice(conConsignacion) {
 
             tx.executeSql(sql);
           }
+
           var esPagoDeConsignacion = PagoConsignacionesControlador.EstaEnPagoDeConsignacion
             ? 1
             : 0;
-          if (localStorage.getItem("IMPLEMENTS_FEL") === "true") {
-            gInvoiceHeader = new FacturaEncabezado();
-            gInvoiceHeader.invoiceNum = window.gInvoiceNUM;
-            gInvoiceHeader.terms = "CASH";
-            gInvoiceHeader.clientId = gClientCode;
-            gInvoiceHeader.clientName = pCustName;
-            gInvoiceHeader.posTerminal = gCurrentRoute;
-            gInvoiceHeader.gps = gCurrentGPS;
-            gInvoiceHeader.totalAmount = 0;
-            gInvoiceHeader.erpInvoiceId = pTaxID;
-            gInvoiceHeader.isPosted = 0;
-            gInvoiceHeader.status = "1";
-            gInvoiceHeader.isCreditNote = 0;
-            gInvoiceHeader.voidReason = "";
-            gInvoiceHeader.voidNotes = "";
-            gInvoiceHeader.postedDateTime = getDateTime();
-            gInvoiceHeader.printRequests = 1;
-            gInvoiceHeader.printedCount = 0;
-            gInvoiceHeader.authId = pCurrentSAT_Resolution;
-            gInvoiceHeader.satSerie = pCurrentSAT_Res_Serie;
-            gInvoiceHeader.change = parseFloat(pChange);
-            gInvoiceHeader.img1 = gImageURI_1;
-            gInvoiceHeader.img2 = gImageURI_2;
-            gInvoiceHeader.img3 = gImageURI_3;
-            gInvoiceHeader.consignmentId = 0;
-            gInvoiceHeader.isPaidConsignment = esPagoDeConsignacion;
-            gInvoiceHeader.initialTaskImage = gInitialTaskImage;
-            gInvoiceHeader.inPlanRoute = gTaskOnRoutePlan;
-            gInvoiceHeader.discount = gDiscount;
-            gInvoiceHeader.comment = comentario;
-            gInvoiceHeader.dueDate = clienteProcesadoConInformacionDeCuentaCorriente.canBuyOnCredit
-              ? clienteProcesadoConInformacionDeCuentaCorriente.invoiceDueDate
-              : null;
-            gInvoiceHeader.creditAmount =
-              clienteProcesadoConInformacionDeCuentaCorriente.creditAmount;
-            gInvoiceHeader.cashAmount =
-              clienteProcesadoConInformacionDeCuentaCorriente.cashAmount;
-            gInvoiceHeader.paidToDate = 0;
-            gInvoiceHeader.taskId = gTaskId;
-            gInvoiceHeader.goalHeaderId = goalHeaderId;
-            gInvoiceHeader.felData.FelDocumentType = localStorage.getItem(
-              "FEL_DOCUMENT_TYPE"
-            );
-            gInvoiceHeader.felData.FelStablishmentCode = parseInt(
-              localStorage.getItem("FEL_STABLISHMENT_CODE")
-            );
-            pTaxID = null;
-            pCustName = null;
-            pChange = null;
-            esPagoDeConsignacion = null;
-            window.gTaskOnRoutePlan = 1;
 
-            gInvoiceHeader.handleTax = gCalculaImpuesto ? 1 : 0;
-            gInvoiceHeader.taxPercent = gCalculaImpuesto
-              ? window.gImpuestoDeFactura
-              : 0;
-            pSQL = "SELECT SUM(ID.TOTAL_LINE) AS TOTAL ";
-            pSQL += "FROM INVOICE_DETAIL AS ID ";
-            pSQL += "WHERE ID.INVOICE_NUM = " + gInvoiceNUM;
-            tx.executeSql(
-              pSQL,
-              [],
-              function(txRet, results) {
-                if (results.rows.length > 0) {
-                  gInvoiceHeader.totalAmount = results.rows.item(0).TOTAL;
-                } else {
-                  gInvoiceHeader.totalAmount = 0;
-                }
-              },
-              function(txRet, error) {
-                notify(
-                  "Error al obtener total de detalle factura debido a: " +
-                    error.message
-                );
-              }
+          var sqlInvoice = [];
+          sqlInvoice.push(
+            "INSERT INTO INVOICE_HEADER(INVOICE_NUM, TERMS, CLIENT_ID, CLIENT_NAME, POS_TERMINAL, GPS, TOTAL_AMOUNT, ERP_INVOICE_ID, IS_POSTED, STATUS"
+          );
+          sqlInvoice.push(
+            ", IS_CREDIT_NOTE, VOID_REASON, VOID_NOTES, POSTED_DATETIME, PRINT_REQUEST, PRINTED_COUNT, AUTH_ID, SAT_SERIE, CHANGE, IMG1"
+          );
+          sqlInvoice.push(
+            ", IMG2, IMG3, CONSIGNMENT_ID, IS_PAID_CONSIGNMENT, INITIAL_TASK_IMAGE , IN_ROUTE_PLAN, DISCOUNT, COMMENT, DUE_DATE, CREDIT_AMOUNT, CASH_AMOUNT, PAID_TO_DATE"
+          );
+          sqlInvoice.push(", TASK_ID, GOAL_HEADER_ID)");
+          sqlInvoice.push(" VALUES(");
+          sqlInvoice.push(window.gInvoiceNUM);
+          sqlInvoice.push(",'CASH','" + gClientCode + "'");
+          sqlInvoice.push(",'" + pCustName + "'");
+          sqlInvoice.push(", '" + gCurrentRoute + "'");
+          sqlInvoice.push(",'" + gCurrentGPS + "', 0");
+          sqlInvoice.push(",'" + pTaxID + "'");
+          sqlInvoice.push(", 0, 1, 0,'',''");
+          sqlInvoice.push(",'" + getDateTime() + "'");
+          sqlInvoice.push(", 1, 0,'" + pCurrentSAT_Resolution + "'");
+          sqlInvoice.push(",'" + pCurrentSAT_Res_Serie + "'");
+          sqlInvoice.push("," + pChange);
+          sqlInvoice.push(",'" + gImageURI_1 + "'");
+          sqlInvoice.push(",'" + gImageURI_2 + "'");
+          sqlInvoice.push(",'" + gImageURI_3 + "'");
+          sqlInvoice.push(",NULL, " + esPagoDeConsignacion);
+          sqlInvoice.push(", '" + gInitialTaskImage + "'");
+          sqlInvoice.push(", " + gTaskOnRoutePlan);
+          sqlInvoice.push(", " + gDiscount);
+          sqlInvoice.push(", '" + comentario + "'");
+          if (clienteProcesadoConInformacionDeCuentaCorriente.canBuyOnCredit) {
+            sqlInvoice.push(
+              ", '" +
+                clienteProcesadoConInformacionDeCuentaCorriente.invoiceDueDate +
+                "'"
             );
           } else {
-            var sqlInvoice = [];
-            sqlInvoice.push(
-              "INSERT INTO INVOICE_HEADER(INVOICE_NUM, TERMS, CLIENT_ID, CLIENT_NAME, POS_TERMINAL, GPS, TOTAL_AMOUNT, ERP_INVOICE_ID, IS_POSTED, STATUS"
-            );
-            sqlInvoice.push(
-              ", IS_CREDIT_NOTE, VOID_REASON, VOID_NOTES, POSTED_DATETIME, PRINT_REQUEST, PRINTED_COUNT, AUTH_ID, SAT_SERIE, CHANGE, IMG1"
-            );
-            sqlInvoice.push(
-              ", IMG2, IMG3, CONSIGNMENT_ID, IS_PAID_CONSIGNMENT, INITIAL_TASK_IMAGE , IN_ROUTE_PLAN, DISCOUNT, COMMENT, DUE_DATE, CREDIT_AMOUNT, CASH_AMOUNT, PAID_TO_DATE"
-            );
-            sqlInvoice.push(", TASK_ID, GOAL_HEADER_ID)");
-            sqlInvoice.push(" VALUES(");
-            sqlInvoice.push(window.gInvoiceNUM);
-            sqlInvoice.push(",'CASH','" + gClientCode + "'");
-            sqlInvoice.push(",'" + pCustName + "'");
-            sqlInvoice.push(", '" + gCurrentRoute + "'");
-            sqlInvoice.push(",'" + gCurrentGPS + "', 0");
-            sqlInvoice.push(",'" + pTaxID + "'");
-            sqlInvoice.push(", 0, 1, 0,'',''");
-            sqlInvoice.push(",'" + getDateTime() + "'");
-            sqlInvoice.push(", 1, 0,'" + pCurrentSAT_Resolution + "'");
-            sqlInvoice.push(",'" + pCurrentSAT_Res_Serie + "'");
-            sqlInvoice.push("," + pChange);
-            sqlInvoice.push(",'" + gImageURI_1 + "'");
-            sqlInvoice.push(",'" + gImageURI_2 + "'");
-            sqlInvoice.push(",'" + gImageURI_3 + "'");
-            sqlInvoice.push(",NULL, " + esPagoDeConsignacion);
-            sqlInvoice.push(", '" + gInitialTaskImage + "'");
-            sqlInvoice.push(", " + gTaskOnRoutePlan);
-            sqlInvoice.push(", " + gDiscount);
-            sqlInvoice.push(", '" + comentario + "'");
-            if (
-              clienteProcesadoConInformacionDeCuentaCorriente.canBuyOnCredit
-            ) {
-              sqlInvoice.push(
-                ", '" +
-                  clienteProcesadoConInformacionDeCuentaCorriente.invoiceDueDate +
-                  "'"
-              );
-            } else {
-              sqlInvoice.push(",NULL");
-            }
-            sqlInvoice.push(
-              ", " +
-                clienteProcesadoConInformacionDeCuentaCorriente.creditAmount
-            );
-            sqlInvoice.push(
-              ", " +
-                clienteProcesadoConInformacionDeCuentaCorriente.cashAmount +
-                ", 0 "
-            );
-            sqlInvoice.push(", " + gTaskId);
-            sqlInvoice.push(", " + goalHeaderId);
-            sqlInvoice.push(")");
-            tx.executeSql(sqlInvoice.join(""));
-
-            pTaxID = null;
-            pCustName = null;
-            pChange = null;
-            esPagoDeConsignacion = null;
-            window.gTaskOnRoutePlan = 1;
-
-            pSQL =
-              "UPDATE INVOICE_HEADER SET TOTAL_AMOUNT = (SELECT SUM(ID.TOTAL_LINE) AS TOTAL FROM INVOICE_DETAIL AS ID WHERE ID.INVOICE_NUM = " +
-              gInvoiceNUM +
-              "), HANDLE_TAX = " +
-              (gCalculaImpuesto ? 1 : 0) +
-              ", TAX_PERCENT = " +
-              (gCalculaImpuesto ? window.gImpuestoDeFactura : 0) +
-              " WHERE INVOICE_NUM = " +
-              gInvoiceNUM;
-
-            tx.executeSql(pSQL);
-
-            sqlInvoice.length = 0;
+            sqlInvoice.push(",NULL");
           }
+          sqlInvoice.push(
+            ", " + clienteProcesadoConInformacionDeCuentaCorriente.creditAmount
+          );
+          sqlInvoice.push(
+            ", " +
+              clienteProcesadoConInformacionDeCuentaCorriente.cashAmount +
+              ", 0 "
+          );
+          sqlInvoice.push(", " + gTaskId);
+          sqlInvoice.push(", " + goalHeaderId);
+          sqlInvoice.push(")");
+          tx.executeSql(sqlInvoice.join(""));
+
+          pTaxID = null;
+          pCustName = null;
+          pChange = null;
+          esPagoDeConsignacion = null;
+          window.gTaskOnRoutePlan = 1;
+
+          pSQL =
+            "UPDATE INVOICE_HEADER SET TOTAL_AMOUNT = (SELECT SUM(ID.TOTAL_LINE) AS TOTAL FROM INVOICE_DETAIL AS ID WHERE ID.INVOICE_NUM = " +
+            gInvoiceNUM +
+            "), HANDLE_TAX = " +
+            (gCalculaImpuesto ? 1 : 0) +
+            ", TAX_PERCENT = " +
+            (gCalculaImpuesto ? window.gImpuestoDeFactura : 0) +
+            " WHERE INVOICE_NUM = " +
+            gInvoiceNUM;
+
+          tx.executeSql(pSQL);
+
+          sqlInvoice.length = 0;
         },
         function(err) {
           my_dialog("", "", "close");
           notify(err.message);
-          estaEnConfirmacionDeFacturacion = false;
         },
         function() {
-          UpdateQuantityOfSkuSold(
-            function() {
-              gTotalInvoiced += Number(gInvocingTotal);
-              gTotalInvoicesProc++;
+          UpdateQuantityOfSkuSold(function() {
+            gTotalInvoiced += Number(gInvocingTotal);
+            gTotalInvoicesProc++;
 
-              UpdateInvoiceCounter();
-              GrabarNotaDeEntrega(
-                function() {
-                  gImageURI_1 = "";
-                  actualizarEstadoDeTarea(
-                    gTaskId,
-                    TareaGeneroGestion.Si,
-                    "Genero Gestión",
-                    function() {
-                      ShowInvoiceConfirmation();
-                    },
-                    TareaEstado.Completada
-                  );
-                },
-                function(error) {
-                  notify(error.mensaje);
-                  ShowInvoiceConfirmation();
-                  estaEnConfirmacionDeFacturacion = false;
-                }
-              );
+            UpdateInvoiceCounter();
+            GrabarNotaDeEntrega(
+              function() {
+                GrabarNotaDeEntrega(
+                  function() {
+                    gImageURI_1 = "";
+                    actualizarEstadoDeTarea(
+                      gTaskId,
+                      TareaGeneroGestion.Si,
+                      "Genero Gestión",
+                      function() {
+                        ShowInvoiceConfirmation();
+                      },
+                      TareaEstado.Completada
+                    );
+                  },
+                  function(error) {
+                    notify(error.mensaje);
+                    ShowInvoiceConfirmation();
+                  }
+                );
 
-              window.clienteProcesadoConInformacionDeCuentaCorriente = null;
-            },
-            function(error) {
-              notify(
-                "Ha ocurrido un error al actualizar el inventario con las cantidades vendidas, por favor, vuelva a intentar."
-              );
-              estaEnConfirmacionDeFacturacion = false;
-            }
-          );
+                window.clienteProcesadoConInformacionDeCuentaCorriente = null;
+              },
+              function(error) {
+                console.log(
+                  "Ha ocurrido un error al actualizar el inventario con las cantidades vendidas, por favor, vuelva a intentar. " +
+                    error
+                );
+                notify(
+                  "Ha ocurrido un error al actualizar el inventario con las cantidades vendidas, por favor, vuelva a intentar."
+                );
+              }
+            );
+          });
         }
       );
     } else {
       notify(
         "ERROR, Resolucion de SAT ha sido agotada, contacte a su administrador."
       );
-      estaEnConfirmacionDeFacturacion = false;
+      console.log(
+        "ERROR, Resolucion de SAT ha sido agotada, contacte a su administrador."
+      );
     }
   } catch (e) {
+    console.log(e.message);
     notify("PostInvoice: " + e.message);
-    estaEnConfirmacionDeFacturacion = false;
   }
 }
 
 function UpdateQuantityOfSkuSold(callback, errorCallBack) {
   try {
-    if (vieneDeListadoDeDocumentosDeEntrega) {
-      callback();
-      return;
-    }
     var sql = "";
     SONDA_DB_Session.transaction(
       function(trans) {
@@ -3041,6 +3024,7 @@ function ShowSkusToPOS() {
         null,
         null,
         function() {
+          GetGPS_ProcessInvoice();
           ReleaseUnsedSeries();
           $.mobile.changePage("#pos_skus_page", {
             transition: "flip",
@@ -3060,6 +3044,30 @@ function ShowSkusToPOS() {
       "Lo sentimos, ha ocurrido un error al intentar procesar la tarea del cliente, por favor vuelva a intentar."
     );
   }
+}
+
+function GetGPS_ProcessInvoice() {
+  navigator.geolocation.getCurrentPosition(
+    onSuccessGPS_PostInvoice,
+    onErrorGPS_PostInvoice,
+    { timeout: 30000, enableHighAccuracy: true }
+  );
+}
+function onSuccessGPS_PostInvoice(position) {
+  try {
+    navigator.notification.activityStop();
+    gGPSPositionIsAvailable = true;
+    gCurrentGPS = position.coords.latitude + "," + position.coords.longitude;
+    my_dialog("", "", "close");
+  } catch (e) {
+    alert("error on getting gps:" + err.message);
+  }
+}
+function onErrorGPS_PostInvoice(error) {
+  navigator.notification.activityStop();
+  window.gGPSPositionIsAvailable = false;
+  window.gMyCurrentGPS = "0,0";
+  ToastThis("GPS position Is unreachable.");
 }
 
 function AddSKU(pSKU, pQTY, esSuma, unidadDeMedida) {
@@ -3117,10 +3125,8 @@ function AddSKU(pSKU, pQTY, esSuma, unidadDeMedida) {
                 var cantidadAEvaluar = 0;
 
                 if (
-                  unidadDeMedida &&
-                  unidadDeMedidaStock &&
                   unidadDeMedida.toUpperCase() !==
-                    unidadDeMedidaStock.toUpperCase()
+                  unidadDeMedidaStock.toUpperCase()
                 ) {
                   cantidadAEvaluar =
                     (pQTY * factorDeConversion).toFixed(
@@ -3176,34 +3182,17 @@ function AddSKU(pSKU, pQTY, esSuma, unidadDeMedida) {
                     : inventario;
 
                   if (parseFloat(cantidadAEvaluar) <= inventarioDisponible) {
-                    if (
-                      unidadDeMedida &&
-                      unidadDeMedida.toUpperCase() !== "UNDEFINED" &&
-                      unidadDeMedida.toUpperCase() !== "NULL"
-                    ) {
-                      sql =
-                        "UPDATE INVOICE_DETAIL SET QTY = " +
-                        parseFloat(pQTY) +
-                        ", TOTAL_LINE = (" +
-                        parseFloat(pQTY) +
-                        " * PRICE)  " +
-                        "WHERE  INVOICE_NUM = -9999 AND SKU = '" +
-                        pSKU +
-                        "' AND PACK_UNIT = '" +
-                        unidadDeMedida +
-                        "'";
-                    } else {
-                      sql =
-                        "UPDATE INVOICE_DETAIL SET QTY = " +
-                        parseFloat(pQTY) +
-                        ", TOTAL_LINE = (" +
-                        parseFloat(pQTY) +
-                        " * PRICE)  " +
-                        "WHERE  INVOICE_NUM = -9999 AND SKU = '" +
-                        pSKU +
-                        "'";
-                    }
-
+                    sql =
+                      "UPDATE INVOICE_DETAIL SET QTY = " +
+                      parseFloat(pQTY) +
+                      ", TOTAL_LINE = (" +
+                      parseFloat(pQTY) +
+                      " * PRICE)  " +
+                      "WHERE  INVOICE_NUM = -9999 AND SKU = '" +
+                      pSKU +
+                      "' AND PACK_UNIT = '" +
+                      unidadDeMedida +
+                      "'";
                     console.log(sql);
                     tx2.executeSql(sql);
 
@@ -4196,7 +4185,7 @@ function EnviarResolucion(request) {
 }
 
 function VerificarLimiteDeCreditoExcedidoPorVentaActual(callBack) {
-  if (gClientCode === "C00000" || vieneDeListadoDeDocumentosDeEntrega) {
+  if (gClientCode === "C00000") {
     callback();
     return;
   }
@@ -4287,7 +4276,6 @@ function VerificarLimiteDeCreditoExcedidoPorVentaActual(callBack) {
                             "No se ha podido obtener la suma de facturas en ruta del cliente debido a: " +
                               resultado.mensaje
                           );
-                          estaEnConfirmacionDeFacturacion = false;
                         }
                       );
                     },
@@ -4296,7 +4284,6 @@ function VerificarLimiteDeCreditoExcedidoPorVentaActual(callBack) {
                         "No se ha podido obtener la suma de facturas abiertas del cliente debido a: " +
                           resultado.mensaje
                       );
-                      estaEnConfirmacionDeFacturacion = false;
                     }
                   );
                 },
@@ -4305,7 +4292,6 @@ function VerificarLimiteDeCreditoExcedidoPorVentaActual(callBack) {
                     "No se ha podido obtener la lista de facturas vencidas del cliente debido a: " +
                       resultado.mensaje
                   );
-                  estaEnConfirmacionDeFacturacion = false;
                 }
               );
             } else {
@@ -4317,7 +4303,6 @@ function VerificarLimiteDeCreditoExcedidoPorVentaActual(callBack) {
               "No se ha podido obtener la cuenta corriente del cliente debido a: " +
                 resultado.mensaje
             );
-            estaEnConfirmacionDeFacturacion = false;
           }
         );
       } else {
@@ -4326,7 +4311,6 @@ function VerificarLimiteDeCreditoExcedidoPorVentaActual(callBack) {
     },
     function(error) {
       notify(error);
-      estaEnConfirmacionDeFacturacion = false;
     }
   );
 }

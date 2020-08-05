@@ -1,4 +1,6 @@
-﻿class ManifiestoControlador {
+﻿declare var _este: ManifiestoControlador;
+
+class ManifiestoControlador {
 
     manifiestoServicio: ManifiestoServicio = new ManifiestoServicio();
 
@@ -23,7 +25,8 @@
 
         $("#UiPageScanManifest").on("pageshow",
             () => {
-                this.suscribirEventoDePerdidaDeConexionAlServidor(manifiestoControlador);
+                _este = this;
+                this.suscribirEventoDePerdidaDeConexionAlServidor(_este);
                 this.limpiarCampos();
             });
 
@@ -96,7 +99,7 @@
         //TODO: Sockets para obtencion de manifiesto
         socketIo.on("get_manifest_for_sonda_sd_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             my_dialog("", "", "close");
@@ -141,7 +144,7 @@
         //TODO: Sockets para obtencion de tareas de entrega
         socketIo.on("get_delivery_tasks_for_sonda_sd_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             my_dialog("", "", "close");
@@ -161,7 +164,7 @@
         //TODO: Sockets para obtener las demandas de despacho encabezado.
         socketIo.on("get_next_picking_demand_header_by_manifest_for_sonda_sd_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             my_dialog("", "", "close");
@@ -183,7 +186,7 @@
         //TODO: Sockets para obtener las demandas de despacho detalle.
         socketIo.on("get_next_picking_demand_detail_by_Manifest_for_sonda_sd_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             my_dialog("", "", "close");
@@ -207,7 +210,7 @@
         //TODO: Sockets para obtener las demandas de despacho detalle por numero de serie.
         socketIo.on("get_serial_number_by_Manifest_for_sonda_sd_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             my_dialog("", "", "close");
@@ -231,7 +234,7 @@
         //TODO: Sockets para obtencion de canastas de entrega
         socketIo.on("get_baskets_information_for_manifest_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             my_dialog("", "", "close");
@@ -255,7 +258,7 @@
         //TODO: Sockets para actualizacion de estado del manifiesto
         socketIo.on("change_manifest_status_from_sonda_sd_response",
             (data) => {
-                if (!manifiestoControlador.perdioConexionEnProcesoDeManifiesto)
+                if (!_este.perdioConexionEnProcesoDeManifiesto)
                     switch (data.option) {
                         case "fail":
                             notify(data.message);
@@ -266,7 +269,7 @@
                                 (resultado) => {
                                     notify(resultado.mensaje);
                                 });
-                            manifiestoControlador.procesandoManifiesto = false;
+                            _este.procesandoManifiesto = false;
                             let intervalo: number = 0;
                             let tiempoEspera = setInterval(() => {
                                     if (intervalo === 5) {
@@ -284,12 +287,14 @@
 
     regresarAPantallaAnterior(pantalla: string) {
 
-        if (manifiestoControlador.perdioConexionEnProcesoDeManifiesto && manifiestoControlador.procesandoManifiesto) {
-            manifiestoControlador.manifiestoServicio.limpiarTareasDeEntrega();
-            manifiestoControlador.perdioConexionEnProcesoDeManifiesto = false;
+        if (_este.perdioConexionEnProcesoDeManifiesto && _este.procesandoManifiesto) {
+            _este.manifiestoServicio.limpiarTareasDeEntrega();
+            _este.perdioConexionEnProcesoDeManifiesto = false;
         }
 
         this.desvincularEventoDePerdidaDeConexionAlServidor(this);
+
+        //_este = null;
 
         $.mobile.changePage(`#${pantalla}`,
             {
@@ -377,12 +382,12 @@
             "currentGpsUser": gCurrentGPS
         }
 
-        if (manifiestoControlador.perdioConexionEnProcesoDeManifiesto) {
-            manifiestoControlador.delegarSocketPrincipalDeProcesoDeManifiesto();
-            manifiestoControlador.perdioConexionEnProcesoDeManifiesto = false;
+        if (_este.perdioConexionEnProcesoDeManifiesto) {
+            _este.delegarSocketPrincipalDeProcesoDeManifiesto();
+            _este.perdioConexionEnProcesoDeManifiesto = false;
         }
 
-        manifiestoControlador.procesandoManifiesto = true;
+        _este.procesandoManifiesto = true;
         SocketControlador.socketIo.emit("process_manifest_from_sonda_sd", data);
         txtIdManifiesto = null;
     }
@@ -447,11 +452,11 @@
     }
 
     usuarioPerdioConexionAlServidor() {
-        if (!manifiestoControlador.procesandoManifiesto) {
+        if (!_este.procesandoManifiesto) {
             return;
         }
-        manifiestoControlador.perdioConexionEnProcesoDeManifiesto = true;
-        manifiestoControlador.manifiestoServicio.limpiarTareasDeEntrega();
+        _este.perdioConexionEnProcesoDeManifiesto = true;
+        _este.manifiestoServicio.limpiarTareasDeEntrega();
         my_dialog("", "", "close");
         notify("Ha perdido la conexión al servidor, por favor, verifique y vuelva a intentar.");
         SocketControlador.socketIo.off("process_manifest_from_sonda_sd_response");

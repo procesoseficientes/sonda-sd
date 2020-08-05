@@ -9,7 +9,7 @@ var EntregaDetalleControlador = (function () {
         this.tokenTarea = mensajero.subscribe(this.tareaMensajeEntregado, getType(TareaMensaje), this);
     }
     EntregaDetalleControlador.prototype.delegarEntregaControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         var este = this;
         $("#UiDeliveryDetailPage").on("pageshow", function () {
             vieneDeListadoDeDocumentosDeEntrega = true;
@@ -21,11 +21,11 @@ var EntregaDetalleControlador = (function () {
             id = null;
         });
         $("#UiBtnConsolidateDelivery").on("click", function () {
-            if (!_this_1.tieneProductosParaEntrega()) {
+            if (!_this.tieneProductosParaEntrega()) {
                 notify("No se ha encontrado informaci\u00F3n suficiente para generar el detalle de la entrega, por favor, verifique y vuelva a intentar.");
             }
             else {
-                _this_1.generarDetalleDeEntregaConsolidada();
+                _this.generarDetalleDeEntregaConsolidada();
             }
         });
     };
@@ -34,9 +34,9 @@ var EntregaDetalleControlador = (function () {
     };
     ;
     EntregaDetalleControlador.prototype.obtenerTareaPorCodigoYTipo = function () {
-        var _this_1 = this;
+        var _this = this;
         TareaServicio.obtenerTareaPorCodigoYTipo(this.tarea.taskId, this.tarea.taskType, function (tarea) {
-            _this_1.tarea = tarea;
+            _this.tarea = tarea;
             var uiCodeClient = $("#UiCodeClient");
             uiCodeClient.text(tarea.relatedClientCode);
             uiCodeClient = null;
@@ -44,38 +44,38 @@ var EntregaDetalleControlador = (function () {
             uiNameClient.text(tarea.relatedClientName);
             uiNameClient = null;
             var txtNIT = $("#txtNIT");
-            txtNIT.val(_this_1.tarea.nit);
+            txtNIT.val(_this.tarea.nit);
             txtNIT = null;
             var txtNombre = $("#txtNombre");
-            txtNombre.val(_this_1.tarea.relatedClientName);
+            txtNombre.val(_this.tarea.relatedClientName);
             txtNombre = null;
             var txtVuelto_summ = $("#txtVuelto_summ");
             txtVuelto_summ.text("0");
             txtVuelto_summ = null;
-            _this_1.listaDemandaDeDespachos = [];
-            _this_1.obtenerDocumentosParaEntrega();
+            _this.listaDemandaDeDespachos = [];
+            _this.obtenerDocumentosParaEntrega();
         }, function (error) {
             notify("Error al obtener tarea de entrega: " + error.message);
         });
     };
     EntregaDetalleControlador.prototype.obtenerDocumentosParaEntrega = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea, function (listaDemandaDeDespachos) {
-                _this_1.listaDemandaDeDespachos = listaDemandaDeDespachos;
-                _this_1.listaDemandaDeDespachoConsolidado = [];
-                _this_1.consolidarListaDeDespacho([], function (listaDemandaDeDespachoConsolidado) {
-                    _this_1.listaDemandaDeDespachoConsolidado = listaDemandaDeDespachoConsolidado;
-                    _this_1.generarListadoDeDocumentosDeEntrega(function (error) {
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode, function (listaDemandaDeDespachos) {
+                _this.listaDemandaDeDespachos = listaDemandaDeDespachos;
+                _this.listaDemandaDeDespachoConsolidado = [];
+                _this.consolidarListaDeDespacho([], function (listaDemandaDeDespachoConsolidado) {
+                    _this.listaDemandaDeDespachoConsolidado = listaDemandaDeDespachoConsolidado;
+                    _this.generarListadoDeDocumentosDeEntrega(function (error) {
                         notify("Error al generar el listado de entrega: " + error.mensaje);
                     });
-                    _this_1.generarListadoDeDocumentosDeEntregaConsolidado(function (error) {
+                    _this.generarListadoDeDocumentosDeEntregaConsolidado(function (error) {
                         notify("Error al generar el listado de entrega consolidado: " + error.mensaje);
                     });
-                    _this_1.consolidarListaDeDespachoParaProcesoDeEntrega(function (listaDeDemandaDeDespachoParaProcesoDeEntrega) {
-                        _this_1.listaDeDemandaDeDespachoParaProcesoDeEntrega = listaDeDemandaDeDespachoParaProcesoDeEntrega;
+                    _this.consolidarListaDeDespachoParaProcesoDeEntrega(function (listaDeDemandaDeDespachoParaProcesoDeEntrega) {
+                        _this.listaDeDemandaDeDespachoParaProcesoDeEntrega = listaDeDemandaDeDespachoParaProcesoDeEntrega;
                     });
-                    _this_1.prepararInformacionDeCanastas();
+                    _this.prepararInformacionDeCanastas();
                 }, function (error) {
                     notify("Error al generar el listado conslidado de entrega: " + error.mensaje);
                 });
@@ -145,7 +145,7 @@ var EntregaDetalleControlador = (function () {
     EntregaDetalleControlador.prototype.consolidarListaDeDespacho = function (listaDemandaDeDespachos, callback, errorCallback) {
         try {
             var listaDemandaDeDespachoConsolidado_1 = [];
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea, function (listaDemandaDeDespacho) {
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode, function (listaDemandaDeDespacho) {
                 listaDemandaDeDespacho.map(function (demandaDeDespacho) {
                     if (demandaDeDespacho.processStatus !== EstadoEntrega.Cancelada.toString() &&
                         demandaDeDespacho.processStatus !== EstadoEntrega.Entregado.toString()) {
@@ -236,7 +236,7 @@ var EntregaDetalleControlador = (function () {
         return demandaDeDespacho.processStatus != EstadoEntrega.Entregado.toString() && demandaDeDespacho.processStatus != EstadoEntrega.Cancelada.toString();
     };
     EntregaDetalleControlador.prototype.cancelarDocumentoEntrega = function (pickingDemandHeaderId) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var demandaDeDespachoAFacturar_1 = this.listaDemandaDeDespachos.find(function (demandaDeDespacho) {
                 return demandaDeDespacho.pickingDemandHeaderId == pickingDemandHeaderId;
@@ -247,13 +247,13 @@ var EntregaDetalleControlador = (function () {
                     : demandaDeDespachoAFacturar_1.docNum.toString();
                 navigator.notification.confirm("\u00BFConfirma cancelar la entrega: " + documento + "?", function (buttonIndex) {
                     if (buttonIndex === 2) {
-                        _this_1.preguntarRazonDeNoEntrega(function (razonDeNoEntrega) {
+                        _this.preguntarRazonDeNoEntrega(function (razonDeNoEntrega) {
                             demandaDeDespachoAFacturar_1.reasonCancel = razonDeNoEntrega;
-                            _this_1.cancelarLaEntrega(demandaDeDespachoAFacturar_1, EstadoEntrega.Cancelada.toString(), function () {
+                            _this.cancelarLaEntrega(demandaDeDespachoAFacturar_1, EstadoEntrega.Cancelada.toString(), function () {
                                 vieneDeListadoDeDocumentosDeEntrega = true;
-                                actualizarEstadoDeTarea(_this_1.tarea.taskId, 0, "Sin Gestion", function () {
+                                actualizarEstadoDeTarea(_this.tarea.taskId, 0, "Sin Gestion", function () {
                                     vieneDeListadoDeDocumentosDeEntrega = false;
-                                    _this_1.obtenerDocumentosParaEntrega();
+                                    _this.obtenerDocumentosParaEntrega();
                                 }, TareaEstado.Completada);
                             });
                         });
@@ -267,7 +267,7 @@ var EntregaDetalleControlador = (function () {
         }
     };
     EntregaDetalleControlador.prototype.entregaCompletaDeEntrega = function (pickingDemandHeaderId) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var demandaDeDespachoAFacturar = this.listaDemandaDeDespachos
                 .find(function (demandaDeDespacho) {
@@ -289,7 +289,7 @@ var EntregaDetalleControlador = (function () {
                         .agregarDetalleCompletoDeDemandaDeDespachoAFacturacion(demandaDeDespachoAFacturar
                         .detalleDeDemandaDeDespacho, function () {
                         vieneDeListadoDeDocumentosDeEntrega = true;
-                        _this_1.irAPantalla("pos_skus_page");
+                        _this.irAPantalla("pos_skus_page");
                     }, function (error) {
                         notify(error.mensaje);
                     });
@@ -328,7 +328,7 @@ var EntregaDetalleControlador = (function () {
         return producto.isBonus == SiNo.No;
     };
     EntregaDetalleControlador.prototype.entregaParcialDeEntrega = function (pickingDemandHeaderId) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var demandaDeDespachoAFacturar_2 = this.listaDemandaDeDespachos
                 .find(function (demandaDeDespacho) {
@@ -341,19 +341,19 @@ var EntregaDetalleControlador = (function () {
                 if (this.documentoNoEstaCompletadoOCancelado(demandaDeDespachoAFacturar_2)) {
                     navigator.notification.confirm("\u00BFConfirma realizar la entrega parcial.(Esto cancelara la entrega original): " + documento + "?", function (buttonIndex) {
                         if (buttonIndex === 2) {
-                            _this_1.preguntarRazonDeNoEntrega(function (razonDeNoEntrega) {
+                            _this.preguntarRazonDeNoEntrega(function (razonDeNoEntrega) {
                                 demandaDeDespachoAFacturar_2.reasonCancel = razonDeNoEntrega;
-                                _this_1.cancelarLaEntrega(demandaDeDespachoAFacturar_2, EstadoEntrega.Parcial.toString(), function () {
-                                    var detalleTemporal = demandaDeDespachoAFacturar_2.detalleDeDemandaDeDespacho.filter(_this_1.productoNoEsBonificacion);
+                                _this.cancelarLaEntrega(demandaDeDespachoAFacturar_2, EstadoEntrega.Parcial.toString(), function () {
+                                    var detalleTemporal = demandaDeDespachoAFacturar_2.detalleDeDemandaDeDespacho.filter(_this.productoNoEsBonificacion);
                                     detalleTemporal.map(function (demandaDeDespachoDetalle) {
                                         demandaDeDespachoDetalle.discount = 0;
                                     });
                                     demandaDeDespachoAFacturar_2.detalleDeDemandaDeDespacho = detalleTemporal;
                                     demandaDeDespachoEnProcesoDeEntrega = demandaDeDespachoAFacturar_2;
-                                    _this_1.entregaServicio.agregarDetalleCompletoDeDemandaDeDespachoAFacturacion(demandaDeDespachoAFacturar_2
+                                    _this.entregaServicio.agregarDetalleCompletoDeDemandaDeDespachoAFacturacion(demandaDeDespachoAFacturar_2
                                         .detalleDeDemandaDeDespacho, function () {
                                         vieneDeListadoDeDocumentosDeEntrega = true;
-                                        _this_1.irAPantalla("pos_skus_page");
+                                        _this.irAPantalla("pos_skus_page");
                                     }, function (error) {
                                         notify(error.mensaje);
                                     });
@@ -375,17 +375,17 @@ var EntregaDetalleControlador = (function () {
         }
     };
     EntregaDetalleControlador.prototype.cancelarLaEntrega = function (demandaDeDespachoAFacturar, estadoEntrega, callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             PagoConsignacionesServicio.ValidarSequenciaDeDocumentos(SecuenciaDeDocumentoTipo.EntregaCancelada, function (secuenciaValida) {
                 if (secuenciaValida) {
                     PagoConsignacionesServicio.ObtenerSiguienteSecuenciaDeDocumento(SecuenciaDeDocumentoTipo.EntregaCancelada, function (docSerie, docNum) {
-                        _this_1.entregaServicio.insertarEntregaCancelada(demandaDeDespachoAFacturar, docSerie, docNum, function () {
+                        _this.entregaServicio.insertarEntregaCancelada(demandaDeDespachoAFacturar, docSerie, docNum, function () {
                             PagoConsignacionesServicio.ActualizarSecuenciaDeDocumentos(SecuenciaDeDocumentoTipo.EntregaCancelada, docNum, function () {
-                                _this_1.entregaServicio.cambiarEstadoDeDocumentoEntrega(demandaDeDespachoAFacturar.pickingDemandHeaderId, estadoEntrega, function () {
+                                _this.entregaServicio.cambiarEstadoDeDocumentoEntrega(demandaDeDespachoAFacturar.pickingDemandHeaderId, estadoEntrega, function () {
                                     var facturaEnRuta = (localStorage.getItem("INVOICE_IN_ROUTE") === "1");
                                     if (facturaEnRuta) {
-                                        _this_1.entregaServicio
+                                        _this.entregaServicio
                                             .agregarSkuAInvnetarioCancelado(demandaDeDespachoAFacturar.detalleDeDemandaDeDespacho, function () {
                                             callback();
                                         }, function (error) {
@@ -435,7 +435,7 @@ var EntregaDetalleControlador = (function () {
     EntregaDetalleControlador.prototype.consolidarListaDeDespachoParaProcesoDeEntrega = function (callback) {
         try {
             var listaDeDespachoParaProcesoDeEntrega_1 = [];
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea, function (listaDemandaDeDespachos) {
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode, function (listaDemandaDeDespachos) {
                 listaDemandaDeDespachos.map(function (demandaDeDespacho) {
                     if (demandaDeDespacho.processStatus !== EstadoEntrega.Cancelada.toString() &&
                         demandaDeDespacho.processStatus !== EstadoEntrega.Entregado.toString()) {
@@ -492,7 +492,7 @@ var EntregaDetalleControlador = (function () {
     };
     EntregaDetalleControlador.prototype.tieneProductosParaEntrega = function () { return this.listaDeDemandaDeDespachoParaProcesoDeEntrega.length > 0; };
     EntregaDetalleControlador.prototype.generarDetalleDeEntregaConsolidada = function () {
-        var _this_1 = this;
+        var _this = this;
         this.publicarListaDeDetallesConsolidadosParaProcesoDeEntrega(this.listaDeDemandaDeDespachoParaProcesoDeEntrega);
         listaDeDemandasDeDespachoEnProcesoDeEntrega = this.listaDemandaDeDespachos;
         esEntregaParcial = false;
@@ -502,7 +502,7 @@ var EntregaDetalleControlador = (function () {
         esFacturaDeEntrega = true;
         this.entregaServicio
             .agregarDetalleCompletoDeDemandaDeDespachoAFacturacion(this.listaDeDemandaDeDespachoParaProcesoDeEntrega, function () {
-            _this_1.irAPantalla("pos_skus_page");
+            _this.irAPantalla("pos_skus_page");
         }, function (resultado) {
             notify("No se ha podido agregar el detalle de la demanda de despacho al proceso de entrega debido a: " + resultado.mensaje);
         });
@@ -513,7 +513,7 @@ var EntregaDetalleControlador = (function () {
         this.mensajero.publish(message, getType(ListaDeDetalleDeDemandaDeDespachoConsolidadoMensaje));
     };
     EntregaDetalleControlador.prototype.preguntarRazonDeNoEntrega = function (callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.entregaServicio.obtenerRazonesDeNoEntrega(function (razonesDeNoEntrega) {
                 var listaRazones = [];
@@ -529,7 +529,7 @@ var EntregaDetalleControlador = (function () {
                 window.plugins.listpicker.showPicker(configOptions, function (item) {
                     callback(item);
                 }, function (error) {
-                    if (!_this_1.esErrorPorDefecto(error)) {
+                    if (!_this.esErrorPorDefecto(error)) {
                         notify("No se han podido obtener las razones de no entrega debido a: " + error);
                     }
                 });
@@ -542,7 +542,7 @@ var EntregaDetalleControlador = (function () {
         }
     };
     EntregaDetalleControlador.prototype.prepararInformacionDeCanastas = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.verificarParametroParaMostrarCanastas(function (muestraCanastas) {
                 if (muestraCanastas) {
@@ -553,11 +553,11 @@ var EntregaDetalleControlador = (function () {
                     var uiLiTabEntregaDocumentos = $("#UiLiTabEntregaDocumentos");
                     uiLiTabEntregaDocumentos.css('width', '33%');
                     var listaDeDespachoConCanastas_1 = [];
-                    _this_1.entregaServicio.obtenerDocumentosParaEntrega(_this_1.tarea, function (listaDemandaDeDespachos) {
+                    _this.entregaServicio.obtenerDocumentosParaEntrega(_this.tarea.relatedClientCode, function (listaDemandaDeDespachos) {
                         listaDemandaDeDespachos.map(function (demandaDeDespacho) {
-                            _this_1.entregaServicio.obtenerInformacionDeCanastas(demandaDeDespacho.docNum, function (demandaDeDespachoConCanastas) {
+                            _this.entregaServicio.obtenerInformacionDeCanastas(demandaDeDespacho.docNum, function (demandaDeDespachoConCanastas) {
                                 listaDeDespachoConCanastas_1.push(demandaDeDespachoConCanastas);
-                                _this_1.crearListaDeDespachosConCanastas(listaDeDespachoConCanastas_1, function (resultado) {
+                                _this.crearListaDeDespachosConCanastas(listaDeDespachoConCanastas_1, function (resultado) {
                                     notify("Error al crear lista de despachos con canastas: " + resultado.mensaje);
                                 });
                             }, function (resultado) {

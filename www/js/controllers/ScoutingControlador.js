@@ -9,20 +9,22 @@ var ScoutingControlador = (function () {
     ScoutingControlador.prototype.delegarScoutingControlador = function () {
         var este = this;
         $("#UiScoutingPage").on("pageshow", function () {
-            InteraccionConUsuarioServicio.bloquearPantalla();
             este.cliente = new Cliente();
-            $("input[data-type=\"search\"]").val("");
+            my_dialog("Espere", "Por favor, espere...", "open");
+            $('input[data-type="search"]').val("");
             este.limpiarCamposDeScouting(function () {
                 este.reglaServicio.obtenerRegla(ReglaTipo.Scouting.toString(), function (reglasDeScouting) {
                     este.reglasDeScouting = reglasDeScouting;
                     este.cargarEtiquetasParaNuevoCliente(function () {
                         DispositivoServicio.obtenerUbicacion(function () {
-                            InteraccionConUsuarioServicio.desbloquearPantalla();
+                            my_dialog("", "", "close");
                         });
                     }, function (resultado) {
+                        my_dialog("", "", "close");
                         notify(resultado.mensaje);
                     });
                 }, function (error) {
+                    my_dialog("", "", "close");
                     notify(error);
                 });
             });
@@ -171,9 +173,11 @@ var ScoutingControlador = (function () {
     ScoutingControlador.prototype.recolectarInformacionBasicaDeNuevoCliente = function (callback, errorCallback) {
         var _this = this;
         try {
-            PagoConsignacionesServicio.ValidarSequenciaDeDocumentos(SecuenciaDeDocumentoTipo.Scouting, function (isValidSequence) {
+            PagoConsignacionesServicio
+                .ValidarSequenciaDeDocumentos(SecuenciaDeDocumentoTipo.Scouting, function (isValidSequence) {
                 if (isValidSequence) {
-                    PagoConsignacionesServicio.ObtenerSiguienteSecuenciaDeDocumento(SecuenciaDeDocumentoTipo.Scouting, function (docSerie, docNum) {
+                    PagoConsignacionesServicio
+                        .ObtenerSiguienteSecuenciaDeDocumento(SecuenciaDeDocumentoTipo.Scouting, function (docSerie, docNum) {
                         GetNexSequence("SCOUTING", function (seq) {
                             var nameClient = $("#UiTxtNameScouting");
                             var taxIdClient = $("#UiTxtTaxIdScouting");
@@ -192,27 +196,16 @@ var ScoutingControlador = (function () {
                             _this.cliente.gps = gCurrentGPS;
                             if (nameClient.val() === "") {
                                 $("#UiTxtNameScouting").focus();
-                                errorCallback({
-                                    codigo: -1,
-                                    resultado: ResultadoOperacionTipo.Error,
-                                    mensaje: "Debe proporcionar el nombre del cliente."
-                                });
+                                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Debe proporcionar el nombre del cliente." });
                                 return;
                             }
                             else {
                                 _this.cliente.clientName = nameClient.val();
                             }
                             _this.cliente.clientTaxId = taxIdClient.val();
-                            _this.cliente.address =
-                                addressClient.val() === "" ? "..." : addressClient.val();
-                            _this.cliente.contactCustomer =
-                                contactNameClient.val() === ""
-                                    ? "..."
-                                    : contactNameClient.val();
-                            _this.cliente.contactPhone =
-                                telephoneContactNameClient.val() === ""
-                                    ? "..."
-                                    : telephoneContactNameClient.val();
+                            _this.cliente.address = addressClient.val() === "" ? "..." : addressClient.val();
+                            _this.cliente.contactCustomer = contactNameClient.val() === "" ? "..." : contactNameClient.val();
+                            _this.cliente.contactPhone = telephoneContactNameClient.val() === "" ? "..." : telephoneContactNameClient.val();
                             _this.cliente.billingName = invoiceNameClient.val();
                             _this.cliente.billingAddress = invoiceAddressClient.val();
                             _this.cliente.photo1 = imgOneClient.attr("src");
@@ -230,63 +223,37 @@ var ScoutingControlador = (function () {
                             imgThreeClient = null;
                             callback(_this.cliente);
                         }, function (err) {
-                            errorCallback({
-                                codigo: -1,
-                                resultado: ResultadoOperacionTipo.Error,
-                                mensaje: err.message
-                            });
+                            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: err.message });
                             return;
                         });
                     }, function (error) {
-                        errorCallback({
-                            codigo: -1,
-                            resultado: ResultadoOperacionTipo.Error,
-                            mensaje: error
-                        });
+                        errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error });
                         return;
                     });
                 }
                 else {
-                    errorCallback({
-                        codigo: -1,
-                        resultado: ResultadoOperacionTipo.Error,
-                        mensaje: "No tiene una secuencia valida para crear el nuevo cliente, por favor, comuníquese con su Administrador."
-                    });
+                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "No tiene una secuencia valida para crear el nuevo cliente, por favor, comuníquese con su Administrador." });
                     return;
                 }
             }, function (error) {
-                errorCallback({
-                    codigo: -1,
-                    resultado: ResultadoOperacionTipo.Error,
-                    mensaje: error
-                });
+                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error });
                 return;
             });
         }
         catch (e) {
-            errorCallback({
-                codigo: -1,
-                resultado: ResultadoOperacionTipo.Error,
-                mensaje: e.message
-            });
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
             return;
         }
     };
     ScoutingControlador.prototype.recolectarInformacionDeEtiquetasDeNuevoCliente = function (cliente, callback, errorCallback) {
         try {
-            var contenedorDeEtiquetas = $("input[type=checkbox]:checked");
+            var contenedorDeEtiquetas = $('input[type=checkbox]:checked');
             var etiquetasDeCliente = new Array();
             if (contenedorDeEtiquetas) {
-                etiquetasDeCliente = contenedorDeEtiquetas
-                    .map(function (index, element) {
+                etiquetasDeCliente = contenedorDeEtiquetas.map(function (index, element) {
                     var control = element;
-                    return {
-                        tagColor: $(control).attr("id"),
-                        docSerieClient: cliente.docSerie,
-                        docNumClient: cliente.docNum
-                    };
-                })
-                    .get();
+                    return { tagColor: $(control).attr("id"), docSerieClient: cliente.docSerie, docNumClient: cliente.docNum };
+                }).get();
                 cliente.tags = etiquetasDeCliente;
                 callback(cliente);
                 contenedorDeEtiquetas = null;
@@ -297,11 +264,7 @@ var ScoutingControlador = (function () {
             }
         }
         catch (e) {
-            errorCallback({
-                codigo: -1,
-                resultado: ResultadoOperacionTipo.Error,
-                mensaje: e.message
-            });
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
             return;
         }
     };
@@ -345,9 +308,7 @@ var ScoutingControlador = (function () {
                 switch (reglaAct.TYPE_ACTION) {
                     case "FotografiaObligatoria":
                         if (reglaAct.ENABLED.toUpperCase() === "SI") {
-                            if (cliente.photo1 === "" &&
-                                cliente.photo2 === "" &&
-                                cliente.photo3 === "") {
+                            if (cliente.photo1 === "" && cliente.photo2 === "" && cliente.photo3 === "") {
                                 throw new Error("Debe tomar como mínimo dos fotografías");
                             }
                             else if (cliente.photo1 === "" && cliente.photo2 === "") {
@@ -381,11 +342,7 @@ var ScoutingControlador = (function () {
             }
         }
         catch (e) {
-            errorCallback({
-                codigo: -1,
-                resultado: ResultadoOperacionTipo.Error,
-                mensaje: e.message
-            });
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
             return;
         }
     };
@@ -419,11 +376,7 @@ var ScoutingControlador = (function () {
             });
         }
         catch (e) {
-            errorCallback({
-                codigo: -1,
-                resultado: ResultadoOperacionTipo.Error,
-                mensaje: e.message
-            });
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
         }
     };
     return ScoutingControlador;

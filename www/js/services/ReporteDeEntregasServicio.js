@@ -61,7 +61,7 @@ var ReporteDeEntregasServicio = (function () {
         }
     };
     ReporteDeEntregasServicio.prototype.obtenerEntregasPendientes = function (callBack, errorCallBack) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var entregasPendientes_1 = [];
             SONDA_DB_Session.transaction(function (trans) {
@@ -98,7 +98,7 @@ var ReporteDeEntregasServicio = (function () {
                             entregaPendiente.qtyPending = entregaPendienteTemp.QTY_PENDING;
                             entregasPendientes_1.push(entregaPendiente);
                         }
-                        _this_1.obtenerNotasDeEntregaAsociadasADemandaDeDespacho(entregasPendientes_1, transResult, function (entregasPendientesDevueltas, notasDeEntrega) {
+                        _this.obtenerNotasDeEntregaAsociadasADemandaDeDespacho(entregasPendientes_1, transResult, function (entregasPendientesDevueltas, notasDeEntrega) {
                             entregasPendientesDevueltas.map(function (entregaPendiente) {
                                 var notaEntregaAnuladaAsociadaADemandaDeDespachoPendiente = notasDeEntrega
                                     .find(function (notaEntrega) {

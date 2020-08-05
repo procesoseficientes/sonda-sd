@@ -26,7 +26,7 @@
             }, (error) => {
                 notify(error.mensaje);
             });
-        });
+        });       
 
         $("#UiBtnStartDeliveryRouteFromDeliveryPage").on("click", () => {
             este.empezarNavegacionHaciaTareaEntrega();
@@ -34,7 +34,6 @@
 
         $("#UiBtnInvoiceDeliveryPage").on("click",
             () => {
-                InteraccionConUsuarioServicio.bloquearPantalla();
                 este.procederARealizarEntrega();
             });
     }
@@ -51,16 +50,13 @@
         catch (e) {
             notify(e.message);
         }
-    }
+    }    
 
     obtenerTareaPorCodigoYTipo() {
-        this.limpiarDatosDeCliente(() => {
-            TareaServicio.obtenerTareaPorCodigoYTipo(this.tarea.taskId, this.tarea.taskType, (tarea) => {
-                this.tarea = tarea;
-                this.establecerDatosDeCliente();
-            }, (error) => {
-                notify("Error al obtener tarea de entrega: " + error);
-            });
+        TareaServicio.obtenerTareaPorCodigoYTipo(this.tarea.taskId, this.tarea.taskType, (tarea) => {
+            this.tarea = tarea;
+        }, (error) => {
+            notify("Error al obtener tarea de entrega: " + error);
         });
     }
 
@@ -90,7 +86,7 @@
     procederARealizarEntrega() {
         try {
 
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea, (documentosAEntregar) => {
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode, (documentosAEntregar) => {
 
                 if (documentosAEntregar.length == 0) {
                     throw new Error("No se han encontrado documentos para realizar la entrega, por favor verifique y vuelva a intentar");
@@ -99,7 +95,6 @@
                 this.publicarListadoDeDocumentosDeEntrega(documentosAEntregar, () => {
                     actualizarEstadoDeTarea(gTaskId, null, null, () => {
                         this.irAPantalla("UiDeliveryDetailPage");
-                        InteraccionConUsuarioServicio.desbloquearPantalla();
                     }, TareaEstado.Aceptada);
                 });
 
@@ -158,29 +153,5 @@
 
     VerificarSiTraeGps = function (tarea) {
         return (tarea.expectedGps && tarea.expectedGps != "0,0");
-    }
-
-    limpiarDatosDeCliente(callback: () => void) {
-        let codigoCliente: JQuery = $("#UiLabelClientCodeInDelivery");
-        let nombreCliente: JQuery = $("#UiLabelClientNameInDelivery");
-
-        codigoCliente.text("");
-        nombreCliente.text("");
-
-        codigoCliente = null;
-        nombreCliente = null;
-
-        callback();
-    }
-
-    establecerDatosDeCliente() {
-        let codigoCliente: JQuery = $("#UiLabelClientCodeInDelivery");
-        let nombreCliente: JQuery = $("#UiLabelClientNameInDelivery");
-
-        codigoCliente.text(this.tarea.relatedClientCode);
-        nombreCliente.text(this.tarea.relatedClientName);
-
-        codigoCliente = null;
-        nombreCliente = null;
     }
 }

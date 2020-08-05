@@ -10,16 +10,14 @@ var NotaDeEntregaServicio = (function () {
         }
     };
     NotaDeEntregaServicio.prototype.obtenerEncabezadosDeNotaDeEntregaParaSincronizar = function (callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var documentos_1 = [];
             SONDA_DB_Session.readTransaction(function (readTrans) {
                 var sql = [];
                 sql.push("SELECT DELIVERY_NOTE_ID, DOC_SERIE, DOC_NUM, CODE_CUSTOMER");
                 sql.push(", DELIVERY_NOTE_ID_HH, TOTAL_AMOUNT, IS_POSTED, CREATED_DATETIME");
-                sql.push(", POSTED_DATETIME, TASK_ID, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID");
-                sql.push(", DELIVERY_IMAGE, BILLED_FROM_SONDA, IS_CANCELED, REASON_CANCEL, DISCOUNT");
-                sql.push(", DELIVERY_IMAGE_2, DELIVERY_IMAGE_3, DELIVERY_IMAGE_4, DELIVERY_SIGNATURE");
+                sql.push(", POSTED_DATETIME, TASK_ID, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE, BILLED_FROM_SONDA, IS_CANCELED, REASON_CANCEL, DISCOUNT");
                 sql.push(" FROM SONDA_DELIVERY_NOTE_HEADER WHERE IS_POSTED IN(0,1,3)");
                 readTrans.executeSql(sql.join(""), [], function (readTransResult, results) {
                     for (var i = 0; i < results.rows.length; i++) {
@@ -43,13 +41,9 @@ var NotaDeEntregaServicio = (function () {
                         encabezadoNotaDeEntrega.isCanceled = encabezadoNotaEntregaTemp.IS_CANCELED;
                         encabezadoNotaDeEntrega.reasonCancel = encabezadoNotaEntregaTemp.REASON_CANCEL;
                         encabezadoNotaDeEntrega.discount = encabezadoNotaEntregaTemp.DISCOUNT;
-                        encabezadoNotaDeEntrega.deliveryImage2 = encabezadoNotaEntregaTemp.DELIVERY_IMAGE_2;
-                        encabezadoNotaDeEntrega.deliveryImage3 = encabezadoNotaEntregaTemp.DELIVERY_IMAGE_3;
-                        encabezadoNotaDeEntrega.deliveryImage4 = encabezadoNotaEntregaTemp.DELIVERY_IMAGE_4;
-                        encabezadoNotaDeEntrega.deliverySignature = encabezadoNotaEntregaTemp.DELIVERY_SIGNATURE;
                         documentos_1.push(encabezadoNotaDeEntrega);
                     }
-                    _this_1.obtenerDetalleDeNotasDeEntrega(documentos_1, callback, errorCallback, 0, readTransResult);
+                    _this.obtenerDetalleDeNotasDeEntrega(documentos_1, callback, errorCallback, 0, readTransResult);
                 }, function (readTransResult, error) {
                     errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message });
                 });
@@ -62,7 +56,7 @@ var NotaDeEntregaServicio = (function () {
         }
     };
     NotaDeEntregaServicio.prototype.obtenerDetalleDeNotasDeEntrega = function (documentos, callback, errorCallback, indice, transaccion) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (this.seProcesaRegistro(indice, documentos.length)) {
                 var documentoActual_1 = documentos[indice];
@@ -89,7 +83,7 @@ var NotaDeEntregaServicio = (function () {
                         documentoActual_1.detalleNotaDeEntrega.push(detalleNotaEntrega);
                     }
                     documentos[indice] = documentoActual_1;
-                    _this_1.obtenerDetalleDeNotasDeEntrega(documentos, callback, errorCallback, indice + 1, transReturn);
+                    _this.obtenerDetalleDeNotasDeEntrega(documentos, callback, errorCallback, indice + 1, transReturn);
                 }, function (transReturn, error) {
                     errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message });
                 });
@@ -126,12 +120,12 @@ var NotaDeEntregaServicio = (function () {
         return indiceDeDocumento < cantidadDeDocumentos;
     };
     NotaDeEntregaServicio.prototype.insertarNotaDeEntrega = function (notaDeEntrega, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             SONDA_DB_Session.transaction(function (trans) {
-                trans.executeSql(_this_1.obtenerFormatoDeInsercionDeEncabezadoDeNotaDeEntrega(notaDeEntrega));
+                trans.executeSql(_this.obtenerFormatoDeInsercionDeEncabezadoDeNotaDeEntrega(notaDeEntrega));
                 notaDeEntrega.detalleNotaDeEntrega.map(function (detalle) {
-                    trans.executeSql(_this_1.obtenerFormatoDeInsercionDeDetalleDeNotaDeEntrega(detalle));
+                    trans.executeSql(_this.obtenerFormatoDeInsercionDeDetalleDeNotaDeEntrega(detalle));
                 });
                 if (!esEntregaConsolidada) {
                     trans
@@ -153,11 +147,11 @@ var NotaDeEntregaServicio = (function () {
                             .Entregado + "' END, IS_POSTED = 0 WHERE PICKING_DEMAND_HEADER_ID = " + encabezadoDeDemandaEnProceso.pickingDemandHeaderId);
                     });
                 }
-                if (_this_1.estaNotaDeEntregaGeneroFactura(notaDeEntrega)) {
+                if (_this.estaNotaDeEntregaGeneroFactura(notaDeEntrega)) {
                     trans.executeSql("UPDATE INVOICE_HEADER SET IS_FROM_DELIVERY_NOTE = 1 WHERE INVOICE_NUM = " + notaDeEntrega.invoiceId);
                 }
-                _this_1.actualizarEstadoDeManifiestos();
-                if (_this_1.estaNotaDeEntregaNoEsPagadaDesdeSonda(notaDeEntrega)) {
+                _this.actualizarEstadoDeManifiestos();
+                if (_this.estaNotaDeEntregaNoEsPagadaDesdeSonda(notaDeEntrega)) {
                     gTotalInvoiced += notaDeEntrega.totalAmount;
                     localStorage.setItem('POS_TOTAL_INVOICED', gTotalInvoiced.toString());
                 }
@@ -181,8 +175,7 @@ var NotaDeEntregaServicio = (function () {
         sqlEncabezado.push("DELIVERY_NOTE_ID, DOC_SERIE, DOC_NUM");
         sqlEncabezado.push(", CODE_CUSTOMER, DELIVERY_NOTE_ID_HH, TOTAL_AMOUNT");
         sqlEncabezado.push(", IS_POSTED, CREATED_DATETIME, POSTED_DATETIME, TASK_ID");
-        sqlEncabezado.push(", INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE");
-        sqlEncabezado.push(", BILLED_FROM_SONDA, DISCOUNT, DELIVERY_IMAGE_2, DELIVERY_IMAGE_3, DELIVERY_IMAGE_4, DELIVERY_SIGNATURE");
+        sqlEncabezado.push(", INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE, BILLED_FROM_SONDA, DISCOUNT");
         sqlEncabezado.push(") VALUES(");
         sqlEncabezado.push("" + notaDeEntregaEncabezado.deliveryNoteId);
         sqlEncabezado.push(",'" + notaDeEntregaEncabezado.docSerie + "'");
@@ -200,10 +193,6 @@ var NotaDeEntregaServicio = (function () {
         sqlEncabezado.push(",'" + notaDeEntregaEncabezado.deliveryImage + "'");
         sqlEncabezado.push("," + notaDeEntregaEncabezado.billedFromSonda);
         sqlEncabezado.push("," + gDiscount);
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliveryImage2 && notaDeEntregaEncabezado.deliveryImage2.length > 0 ? ",'" + notaDeEntregaEncabezado.deliveryImage2 + "'" : ',NULL');
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliveryImage3 && notaDeEntregaEncabezado.deliveryImage3.length > 0 ? ",'" + notaDeEntregaEncabezado.deliveryImage3 + "'" : ',NULL');
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliveryImage4 && notaDeEntregaEncabezado.deliveryImage4.length > 0 ? ",'" + notaDeEntregaEncabezado.deliveryImage4 + "'" : ',NULL');
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliverySignature && notaDeEntregaEncabezado.deliverySignature.length > 0 ? ",'" + notaDeEntregaEncabezado.deliverySignature + "'" : ',NULL');
         sqlEncabezado.push(")");
         return sqlEncabezado.join("");
     };
@@ -233,7 +222,7 @@ var NotaDeEntregaServicio = (function () {
         return notaDeEntrega.invoiceId ? true : false;
     };
     NotaDeEntregaServicio.prototype.obtenerDocumentoDeNotaDeEntregaConDetalleParaGuardar = function (notaDeEntregaEncabezado, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         var entregaServicio = new EntregaServicio();
         try {
             if (esEntregaConsolidada) {
@@ -256,7 +245,7 @@ var NotaDeEntregaServicio = (function () {
                 entregaServicio.obtenerSkuModificados(entregaServicio, -9999, function (skusModificadosEnEntregaParcial, entregaServicio) {
                     notaDeEntregaEncabezado.relatedPickingDemandHeaderId = demandaDeDespachoEnProcesoDeEntrega
                         .pickingDemandHeaderId;
-                    if (_this_1.modificoProductoParaEntregaParcial(skusModificadosEnEntregaParcial)) {
+                    if (_this.modificoProductoParaEntregaParcial(skusModificadosEnEntregaParcial)) {
                         demandaDeDespachoEnProcesoDeEntrega.detalleDeDemandaDeDespacho.map(function (detalleDeDemanda) {
                             var detalleNotaEntrega = new NotaDeEntregaDetalle();
                             var skuModificado = skusModificadosEnEntregaParcial.find(function (sku) {
@@ -335,11 +324,11 @@ var NotaDeEntregaServicio = (function () {
     };
     NotaDeEntregaServicio.prototype.modificoProductoParaEntregaParcial = function (skusModificadosEnEntregaParcial) { return skusModificadosEnEntregaParcial.length > 0; };
     NotaDeEntregaServicio.prototype.actualizarEstadoDeManifiestos = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.obtenerIdentificadoresDeDemandaDeDespacho(function (identificadores, transaccionActual) {
                 identificadores.map(function (manifiesto) {
-                    if (_this_1.manifiestoNoTieneDocumentosPendientes(manifiesto)) {
+                    if (_this.manifiestoNoTieneDocumentosPendientes(manifiesto)) {
                         var sql = [];
                         sql.push("UPDATE MANIFEST_HEADER SET STATUS = '" + EstadoDeManifiesto.Completado.toString() + "' ");
                         sql.push(", IS_POSTED = 0 ");

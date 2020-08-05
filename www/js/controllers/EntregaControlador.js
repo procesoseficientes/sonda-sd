@@ -28,7 +28,6 @@ var EntregaControlador = (function () {
             este.empezarNavegacionHaciaTareaEntrega();
         });
         $("#UiBtnInvoiceDeliveryPage").on("click", function () {
-            InteraccionConUsuarioServicio.bloquearPantalla();
             este.procederARealizarEntrega();
         });
     };
@@ -46,14 +45,11 @@ var EntregaControlador = (function () {
         }
     };
     EntregaControlador.prototype.obtenerTareaPorCodigoYTipo = function () {
-        var _this_1 = this;
-        this.limpiarDatosDeCliente(function () {
-            TareaServicio.obtenerTareaPorCodigoYTipo(_this_1.tarea.taskId, _this_1.tarea.taskType, function (tarea) {
-                _this_1.tarea = tarea;
-                _this_1.establecerDatosDeCliente();
-            }, function (error) {
-                notify("Error al obtener tarea de entrega: " + error);
-            });
+        var _this = this;
+        TareaServicio.obtenerTareaPorCodigoYTipo(this.tarea.taskId, this.tarea.taskType, function (tarea) {
+            _this.tarea = tarea;
+        }, function (error) {
+            notify("Error al obtener tarea de entrega: " + error);
         });
     };
     EntregaControlador.prototype.irAPantalla = function (pantalla) {
@@ -77,16 +73,15 @@ var EntregaControlador = (function () {
         }
     };
     EntregaControlador.prototype.procederARealizarEntrega = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea, function (documentosAEntregar) {
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode, function (documentosAEntregar) {
                 if (documentosAEntregar.length == 0) {
                     throw new Error("No se han encontrado documentos para realizar la entrega, por favor verifique y vuelva a intentar");
                 }
-                _this_1.publicarListadoDeDocumentosDeEntrega(documentosAEntregar, function () {
+                _this.publicarListadoDeDocumentosDeEntrega(documentosAEntregar, function () {
                     actualizarEstadoDeTarea(gTaskId, null, null, function () {
-                        _this_1.irAPantalla("UiDeliveryDetailPage");
-                        InteraccionConUsuarioServicio.desbloquearPantalla();
+                        _this.irAPantalla("UiDeliveryDetailPage");
                     }, TareaEstado.Aceptada);
                 });
             }, function (error) {
@@ -139,23 +134,6 @@ var EntregaControlador = (function () {
             boton = null;
             usuarioFacturaEnRuta = null;
         }
-    };
-    EntregaControlador.prototype.limpiarDatosDeCliente = function (callback) {
-        var codigoCliente = $("#UiLabelClientCodeInDelivery");
-        var nombreCliente = $("#UiLabelClientNameInDelivery");
-        codigoCliente.text("");
-        nombreCliente.text("");
-        codigoCliente = null;
-        nombreCliente = null;
-        callback();
-    };
-    EntregaControlador.prototype.establecerDatosDeCliente = function () {
-        var codigoCliente = $("#UiLabelClientCodeInDelivery");
-        var nombreCliente = $("#UiLabelClientNameInDelivery");
-        codigoCliente.text(this.tarea.relatedClientCode);
-        nombreCliente.text(this.tarea.relatedClientName);
-        codigoCliente = null;
-        nombreCliente = null;
     };
     return EntregaControlador;
 }());

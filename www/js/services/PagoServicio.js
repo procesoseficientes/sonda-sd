@@ -2,21 +2,21 @@ var PagoServicio = (function () {
     function PagoServicio() {
     }
     PagoServicio.prototype.guardarDocumentoDePago = function (documentoDePago, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             SONDA_DB_Session.transaction(function (trans) {
-                trans.executeSql(_this_1.obtenerFormatoSqlDeInsercionDeEncabezadoDeDocumentoDePago(documentoDePago));
+                trans.executeSql(_this.obtenerFormatoSqlDeInsercionDeEncabezadoDeDocumentoDePago(documentoDePago));
                 documentoDePago.overdueInvoicePaymentDetail.forEach(function (detalleDeDocumentoDePago) {
-                    trans.executeSql(_this_1.obtenerFormatoSqlDeInsercionDeDetalleDeDocumentoDePago(detalleDeDocumentoDePago));
+                    trans.executeSql(_this.obtenerFormatoSqlDeInsercionDeDetalleDeDocumentoDePago(detalleDeDocumentoDePago));
                 });
                 documentoDePago.overdueInvoicePaymentDetail.forEach(function (detalleDeDocumentoDePago) {
-                    trans.executeSql(_this_1.obtenerFormatoSqlDeActualizacionDeMontoPendienteDePagoEnFacturaOriginal(detalleDeDocumentoDePago));
+                    trans.executeSql(_this.obtenerFormatoSqlDeActualizacionDeMontoPendienteDePagoEnFacturaOriginal(detalleDeDocumentoDePago));
                 });
                 documentoDePago.overdueInvoicePaymentTypeDetail.forEach(function (tipoDePago) {
-                    trans.executeSql(_this_1.obtenerFormatoSqlDeInsercionDeTipoDePago(tipoDePago));
+                    trans.executeSql(_this.obtenerFormatoSqlDeInsercionDeTipoDePago(tipoDePago));
                 });
-                trans.executeSql(_this_1.obtenerFormatoDeActualizacionDeBalanceDeCliente(documentoDePago));
-                trans.executeSql(_this_1.obtenerFormatoDeActualizacionDeSecuenciaDeDocumentos(documentoDePago));
+                trans.executeSql(_this.obtenerFormatoDeActualizacionDeBalanceDeCliente(documentoDePago));
+                trans.executeSql(_this.obtenerFormatoDeActualizacionDeSecuenciaDeDocumentos(documentoDePago));
             }, function (error) {
                 errorCallback({ codigo: error.code, resultado: ResultadoOperacionTipo.Error, mensaje: error.message });
             }, callback);
@@ -59,7 +59,7 @@ var PagoServicio = (function () {
         this.obtenerEncabezadoDeDocumentosNoPosteadosEnElServidor(callback);
     };
     PagoServicio.prototype.obtenerEncabezadoDeDocumentosNoPosteadosEnElServidor = function (callback) {
-        var _this_1 = this;
+        var _this = this;
         var sql = [];
         var documentosDePagoNoPosteados = [];
         sql.push("SELECT CODE_CUSTOMER, DOC_SERIE, DOC_NUM, CREATED_DATE, CODE_ROUTE, LOGIN_ID, PAYMENT_AMOUNT, COMMENT FROM OVERDUE_INVOICE_PAYMENT_HEADER");
@@ -79,8 +79,8 @@ var PagoServicio = (function () {
                     documento.paidComment = documentoTemporal.COMMENT;
                     documentosDePagoNoPosteados.push(documento);
                 }
-                _this_1.obtenerDetalleDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteados, 0, function (documentosDePago, transaccionActual) {
-                    _this_1
+                _this.obtenerDetalleDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteados, 0, function (documentosDePago, transaccionActual) {
+                    _this
                         .obtenerDetalleDeTiposDePagoDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePago, 0, callback, transaccionActual);
                 }, transResult);
             }, function (transResult, error) {
@@ -91,7 +91,7 @@ var PagoServicio = (function () {
         });
     };
     PagoServicio.prototype.obtenerDetalleDeDocumentosDePagoNoPosteadosEnElServidor = function (documentosDePagoNoPosteadosEnElServidor, posicionActualDeDocumentoProcesado, callback, transaccionActual) {
-        var _this_1 = this;
+        var _this = this;
         if (documentosDePagoNoPosteadosEnElServidor.length > posicionActualDeDocumentoProcesado) {
             var sql = [];
             sql.push("SELECT INVOICE_ID, DOC_ENTRY, DOC_SERIE, DOC_NUM, PAYED_AMOUNT FROM OVERDUE_INVOICE_PAYMENT_DETAIL");
@@ -109,7 +109,7 @@ var PagoServicio = (function () {
                     documentosDePagoNoPosteadosEnElServidor[posicionActualDeDocumentoProcesado]
                         .overdueInvoicePaymentDetail.push(detalle);
                 }
-                _this_1.obtenerDetalleDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteadosEnElServidor, posicionActualDeDocumentoProcesado + 1, callback, transResult);
+                _this.obtenerDetalleDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteadosEnElServidor, posicionActualDeDocumentoProcesado + 1, callback, transResult);
             }, function (transResult, error) {
                 console.log("Error al obtener el detalle de los documentos de pago de facturas vencidas no posteados debido a: '" + error.message + "'");
             });
@@ -119,15 +119,15 @@ var PagoServicio = (function () {
         }
     };
     PagoServicio.prototype.marcarDocumentosDePagoComoPosteadosEnElServidor = function (documentosDePagoPosteadosEnElServidor) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (documentosDePagoPosteadosEnElServidor.length > 0) {
                 SONDA_DB_Session.transaction(function (trans) {
                     documentosDePagoPosteadosEnElServidor.forEach(function (documentoPosteado) {
                         if (documentoPosteado.RESULT === ResultadoDePosteoEnServidor.Exitoso) {
-                            trans.executeSql(_this_1.obtenerFormatoDeActualizacionDePosteoDeEncabezadoDeDocumentoDePago(documentoPosteado));
-                            trans.executeSql(_this_1.obtenerFormatoDeActualizacionDePosteoDeDetalleDeDocumentoDePago(documentoPosteado));
-                            trans.executeSql(_this_1.obtenerFormatoDeActualizacionDePosteoDeDetalleDeTipoDePagoDeDocumentoDePago(documentoPosteado));
+                            trans.executeSql(_this.obtenerFormatoDeActualizacionDePosteoDeEncabezadoDeDocumentoDePago(documentoPosteado));
+                            trans.executeSql(_this.obtenerFormatoDeActualizacionDePosteoDeDetalleDeDocumentoDePago(documentoPosteado));
+                            trans.executeSql(_this.obtenerFormatoDeActualizacionDePosteoDeDetalleDeTipoDePagoDeDocumentoDePago(documentoPosteado));
                         }
                     });
                 }, function (error) {
@@ -171,7 +171,7 @@ var PagoServicio = (function () {
         return sql.join("");
     };
     PagoServicio.prototype.obtenerParametroDePorcentajeDePagoMinimoDeFacturasVencidas = function (grupoParametro, tipoParametro, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             var sql_1 = [];
             sql_1.push("SELECT IDENTITY, GROUP_ID, PARAMETER_ID, VALUE");
@@ -180,7 +180,7 @@ var PagoServicio = (function () {
             sql_1.push(" AND PARAMETER_ID='" + tipoParametro + "'");
             SONDA_DB_Session.transaction(function (trans) {
                 trans.executeSql(sql_1.join(""), [], function (transResult, results) {
-                    if (_this_1.verificarSiAplicaParametroDePorcentajeMinimoDePagoDeFacturasVencidas(results)) {
+                    if (_this.verificarSiAplicaParametroDePorcentajeMinimoDePagoDeFacturasVencidas(results)) {
                         callback(true, parseFloat(results.rows.item(0).VALUE));
                     }
                     else {
@@ -281,7 +281,7 @@ var PagoServicio = (function () {
         return sql.join("");
     };
     PagoServicio.prototype.obtenerDetalleDeTiposDePagoDeDocumentosDePagoNoPosteadosEnElServidor = function (documentosDePagoNoPosteadosEnElServidor, posicionActualDeDocumentoProcesado, callback, transaccionActual) {
-        var _this_1 = this;
+        var _this = this;
         if (documentosDePagoNoPosteadosEnElServidor.length > posicionActualDeDocumentoProcesado) {
             var sql = [];
             sql.push("SELECT");
@@ -307,7 +307,7 @@ var PagoServicio = (function () {
                     documentosDePagoNoPosteadosEnElServidor[posicionActualDeDocumentoProcesado]
                         .overdueInvoicePaymentTypeDetail.push(detalle);
                 }
-                _this_1.obtenerDetalleDeTiposDePagoDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteadosEnElServidor, posicionActualDeDocumentoProcesado + 1, callback, transResult);
+                _this.obtenerDetalleDeTiposDePagoDeDocumentosDePagoNoPosteadosEnElServidor(documentosDePagoNoPosteadosEnElServidor, posicionActualDeDocumentoProcesado + 1, callback, transResult);
             }, function (transResult, error) {
                 console.log("Error al obtener el detalle de los tipos de pago, para los documentos de pago de facturas vencidas no posteados debido a: '" + error.message + "'");
             });
@@ -323,7 +323,7 @@ var PagoServicio = (function () {
         return sql.join("");
     };
     PagoServicio.prototype.obtenerEncabezadoDeDocumentosDePagoParaReporte = function (callback, errorCallbak) {
-        var _this_1 = this;
+        var _this = this;
         var documentosDePago = [];
         SONDA_DB_Session.transaction(function (trans) {
             var sql = [];
@@ -346,9 +346,9 @@ var PagoServicio = (function () {
                     pago.paidComment = pagoTemp.COMMENT;
                     documentosDePago.push(pago);
                 }
-                _this_1
+                _this
                     .obtenerDetalleDeDocumentosDePagoParaReporte(documentosDePago, 0, function (documentosDePagoConDetalle, transaccion) {
-                    _this_1.obtenerDetalleDeTiposDePagoDeDocumentosDePagoParaReporte(documentosDePagoConDetalle, 0, callback, errorCallbak, transaccion);
+                    _this.obtenerDetalleDeTiposDePagoDeDocumentosDePagoParaReporte(documentosDePagoConDetalle, 0, callback, errorCallbak, transaccion);
                 }, errorCallbak, transResult);
             }, function (transResult, error) {
                 errorCallbak({
@@ -366,7 +366,7 @@ var PagoServicio = (function () {
         });
     };
     PagoServicio.prototype.obtenerDetalleDeDocumentosDePagoParaReporte = function (documentosDePago, posicionActualDeDocumentoProcesado, callback, errorCallback, transaccionActual) {
-        var _this_1 = this;
+        var _this = this;
         if (documentosDePago.length > posicionActualDeDocumentoProcesado) {
             var sql = [];
             sql.push("SELECT OIPD.INVOICE_ID");
@@ -396,7 +396,7 @@ var PagoServicio = (function () {
                     documentosDePago[posicionActualDeDocumentoProcesado]
                         .overdueInvoicePaymentDetail.push(detalle);
                 }
-                _this_1.obtenerDetalleDeDocumentosDePagoParaReporte(documentosDePago, posicionActualDeDocumentoProcesado + 1, callback, errorCallback, transResult);
+                _this.obtenerDetalleDeDocumentosDePagoParaReporte(documentosDePago, posicionActualDeDocumentoProcesado + 1, callback, errorCallback, transResult);
             }, function (transResult, error) {
                 console.log("Error al obtener el detalle de los documentos de pago debido a: '" + error.message + "'");
                 errorCallback({
@@ -411,7 +411,7 @@ var PagoServicio = (function () {
         }
     };
     PagoServicio.prototype.obtenerDetalleDeTiposDePagoDeDocumentosDePagoParaReporte = function (documentosDePago, posicionActualDeDocumentoProcesado, callback, errorCallback, transaccionActual) {
-        var _this_1 = this;
+        var _this = this;
         if (documentosDePago.length > posicionActualDeDocumentoProcesado) {
             var sql = [];
             sql.push("SELECT");
@@ -437,7 +437,7 @@ var PagoServicio = (function () {
                     documentosDePago[posicionActualDeDocumentoProcesado]
                         .overdueInvoicePaymentTypeDetail.push(detalle);
                 }
-                _this_1.obtenerDetalleDeTiposDePagoDeDocumentosDePagoParaReporte(documentosDePago, posicionActualDeDocumentoProcesado + 1, callback, errorCallback, transResult);
+                _this.obtenerDetalleDeTiposDePagoDeDocumentosDePagoParaReporte(documentosDePago, posicionActualDeDocumentoProcesado + 1, callback, errorCallback, transResult);
             }, function (transResult, error) {
                 console.log("Error al obtener el detalle de los documentos de pago debido a: '" + error.message + "'");
                 errorCallback({

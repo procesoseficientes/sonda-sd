@@ -5,5 +5,5 @@
 
     navegarHaciaCliente(cliente: Cliente, callback: () => void, errCallback: (resultado: Operacion) => void): void;
 
-    obtenerDocumentosParaEntrega(tarea: Tarea, callback: (documentosAEntregar: any) => void,errorCallback: (error: Operacion) => void): void;
+    obtenerDocumentosParaEntrega(codigoDeCliente: string, callback: (documentosAEntregar: any) => void,errorCallback: (error: Operacion) => void): void;
 }

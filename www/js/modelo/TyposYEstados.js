@@ -26,7 +26,6 @@ var SecuenciaDeDocumentoTipo = {
     , "NotaDeEntrega": "DELIVERY_NOTE"
     , "EntregaCancelada": "DELIVERY_CANCELED"
     , "PagoDeFacturaVencida": "CREDIT_INVOICE_PAYMENT"
-    , "DocumentoDeContingencia": "CONTINGENCY_DOCUMENT"
 }
 
 var TiposDeRazones = {

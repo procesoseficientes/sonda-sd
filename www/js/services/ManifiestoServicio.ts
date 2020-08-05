@@ -197,12 +197,14 @@
                         manifiestoEncabezado.manifestDetail = [];
                         callback(manifiestoEncabezado);
                         manifiestoTemporal = null;
+                        return;
                     } else {
                         errorCallback({
                             codigo: -1,
                             resultado: ResultadoOperacionTipo.Error,
                             mensaje: `No se ha podido encontrar el encabezado del manifiesto, por favor, verifique y vuelva a intentar.`
                         } as Operacion);
+                        return;
                     }
                 },
                 (transReturn: SqlTransaction, error: SqlError) => {
@@ -274,12 +276,14 @@
                             manifiesto.manifestDetail.push(detalleManifiesto);
                         }
                         callback(manifiesto);
+                        return;
                     } else {
                         errorCallback({
                             codigo: -1,
                             resultado: ResultadoOperacionTipo.Error,
                             mensaje: `No se ha podido encontrar el detalle del manifiesto, por favor, verifique y vuelva a intentar.`
                         } as Operacion);
+                        return;
                     }
                 },
                 (transReturn: SqlTransaction, error: SqlError) => {
@@ -298,6 +302,7 @@
         });
 
     }
+
 
     almacenarDemandaDeDespachoEncabezado(demandaDespachoEncabezado: any,
         errorCallback: (resultado: Operacion) => void): void {
@@ -394,7 +399,7 @@
             sql.push(`,'${demandaDespachoEncabezado.INNER_SALE_STATUS}'`);
             sql.push(`,'${demandaDespachoEncabezado.INNER_SALE_RESPONSE}'`);
             sql.push(`,'${demandaDespachoEncabezado.DEMAND_TYPE}'`);
-            sql.push(`,'${demandaDespachoEncabezado.TRANSFER_REQUEST_ID}'`);
+            sql.push(`,'${demandaDespachoEncabezado.TRANSFER_REQUEST_ID}'`) ;
             sql.push(`,'${demandaDespachoEncabezado.ADDRESS_CUSTOMER}'`);
             sql.push(`,${demandaDespachoEncabezado.STATE_CODE}`);
             sql.push(`,${demandaDespachoEncabezado.MANIFEST_HEADER_ID}`);
@@ -410,7 +415,7 @@
                 resultado: ResultadoOperacionTipo.Error,
                 mensaje: `No se ha podido almacenar el encabezado de la demanda de despacho: ${error.message}`
             } as Operacion);
-        });
+        }, () => { });
     }
 
     almacenarDemandaDeDespachoDetalle(demandaDespachoDetalle: any,
@@ -449,10 +454,7 @@
             sql.push("TONE,");
             sql.push("CALIBER,");
             sql.push("IS_BONUS,");
-            sql.push("DISCOUNT,");
-            sql.push("CODE_PACK_UNIT_STOCK,");
-            sql.push("SALES_PACK_UNIT,");
-            sql.push("CONVERSION_FACTOR");
+            sql.push("DISCOUNT");
             sql.push(") VALUES(");
             sql.push(`${demandaDespachoDetalle.PICKING_DEMAND_DETAIL_ID}`);
             sql.push(`,${demandaDespachoDetalle.PICKING_DEMAND_HEADER_ID}`);
@@ -479,25 +481,6 @@
             sql.push(`,'${demandaDespachoDetalle.CALIBER}'`);
             sql.push(`,${demandaDespachoDetalle.IS_BONUS ? demandaDespachoDetalle.IS_BONUS : 0}`);
             sql.push(`,${demandaDespachoDetalle.DISCOUNT ? demandaDespachoDetalle.DISCOUNT : 0}`);
-            sql.push(
-                demandaDespachoDetalle.CODE_PACK_UNIT_STOCK
-                    ? `,'${demandaDespachoDetalle.CODE_PACK_UNIT_STOCK}'`
-                    : `,NULL`
-            );
-
-            sql.push(
-                demandaDespachoDetalle.SALES_PACK_UNIT
-                    ? `,'${demandaDespachoDetalle.SALES_PACK_UNIT}'`
-                    : `,NULL`
-            );
-
-            sql.push(
-                `,${
-                demandaDespachoDetalle.CONVERSION_FACTOR
-                    ? demandaDespachoDetalle.CONVERSION_FACTOR
-                    : 0
-                }`
-            );
             sql.push(`)`);
 
             trans.executeSql(sql.join(""));
@@ -509,7 +492,7 @@
                 resultado: ResultadoOperacionTipo.Error,
                 mensaje: `No se ha podido almacenar el detalle de la demanda de despacho: ${error.message}`
             } as Operacion);
-        });
+        }, () => { });
     }
 
     almacenarDemandaDeDespachoDetallePorNumeroDeSerie(demandaDespachoDetalleDeNumeroDeSerie: any,
@@ -543,7 +526,7 @@
                 resultado: ResultadoOperacionTipo.Error,
                 mensaje: `No se ha podido almacenar el detalle de numero de serie de la demanda de despacho: ${error.message}`
             } as Operacion);
-        });
+        }, () => { });
     }
 
     marcarTareasDeEntregaCompletadas(callBack: () => void, errorCallBack: (resultado: Operacion) => void): void {
@@ -576,6 +559,7 @@
                         clientCode = null;
                     }
                 }
+
             }, (error) => {
                 errorCallBack({
                     codigo: -1,
@@ -584,13 +568,15 @@
                 } as Operacion);
             });
             sqlClientes = null;
+
         }, (error) => {
             errorCallBack({
                 codigo: -1,
                 resultado: ResultadoOperacionTipo.Error,
                 mensaje: `No se ha podido almacenar el detalle de numero de serie de la demanda de despacho: ${error}`
             } as Operacion);
-        });
+        }, () => { });
+
     }
 
     almacenarInformacionDeCanastasPorManifiesto(basketInformation, errorCallBack: (resultado: any) => void): void {
@@ -620,7 +606,7 @@
                 resultado: ResultadoOperacionTipo.Error,
                 mensaje: `No se ha podido almacenar la información de las canastas debido a: ${error.message}`
             } as Operacion);
-        });
+        }, () => { });
     }
 
     almacenarDataDeDemandasPorTarea(errorCallBack: (resultado: any) => void): void {
@@ -640,7 +626,7 @@
             sql.push(" PDH.PROCESS_STATUS ");
             sql.push(" FROM TASK T INNER JOIN ");
             sql.push(" NEXT_PICKING_DEMAND_HEADER PDH ON ");
-            sql.push(" (PDH.CLIENT_CODE = T.RELATED_CLIENT_CODE AND T.TASK_TYPE = 'DELIVERY_SD' AND PDH.ADDRESS_CUSTOMER = T.TASK_ADDRESS) ");
+            sql.push(" (PDH.CLIENT_CODE = T.RELATED_CLIENT_CODE AND T.TASK_TYPE = 'DELIVERY_SD') ");
 
             trans.executeSql(sql.join(""));
 
@@ -700,10 +686,14 @@
                 sql = `UPDATE  MANIFEST_HEADER SET IS_POSTED = 1 WHERE MANIFEST_HEADER_ID = ${manifiesto} `;
                 trans.executeSql(sql);
             }, (error: SqlError) => {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `No se pudo marcar manifiesto ${manifiesto} como posteado debido a: ${error.message}` } as Operacion);
+                throw new Error(error.message);
             });
         } catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: `No se pudo marcar manifiesto ${manifiesto} como posteado debido a: ${e.message}` } as Operacion);
         }
     }
+
+
 }
+
+

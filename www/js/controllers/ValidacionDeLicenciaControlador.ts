@@ -1,7 +1,7 @@
 ﻿class ValidacionDeLicenciaControlador {
   validacionDeLicenciaServicio = new ValidacionDeLicenciaServicio();
 
-  delegarValidacionDeLicenciaControlador(): void {
+  delegarValidacionDeLicenciaControlador() {
     $("#btnLogme").bind("touchstart", () => {
       this.validateCredentials();
     });
@@ -12,8 +12,8 @@
     });
   }
 
-  validateCredentials(): void {
-    let txtUserId: JQuery = $("#txtUserID");
+  validateCredentials() {
+    let txtUserId = $("#txtUserID");
     pUserID = txtUserId.val();
     pPINCode = $("#txtPin").val();
 
@@ -25,7 +25,7 @@
       } else {
         if (pPINCode === "") {
           notify("ERROR, ingrese usuario/pin.");
-          return;
+          return -1;
         }
         my_dialog("Espere...", "validando usuario y password", "open");
         InteraccionConUsuarioServicio.bloquearPantalla();
@@ -42,7 +42,7 @@
     txtUserId = null;
   }
 
-  desbloquearPantalla(): void {
+  desbloquearPantalla() {
     InteraccionConUsuarioServicio.desbloquearPantalla();
     my_dialog("", "", "close");
   }
@@ -51,7 +51,7 @@
     usuario: string,
     contraseña: string,
     estaIniciandoSession: boolean
-  ): void {
+  ) {
     this.validacionDeLicenciaServicio.validarLicencia(
       usuario,
       contraseña,
@@ -61,7 +61,7 @@
           this.establecerConexionConElServidor(
             usuario,
             contraseña,
-            //"http://192.168.0.14:8596",
+            //'http://192.168.1.97:8596', 
             data.CommunicationAddress,
             data.ValidationType,
             estaIniciandoSession
@@ -84,13 +84,13 @@
     direccionDeComunicacion: string,
     tipoDeValidacionDeLicencia: string,
     estaIniciandoSession: boolean
-  ): void {
+  ) {
     try {
       localStorage.setItem("UserID", usuario);
       localStorage.setItem("UserCode", contrass);
       SocketControlador.establecerConexionConServidor(direccionDeComunicacion);
       let intent: number = 0;
-      let idInterval: any = setInterval(() => {
+      let idInterval = setInterval(() => {
         if (intent === 5) {
           clearInterval(idInterval);
           if (!SocketControlador.socketIo.connected) {
@@ -104,19 +104,18 @@
       }, 1000);
 
       SocketControlador.socketIo.on("connect", () => {
-        (SocketControlador.socketIo as any).sendBuffer.length = 0;
-        let lblNetworkDeliveryMenu: JQuery = $("#lblNetworkDeliveryMenu");
-        let lblNetworkSkusPOS_1: JQuery = $("#lblNetworkSkusPOS_1");
-        let lblNetworkDeliverySumm: JQuery = $("#lblNetworkDeliverySumm");
-        let lblNetworkCust: JQuery = $("#lblNetworkCust");
-        let lblNetworkSkusPOS: JQuery = $("#lblNetworkSkusPOS");
-        let lblNetworkLogin: JQuery = $("#lblNetworkLogin");
-        let lblNetworkDevolucion: JQuery = $("#lblNetworkDevolucion");
+        let lblNetworkDeliveryMenu = $("#lblNetworkDeliveryMenu");
+        let lblNetworkSkusPOS_1 = $("#lblNetworkSkusPOS_1");
+        let lblNetworkDeliverySumm = $("#lblNetworkDeliverySumm");
+        let lblNetworkCust = $("#lblNetworkCust");
+        let lblNetworkSkusPOS = $("#lblNetworkSkusPOS");
+        let lblNetworkLogin = $("#lblNetworkLogin");
+        let lblNetworkDevolucion = $("#lblNetworkDevolucion");
 
-        let lblNetwork: JQuery = $("#lblNetwork");
-        let btnNetworkStatus: JQuery = $("#btnNetworkStatus");
-        let lblNetworkStatusMenuPage: JQuery = $("#lblNetworkStatusMenuPage");
-        let lblSondaVersion: JQuery = $("#lblSondaVersion");
+        let lblNetwork = $("#lblNetwork");
+        let btnNetworkStatus = $("#btnNetworkStatus");
+        let lblNetworkStatusMenuPage = $("#lblNetworkStatusMenuPage");
+        let lblSondaVersion = $("#lblSondaVersion");
 
         if (SocketControlador.vieneDeDesconexion === false) {
           this.delegarConexionDeServidor(SocketControlador.socketIo);
@@ -143,7 +142,7 @@
 
         lblNetworkLogin.text(states[gNetworkState]);
         lblNetworkLogin.buttonMarkup({ icon: "cloud" });
-
+        //---
         lblNetworkDevolucion.text(states[gNetworkState]);
         lblNetworkDevolucion.buttonMarkup({ icon: "cloud" });
 
@@ -155,7 +154,7 @@
           gLastLogin = usuario;
           estaIniciandoSession = false;
 
-          let time: any = setTimeout(() => {
+          setTimeout(() => {
             SocketControlador.socketIo.emit("validatecredentials", {
               loginid: usuario,
               pin: contrass,
@@ -165,7 +164,6 @@
               validationtype: tipoDeValidacionDeLicencia,
               version: SondaVersion
             });
-            clearTimeout(time);
           }, 1000);
         } else {
           gLastLogin = localStorage.getItem("UserID");
@@ -176,18 +174,18 @@
 
         SocketControlador.socketIo.on("disconnect", () => {
           SocketControlador.vieneDeDesconexion = true;
-          let lblNetworkDeliveryMenu: JQuery = $("#lblNetworkDeliveryMenu");
-          let lblNetworkSkusPOS_1: JQuery = $("#lblNetworkSkusPOS_1");
-          let lblNetworkDeliverySumm: JQuery = $("#lblNetworkDeliverySumm");
-          let lblNetworkCust: JQuery = $("#lblNetworkCust");
-          let lblNetworkSkusPOS: JQuery = $("#lblNetworkSkusPOS");
-          let lblNetworkLogin: JQuery = $("#lblNetworkLogin");
-          let lblNetworkDevolucion: JQuery = $("#lblNetworkDevolucion");
+          let lblNetworkDeliveryMenu = $("#lblNetworkDeliveryMenu");
+          let lblNetworkSkusPOS_1 = $("#lblNetworkSkusPOS_1");
+          let lblNetworkDeliverySumm = $("#lblNetworkDeliverySumm");
+          let lblNetworkCust = $("#lblNetworkCust");
+          let lblNetworkSkusPOS = $("#lblNetworkSkusPOS");
+          let lblNetworkLogin = $("#lblNetworkLogin");
+          let lblNetworkDevolucion = $("#lblNetworkDevolucion");
 
-          let lblNetwork: JQuery = $("#lblNetwork");
-          let btnNetworkStatus: JQuery = $("#btnNetworkStatus");
-          let lblNetworkStatusMenuPage: JQuery = $("#lblNetworkStatusMenuPage");
-          let lblSondaVersion: JQuery = $("#lblSondaVersion");
+          let lblNetwork = $("#lblNetwork");
+          let btnNetworkStatus = $("#btnNetworkStatus");
+          let lblNetworkStatusMenuPage = $("#lblNetworkStatusMenuPage");
+          let lblSondaVersion = $("#lblSondaVersion");
 
           lblNetwork.text("Off-line");
           btnNetworkStatus.buttonMarkup({ icon: "forbidden" });
@@ -261,11 +259,9 @@
     }
   }
 
-  delegarConexionDeServidor(socket: SocketIOClient.Socket): void {
-    let socketsGlobalesServicio: SocketsGlobalesServicio = new SocketsGlobalesServicio(),
-      manifiestoControlador: ManifiestoControlador = new ManifiestoControlador(
-        new Messenger()
-      );
+  delegarConexionDeServidor(socket: SocketIOClient.Socket) {
+    let socketsGlobalesServicio = new SocketsGlobalesServicio(),
+      manifiestoControlador = new ManifiestoControlador(new Messenger());
 
     manifiestoControlador.delegarSockets(socket);
     socketsGlobalesServicio.delegarSocketsGlobales(socket);
@@ -274,11 +270,9 @@
     delegarSocketsDeObjetosJs(socket);
     ParametroServicio.delegarSockets(socket);
     ClasificacionControlador.delegarSockets(socket);
-    tareaControladorADelegar.DelegarSocketsDeTareaControlador(socket);
-    confirmacionControlador.delegarSockets(socket);
   }
 
-  usuarioTieneConexionAInternet(): boolean {
+  usuarioTieneConexionAInternet() {
     return !(!navigator.onLine || navigator.connection.type === "none");
   }
 }

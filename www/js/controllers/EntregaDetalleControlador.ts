@@ -71,7 +71,7 @@
 
     obtenerDocumentosParaEntrega() {
         try {
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea, (listaDemandaDeDespachos: DemandaDeDespachoEncabezado[]) => {
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode, (listaDemandaDeDespachos: DemandaDeDespachoEncabezado[]) => {
                 this.listaDemandaDeDespachos = listaDemandaDeDespachos;
 
                 this.listaDemandaDeDespachoConsolidado = [];
@@ -166,7 +166,7 @@
 
             let listaDemandaDeDespachoConsolidado: DemandaDeDespachoDetalle[] = [];
 
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea,
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode,
                 (listaDemandaDeDespacho: DemandaDeDespachoEncabezado[]) => {
 
                     listaDemandaDeDespacho.map((demandaDeDespacho: DemandaDeDespachoEncabezado) => {
@@ -524,7 +524,7 @@
             let listaDeDespachoParaProcesoDeEntrega: DemandaDeDespachoDetalle[] = [];
 
 
-            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea,
+            this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode,
                 (listaDemandaDeDespachos: DemandaDeDespachoEncabezado[]) => {
 
                     listaDemandaDeDespachos.map((demandaDeDespacho: DemandaDeDespachoEncabezado) => {
@@ -674,7 +674,7 @@
 
                     let listaDeDespachoConCanastas: DemandaDeDespachoEncabezado[] = [];
 
-                    this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea,
+                    this.entregaServicio.obtenerDocumentosParaEntrega(this.tarea.relatedClientCode,
                         (listaDemandaDeDespachos: DemandaDeDespachoEncabezado[]) => {
 
                             listaDemandaDeDespachos.map((demandaDeDespacho: DemandaDeDespachoEncabezado) => {

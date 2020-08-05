@@ -7,7 +7,7 @@ var EntregaServicio = (function () {
                 throw new Error("El número de teléfono del cliente no es correcto");
             }
             plugins.CallNumber.callNumber(callback, function (error) {
-                errCallback({ codigo: -1, mensaje: error.message });
+                throw new Error(error.message);
             }, tarea.phoneCustomer);
         }
         catch (e) {
@@ -35,16 +35,16 @@ var EntregaServicio = (function () {
             errCallback({ codigo: -1, mensaje: e.message });
         }
     };
-    EntregaServicio.prototype.obtenerDocumentosParaEntrega = function (tarea, callback, errorCallback) {
+    EntregaServicio.prototype.obtenerDocumentosParaEntrega = function (codigoDeCliente, callback, errorCallback) {
         try {
-            this.obtenerEncabezadosDeDocumentosDeDemandaDeDespacho(tarea, callback, errorCallback);
+            this.obtenerEncabezadosDeDocumentosDeDemandaDeDespacho(codigoDeCliente, callback, errorCallback);
         }
         catch (e) {
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
         }
     };
-    EntregaServicio.prototype.obtenerEncabezadosDeDocumentosDeDemandaDeDespacho = function (tarea, callback, errorCallback) {
-        var _this_1 = this;
+    EntregaServicio.prototype.obtenerEncabezadosDeDocumentosDeDemandaDeDespacho = function (codigoDeCliente, callback, errorCallback) {
+        var _this = this;
         try {
             var documentos_1 = [];
             SONDA_DB_Session.readTransaction(function (readTrans) {
@@ -58,7 +58,7 @@ var EntregaServicio = (function () {
                 sql.push(" ,HAS_MASTERPACK, POSTED_STATUS, OWNER, CLIENT_OWNER, MASTER_ID_SELLER");
                 sql.push(" ,SELLER_OWNER, SOURCE_TYPE, INNER_SALE_STATUS, INNER_SALE_RESPONSE");
                 sql.push(" ,DEMAND_TYPE, TRANSFER_REQUEST_ID, ADDRESS_CUSTOMER, STATE_CODE, PROCESS_STATUS, DISCOUNT");
-                sql.push(" FROM NEXT_PICKING_DEMAND_HEADER WHERE CLIENT_CODE = '" + tarea.relatedClientCode + "' AND ADDRESS_CUSTOMER = " + (tarea.taskAddress ? "'" + tarea.taskAddress + "'" : null) + " ");
+                sql.push(" FROM NEXT_PICKING_DEMAND_HEADER WHERE CLIENT_CODE = '" + codigoDeCliente + "' ");
                 readTrans.executeSql(sql.join(""), [], function (readTransResult, results) {
                     for (var i = 0; i < results.rows.length; i++) {
                         var encabezadoDeDemandaTemp = results.rows.item(i);
@@ -109,12 +109,12 @@ var EntregaServicio = (function () {
                         encabezadoDeDemanda.detalleDeDemandaDeDespacho = [];
                         documentos_1.push(encabezadoDeDemanda);
                     }
-                    _this_1.obtenerDetalleDeDocumentosDeDemandaDeDespacho(documentos_1, callback, errorCallback, 0, readTransResult);
-                }, function (_readTransResult, error) {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message });
+                    _this.obtenerDetalleDeDocumentosDeDemandaDeDespacho(documentos_1, callback, errorCallback, 0, readTransResult);
+                }, function (readTransResult, error) {
+                    throw new Error(error.message);
                 });
             }, function (errorTrans) {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: errorTrans.message });
+                throw new Error(errorTrans.message);
             });
         }
         catch (e) {
@@ -122,7 +122,7 @@ var EntregaServicio = (function () {
         }
     };
     EntregaServicio.prototype.obtenerDetalleDeDocumentosDeDemandaDeDespacho = function (documentos, callback, errorCallback, indice, transaccion) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (this.esUltimoRegistro(indice, documentos.length)) {
                 var documentoActual_1 = documentos[indice];
@@ -131,7 +131,7 @@ var EntregaServicio = (function () {
                 sql.push(" ,QTY,LINE_NUM,ERP_OBJECT_TYPE,PRICE,WAS_IMPLODED,QTY_IMPLODED");
                 sql.push(" ,MASTER_ID_MATERIAL,MATERIAL_OWNER,ATTEMPTED_WITH_ERROR,IS_POSTED_ERP");
                 sql.push(" ,POSTED_ERP,ERP_REFERENCE,POSTED_STATUS,POSTED_RESPONSE");
-                sql.push(" ,INNER_SALE_STATUS,INNER_SALE_RESPONSE,TONE,CALIBER, IS_BONUS, DISCOUNT, CODE_PACK_UNIT_STOCK, SALES_PACK_UNIT, CONVERSION_FACTOR ");
+                sql.push(" ,INNER_SALE_STATUS,INNER_SALE_RESPONSE,TONE,CALIBER, IS_BONUS, DISCOUNT ");
                 sql.push(" FROM NEXT_PICKING_DEMAND_DETAIL WHERE PICKING_DEMAND_HEADER_ID = " + documentoActual_1.pickingDemandHeaderId);
                 transaccion.executeSql(sql.join(""), [], function (transReturn, results) {
                     for (var i = 0; i < results.rows.length; i++) {
@@ -162,15 +162,12 @@ var EntregaServicio = (function () {
                         detalleDemanda.caliber = detalleDemandaTemp.CALIBER;
                         detalleDemanda.isBonus = detalleDemandaTemp.IS_BONUS;
                         detalleDemanda.discount = detalleDemandaTemp.DISCOUNT;
-                        detalleDemanda.codePackUnitStock = detalleDemandaTemp.CODE_PACK_UNIT_STOCK;
-                        detalleDemanda.salesPackUnit = detalleDemandaTemp.SALES_PACK_UNIT;
-                        detalleDemanda.conversionFactor = detalleDemandaTemp.CONVERSION_FACTOR;
                         documentoActual_1.detalleDeDemandaDeDespacho.push(detalleDemanda);
                     }
                     documentos[indice] = documentoActual_1;
-                    _this_1.obtenerDetalleDeDocumentosDeDemandaDeDespacho(documentos, callback, errorCallback, indice + 1, transReturn);
-                }, function (_transReturn, error) {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.message });
+                    _this.obtenerDetalleDeDocumentosDeDemandaDeDespacho(documentos, callback, errorCallback, indice + 1, transReturn);
+                }, function (transReturn, error) {
+                    throw new Error(error.message);
                 });
             }
             else {
@@ -185,12 +182,12 @@ var EntregaServicio = (function () {
         return indiceDeDocumento < cantidadDeDocumentos;
     };
     EntregaServicio.prototype.agregarDetalleCompletoDeDemandaDeDespachoAFacturacion = function (detalleDeDemandaDeDespacho, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.borrarDetalleDeFacturaTemporal(function () {
                 detalleDeDemandaDeDespacho.map(function (detalle, i) {
-                    _this_1.agregarProductoDeDemandaDeDespachoAFacturacion(detalle, i, function (error) {
-                        errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: error.mensaje });
+                    _this.agregarProductoDeDemandaDeDespachoAFacturacion(detalle, i, function (error) {
+                        throw new Error(error.mensaje);
                     });
                 });
                 callback();
@@ -203,19 +200,16 @@ var EntregaServicio = (function () {
         }
     };
     EntregaServicio.prototype.agregarProductoDeDemandaDeDespachoAFacturacion = function (producto, indice, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         SONDA_DB_Session.transaction(function (trans) {
             var sql = [];
             sql.push("INSERT INTO INVOICE_DETAIL(INVOICE_NUM, SKU, SKU_NAME, QTY, PRICE, DISCOUNT, TOTAL_LINE");
             sql.push(", REQUERIES_SERIE, SERIE, SERIE_2, LINE_SEQ, IS_ACTIVE, COMBO_REFERENCE");
-            sql.push(", PARENT_SEQ, EXPOSURE, PHONE, TAX_CODE, ON_HAND, IS_BONUS, PACK_UNIT, CODE_PACK_UNIT_STOCK, CONVERSION_FACTOR) VALUES(");
+            sql.push(", PARENT_SEQ, EXPOSURE, PHONE, TAX_CODE, ON_HAND, IS_BONUS) VALUES(");
             sql.push("-9999, '" + producto.materialId + "', '" + producto.materialDescription + "', " + producto.qty);
-            sql.push(", " + (producto.isBonus && producto.isBonus > 0 ? 0 : producto.price) + ", " + (producto.discount && producto.discount > 0 ? producto.discount : 0) + ", " + (producto.isBonus && producto.isBonus > 0 ? 0 : _this_1.obtenerTotalDeLineaDeProducto(producto)));
+            sql.push(", " + (producto.isBonus && producto.isBonus > 0 ? 0 : producto.price) + ", " + (producto.discount && producto.discount > 0 ? producto.discount : 0) + ", " + (producto.isBonus && producto.isBonus > 0 ? 0 : _this.obtenerTotalDeLineaDeProducto(producto)));
             sql.push(", " + 0 + ", '0','0'," + (indice == 0 ? 0 : indice + 1) + ",3, '" + producto.materialId + "', " + (indice == 0 ? 0 : indice));
-            sql.push(",1,'',NULL, " + producto.qty + ", " + (producto.isBonus && producto.isBonus > 0 ? producto.isBonus : 0) + ",");
-            sql.push("'" + producto.codePackUnitStock + "', ");
-            sql.push("'" + producto.salesPackUnit + "', ");
-            sql.push("" + producto.conversionFactor);
+            sql.push(",1,'',NULL, " + producto.qty + ", " + (producto.isBonus && producto.isBonus > 0 ? producto.isBonus : 0));
             sql.push(")");
             trans.executeSql(sql.join(""));
         }, function (error) {
@@ -245,18 +239,30 @@ var EntregaServicio = (function () {
                 trans.executeSql(sql.join(""));
                 callback();
             }, function (error) {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al cambiar el estado del documento de entrega " + demandHeaderId + " debido a: " + error.message });
+                throw new Error(error.message);
             });
         }
         catch (e) {
-            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al cambiar el estado del documento de entrega debido a: " + e.message });
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al cambiar el estado a un documento de entrega" + e.message });
+        }
+    };
+    EntregaServicio.prototype.cambiarEstadoDeDocumentoDeDemandaDeDespacho = function (idDeDemandaDeDespacho, estado, callback, errorCallback) {
+        try {
+            SONDA_DB_Session.transaction(function (trans) {
+                trans.executeSql("UPDATE ");
+            }, function (error) {
+                throw new Error(error.message);
+            });
+        }
+        catch (e) {
+            errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
         }
     };
     EntregaServicio.prototype.agregarSkuAInvnetarioCancelado = function (listaDeEntregaCancelado, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.obtenerSkuDeInventario(function (listaSku) {
-                _this_1.actualizarOInsertarInventarioCancelado(listaDeEntregaCancelado, listaSku, 0, callback, errorCallback);
+                _this.actualizarOInsertarInventarioCancelado(listaDeEntregaCancelado, listaSku, 0, callback, errorCallback);
             }, function (resultado) {
                 errorCallback(resultado);
             });
@@ -266,7 +272,7 @@ var EntregaServicio = (function () {
         }
     };
     EntregaServicio.prototype.actualizarOInsertarInventarioCancelado = function (listaDeEntregaCancelado, listaSku, indice, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (listaDeEntregaCancelado.length > indice) {
                 SONDA_DB_Session.transaction(function (trans) {
@@ -313,13 +319,13 @@ var EntregaServicio = (function () {
                         sql.push(" , 0");
                         sql.push(" , 0");
                         sql.push(" , 0");
-                        sql.push(" , '" + new Date().toLocaleString() + "'");
+                        sql.push(" , '" + (new Date).toLocaleString() + "'");
                         sql.push(" , 'E'");
                         sql.push(" )");
                     }
                     trans.executeSql(sql.join(""));
                     sql = null;
-                    _this_1.actualizarOInsertarInventarioCancelado(listaDeEntregaCancelado, listaSku, indice + 1, callback, errorCallback);
+                    _this.actualizarOInsertarInventarioCancelado(listaDeEntregaCancelado, listaSku, indice + 1, callback, errorCallback);
                 }, function (error) {
                     errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al actualizar o insertar inventario: " + error.message });
                 });
@@ -351,11 +357,11 @@ var EntregaServicio = (function () {
                     callback(listaSku);
                     listaSku = null;
                 }, function (readTransResult, error) {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al obtener el inventario: " + error.message });
+                    throw new Error(error.message);
                 });
                 sql = null;
             }, function (errorTrans) {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al obtener el inventario: " + errorTrans.message });
+                throw new Error(errorTrans.message);
             });
         }
         catch (e) {
@@ -412,7 +418,7 @@ var EntregaServicio = (function () {
     EntregaServicio.prototype.marcarEntregaCanceladaComoPosteadasEnElServidor = function (entregasCanceladasDevueltasPorElServidor) {
         try {
             this.actualizarEntregasCanceladasComoPosteadas(entregasCanceladasDevueltasPorElServidor, 0, function (resultado) {
-                notify(resultado.mensaje);
+                throw new Error(resultado.mensaje);
             });
         }
         catch (e) {
@@ -420,7 +426,7 @@ var EntregaServicio = (function () {
         }
     };
     EntregaServicio.prototype.actualizarEntregasCanceladasComoPosteadas = function (entregasCanceladasDevueltasPorElServidor, indice, errorCallback, callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (entregasCanceladasDevueltasPorElServidor.length > indice) {
                 SONDA_DB_Session.transaction(function (trans) {
@@ -428,7 +434,7 @@ var EntregaServicio = (function () {
                     var sql = "";
                     sql = "UPDATE DELIVERY_CANCELED SET IS_POSTED = " + entregaCancelada.IS_POSTED + ", POSTED_DATETIME = '" + entregaCancelada.POSTED_DATETIME + "' WHERE DOC_SERIE = '" + entregaCancelada.DOC_SERIE + "' AND DOC_NUM = " + entregaCancelada.DOC_NUM + " ";
                     trans.executeSql(sql);
-                    _this_1.actualizarEntregasCanceladasComoPosteadas(entregasCanceladasDevueltasPorElServidor, indice + 1, function (resultado) {
+                    _this.actualizarEntregasCanceladasComoPosteadas(entregasCanceladasDevueltasPorElServidor, indice + 1, function (resultado) {
                         errorCallback(resultado);
                     }, function () {
                         if (callback) {
@@ -436,7 +442,7 @@ var EntregaServicio = (function () {
                         }
                     });
                 }, function (error) {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "No se pudieron actualizar las entregas canceladas posteadas en el servidor debido a: " + error.message });
+                    throw new Error(error.message);
                 });
             }
             else {
@@ -472,10 +478,11 @@ var EntregaServicio = (function () {
                 sql.push(",0");
                 sql.push(", '" + demandaDeDespachoEncabezado.reasonCancel + "'");
                 sql.push(")");
+                console.log(sql.join(""));
                 trans.executeSql(sql.join(""));
                 callback();
             }, function (error) {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al insertar la entrega cancelada: " + error.message });
+                throw new Error(error.message);
             });
         }
         catch (e) {
@@ -487,10 +494,11 @@ var EntregaServicio = (function () {
             SONDA_DB_Session.transaction(function (trans) {
                 var sql = [];
                 sql.push("DELETE FROM INVOICE_DETAIL WHERE INVOICE_NUM = -9999");
+                console.log(sql.join(""));
                 trans.executeSql(sql.join(""));
                 callback();
             }, function (error) {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al borrar el detalle temporal: " + error.message });
+                throw new Error(error.message);
             });
         }
         catch (e) {
@@ -502,10 +510,11 @@ var EntregaServicio = (function () {
             SONDA_DB_Session.transaction(function (trans) {
                 var sql = [];
                 sql.push("DELETE FROM INVOICE_DETAIL WHERE INVOICE_NUM = -9999 AND QTY <=0");
+                console.log(sql.join(""));
                 trans.executeSql(sql.join(""));
                 callback();
             }, function (error) {
-                errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "Error al borrar el detalle temporal: " + error.message });
+                throw new Error(error.message);
             });
         }
         catch (e) {
@@ -545,7 +554,7 @@ var EntregaServicio = (function () {
         }
     };
     EntregaServicio.prototype.agregarSkusDeFacturaCanceladaAInventario = function (listaDeDetalleDeFacturaCancelada) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.obtenerSkuDeInventario(function (listaSku) {
                 var listaDeDetalleDeDemandaDeDespachoAProcesar = [];
@@ -557,7 +566,7 @@ var EntregaServicio = (function () {
                     demandaDespachoDetalle.qty = detalleFactura.QTY;
                     listaDeDetalleDeDemandaDeDespachoAProcesar.push(demandaDespachoDetalle);
                 }
-                _this_1.actualizarOInsertarInventarioCancelado(listaDeDetalleDeDemandaDeDespachoAProcesar, listaSku, 0, function () {
+                _this.actualizarOInsertarInventarioCancelado(listaDeDetalleDeDemandaDeDespachoAProcesar, listaSku, 0, function () {
                 }, function (resultado) {
                     notify("No se ha podido insertar/actualizar el detalle de inventario de la factura cancelada debido a: " + resultado.mensaje);
                 });
@@ -686,7 +695,7 @@ var EntregaServicio = (function () {
     EntregaServicio.prototype.marcarDemandasDeDespachoPorTareaComoPosteadasEnElServidor = function (demandasDeDespachoPorTareaDevueltasPorElServidor) {
         try {
             this.actualizarDemandasDeDespachoPorTareaComoPosteadas(demandasDeDespachoPorTareaDevueltasPorElServidor, 0, function (resultado) {
-                notify(resultado.mensaje);
+                throw new Error(resultado.mensaje);
             });
         }
         catch (e) {
@@ -694,14 +703,14 @@ var EntregaServicio = (function () {
         }
     };
     EntregaServicio.prototype.actualizarDemandasDeDespachoPorTareaComoPosteadas = function (demandasDeDespachoPorTareaDevueltasPorElServidor, indice, errorCallback, callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (demandasDeDespachoPorTareaDevueltasPorElServidor.length > indice) {
                 SONDA_DB_Session.transaction(function (trans) {
                     var demandaDeDespachoPorTarea = demandasDeDespachoPorTareaDevueltasPorElServidor[indice];
                     var sql = "UPDATE PICKING_DEMAND_BY_TASK SET IS_POSTED = " + demandaDeDespachoPorTarea.IS_POSTED + " WHERE PICKING_DEMAND_HEADER_ID = " + demandaDeDespachoPorTarea.PICKING_DEMAND_HEADER_ID + " ";
                     trans.executeSql(sql);
-                    _this_1.actualizarDemandasDeDespachoPorTareaComoPosteadas(demandasDeDespachoPorTareaDevueltasPorElServidor, indice + 1, function (resultado) {
+                    _this.actualizarDemandasDeDespachoPorTareaComoPosteadas(demandasDeDespachoPorTareaDevueltasPorElServidor, indice + 1, function (resultado) {
                         errorCallback(resultado);
                     }, function () {
                         if (callback) {
@@ -709,7 +718,7 @@ var EntregaServicio = (function () {
                         }
                     });
                 }, function (error) {
-                    errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: "No se ha podido actualizar la demanda de despacho por tarea posteada en el servidor debido a: " + error.message });
+                    throw new Error(error.message);
                 });
             }
             else {

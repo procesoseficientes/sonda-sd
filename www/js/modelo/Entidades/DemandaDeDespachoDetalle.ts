@@ -24,7 +24,4 @@
     caliber: string;
     isBonus: number;
     discount: number;
-    codePackUnitStock: string;
-    salesPackUnit: string;
-    conversionFactor: number;
 }

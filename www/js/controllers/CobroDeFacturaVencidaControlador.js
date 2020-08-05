@@ -33,39 +33,39 @@ var CobroDeFacturaVencidaControlador = (function () {
         pageTitle = null;
     };
     CobroDeFacturaVencidaControlador.prototype.delegarCobroDeFacturaVencidaControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         var este = this;
         $("#UiOverdueInvoicePaymentPage").on("pageshow", function () {
             try {
-                _this_1.sumatoriaTotalPendienteDePagoDeFacturasVencidas = 0;
-                _this_1.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas = 0;
-                _this_1.porcentajeDePagoDeFacturasVencidasCubiertoPorElPagoActual = 0;
-                _this_1.cliente.paymentType = _this_1.tipoDePagoParaFacturasProcesadas;
-                tipoDePagoProcesadoEnCobroDeFacturasVencidas = _this_1
+                _this.sumatoriaTotalPendienteDePagoDeFacturasVencidas = 0;
+                _this.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas = 0;
+                _this.porcentajeDePagoDeFacturasVencidasCubiertoPorElPagoActual = 0;
+                _this.cliente.paymentType = _this.tipoDePagoParaFacturasProcesadas;
+                tipoDePagoProcesadoEnCobroDeFacturasVencidas = _this
                     .tipoDePagoParaFacturasProcesadas;
-                _this_1.cuentaCorrienteServicio.obtenerFacturasVencidasDeCliente(_this_1.cliente, function (facturasVencidas) {
-                    _this_1.cliente.overdueInvoices = facturasVencidas;
-                    _this_1.cuentaCorrienteServicio.obtenerSumatoriaDePagosRealizadosPorClienteDuranteElDia(_this_1.cliente, function (clienteConInformacionCompleta) {
-                        _this_1.cliente = clienteConInformacionCompleta;
-                        if (_this_1.cliente.paymentType ===
+                _this.cuentaCorrienteServicio.obtenerFacturasVencidasDeCliente(_this.cliente, function (facturasVencidas) {
+                    _this.cliente.overdueInvoices = facturasVencidas;
+                    _this.cuentaCorrienteServicio.obtenerSumatoriaDePagosRealizadosPorClienteDuranteElDia(_this.cliente, function (clienteConInformacionCompleta) {
+                        _this.cliente = clienteConInformacionCompleta;
+                        if (_this.cliente.paymentType ===
                             TipoDePagoDeFactura.FacturaAbierta) {
-                            _this_1.cliente.totalAmountPayedOfOverdueInvoices = _this_1.montoCubiertoPorUltimoPagoProcesado;
+                            _this.cliente.totalAmountPayedOfOverdueInvoices = _this.montoCubiertoPorUltimoPagoProcesado;
                         }
-                        _this_1.crearListadoDeFacturasVencidasDeCliente(function () {
-                            _this_1.actualizarPorcentajeCubiertoPorPagoActual();
+                        _this.crearListadoDeFacturasVencidasDeCliente(function () {
+                            _this.actualizarPorcentajeCubiertoPorPagoActual();
                             InteraccionConUsuarioServicio.desbloquearPantalla();
-                            if (_this_1.vistaCargandosePorPrimeraVez)
-                                _this_1.verificarSiYaSeAlcanzoElPorcentajeMinimoDePagoDeFacturasVencidas();
+                            if (_this.vistaCargandosePorPrimeraVez)
+                                _this.verificarSiYaSeAlcanzoElPorcentajeMinimoDePagoDeFacturasVencidas();
                         });
                     }, function (resultado) {
                         console.log("Error al obtener las facturas vencidas del cliente debido a: " + resultado.mensaje);
                         InteraccionConUsuarioServicio.desbloquearPantalla();
-                        notify("Lo sentimos, ha habido un error al obtener la sumatoria de pagos realizados por el cliente " + _this_1.cliente.clientId);
+                        notify("Lo sentimos, ha habido un error al obtener la sumatoria de pagos realizados por el cliente " + _this.cliente.clientId);
                     });
                 }, function (resultado) {
                     console.log("Error al obtener las facturas vencidas del cliente debido a: " + resultado.mensaje);
                     InteraccionConUsuarioServicio.desbloquearPantalla();
-                    notify("Lo sentimos, ha habido un error al obtener las facturas vencidas de cliente " + _this_1.cliente.clientId);
+                    notify("Lo sentimos, ha habido un error al obtener las facturas vencidas de cliente " + _this.cliente.clientId);
                 });
             }
             catch (e) {
@@ -73,19 +73,19 @@ var CobroDeFacturaVencidaControlador = (function () {
             }
         });
         $("#UiLblPercentageOfOverdueInvoicesPayment").on("click", function () {
-            _this_1.obtenerAutorizacionDeUsuarioParaProcesarPago(function () {
-                _this_1.procesarCobroDeFacturas();
+            _this.obtenerAutorizacionDeUsuarioParaProcesarPago(function () {
+                _this.procesarCobroDeFacturas();
             });
         });
         $("#UiBtnShowPaymentTypeDetailPage").on("click", function (e) {
             e.preventDefault();
-            _this_1.enviarInformacionDeDetalleDePagos(function () {
-                _this_1.irAPantalla("UiOverdueInvoicePaymentDetailPage");
+            _this.enviarInformacionDeDetalleDePagos(function () {
+                _this.irAPantalla("UiOverdueInvoicePaymentDetailPage");
             });
         });
         $("#UiBtnGoBackFromOverdueInvoicePaymentPage").on("click", function (e) {
             e.preventDefault();
-            _this_1.irAPantallaDeCliente();
+            _this.irAPantallaDeCliente();
         });
     };
     CobroDeFacturaVencidaControlador.prototype.irAPantalla = function (pantalla) {
@@ -97,7 +97,7 @@ var CobroDeFacturaVencidaControlador = (function () {
         });
     };
     CobroDeFacturaVencidaControlador.prototype.crearListadoDeFacturasVencidasDeCliente = function (callback) {
-        var _this_1 = this;
+        var _this = this;
         var contenedorDeFacturasVencidasDeCliente = $("#UlDetailOverdueInvoices");
         var etiquetaDeSumaTotalDeFacturasVencidas = $("#UiLblOverdueInvoicesAmount");
         var campoComentarioDePago = $("#UiTxtPaidComment");
@@ -109,9 +109,9 @@ var CobroDeFacturaVencidaControlador = (function () {
         contenedorDeFacturasVencidasDeCliente.children().remove("li");
         var htmlDeFacturasVencidas = [];
         this.cliente.overdueInvoices.forEach(function (facturaVencida) {
-            _this_1.sumatoriaTotalPendienteDePagoDeFacturasVencidas +=
+            _this.sumatoriaTotalPendienteDePagoDeFacturasVencidas +=
                 facturaVencida.pendingToPaid;
-            htmlDeFacturasVencidas.push(_this_1.obtenerFormatoHtmlDeObjetoFactura(facturaVencida));
+            htmlDeFacturasVencidas.push(_this.obtenerFormatoHtmlDeObjetoFactura(facturaVencida));
         });
         etiquetaDeSumaTotalDeFacturasVencidas.text(window.accounting.formatMoney(this.sumatoriaTotalPendienteDePagoDeFacturasVencidas));
         if (htmlDeFacturasVencidas.length > 0) {
@@ -123,22 +123,22 @@ var CobroDeFacturaVencidaControlador = (function () {
         campoDeMontoDePago = null;
         campoComentarioDePago = null;
         this.verificarSiAplicaPorcentajeMinimoDePago(function (aplicaPorcentajeMinimoDePago, valorDePorcentajeMinimoDePago) {
-            _this_1.aplicaPorcentajeMinimoDePagoDeFacturasVencidas = aplicaPorcentajeMinimoDePago;
-            _this_1.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas =
+            _this.aplicaPorcentajeMinimoDePagoDeFacturasVencidas = aplicaPorcentajeMinimoDePago;
+            _this.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas =
                 valorDePorcentajeMinimoDePago > 100
                     ? 100
                     : valorDePorcentajeMinimoDePago;
-            etiquetaDePorcentajeDePagoMinimo.text(_this_1.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas.toString());
+            etiquetaDePorcentajeDePagoMinimo.text(_this.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas.toString());
             callback();
         });
     };
     CobroDeFacturaVencidaControlador.prototype.verificarSiAplicaPorcentajeMinimoDePago = function (callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.pagoServicio.obtenerParametroDePorcentajeDePagoMinimoDeFacturasVencidas(GrupoParametro.Factura.toString(), TipoDeParametro.PorcentajeMinimoDePagoDeFacturasVencidas.toString(), function (aplicaParametro, valorDeParametro) {
-                var porcentajeMinimoAAplicar = _this_1.cliente.paymentType === TipoDePagoDeFactura.FacturaVencida
+                var porcentajeMinimoAAplicar = _this.cliente.paymentType === TipoDePagoDeFactura.FacturaVencida
                     ? valorDeParametro
-                    : _this_1.obtenerPorcentajeMinimoDePagoEnBaseAFacturasAbiertas(_this_1.cliente);
+                    : _this.obtenerPorcentajeMinimoDePagoEnBaseAFacturasAbiertas(_this.cliente);
                 callback(aplicaParametro, porcentajeMinimoAAplicar);
             }, function (resultado) {
                 console.log(resultado.mensaje);
@@ -231,7 +231,7 @@ var CobroDeFacturaVencidaControlador = (function () {
         }, "Sonda\u00AE SD " + SondaVersion, ["No", "Si"]);
     };
     CobroDeFacturaVencidaControlador.prototype.procesarCobroDeFacturas = function () {
-        var _this_1 = this;
+        var _this = this;
         try {
             var montoDePago_1 = this.obtenerMontoIngresadoEnCampoDePago();
             if (montoDePago_1 === 0) {
@@ -242,13 +242,13 @@ var CobroDeFacturaVencidaControlador = (function () {
                 if (montoDePago_1 > this.sumatoriaTotalPendienteDePagoDeFacturasVencidas)
                     montoDePago_1 = this.sumatoriaTotalPendienteDePagoDeFacturasVencidas;
                 this.obtenerFacturasParaDetalleDePago(montoDePago_1, function () {
-                    _this_1.prepararPago(montoDePago_1, function (documentoDePago) {
-                        _this_1.montoCubiertoPorUltimoPagoProcesado =
+                    _this.prepararPago(montoDePago_1, function (documentoDePago) {
+                        _this.montoCubiertoPorUltimoPagoProcesado =
                             documentoDePago.paymentAmount;
-                        _this_1.pagoServicio.guardarDocumentoDePago(documentoDePago, function () {
+                        _this.pagoServicio.guardarDocumentoDePago(documentoDePago, function () {
                             InteraccionConUsuarioServicio.desbloquearPantalla();
-                            _this_1.publicarCobroProcesado(documentoDePago, function () {
-                                _this_1.irAPantalla("UiPaymentConfirmationPage");
+                            _this.publicarCobroProcesado(documentoDePago, function () {
+                                _this.irAPantalla("UiPaymentConfirmationPage");
                             });
                         }, function (resultado) {
                             console.log("Error al guardar el documento de pago despues de procesarlo debido a: " + resultado.mensaje);
@@ -266,7 +266,7 @@ var CobroDeFacturaVencidaControlador = (function () {
         }
     };
     CobroDeFacturaVencidaControlador.prototype.obtenerFacturasParaDetalleDePago = function (montoDePago, callbak) {
-        var _this_1 = this;
+        var _this = this;
         var montoDePagoDisponible = montoDePago;
         this.facturasCubiertasPorElPagoActual.length = 0;
         var facturasOrdenadas = this.cliente.overdueInvoices.sort(function (a, b) {
@@ -276,42 +276,42 @@ var CobroDeFacturaVencidaControlador = (function () {
             if (facturaVencida.pendingToPaid <= montoDePagoDisponible) {
                 facturaVencida.payedAmount = facturaVencida.pendingToPaid;
                 facturaVencida.pendingToPaid = 0;
-                _this_1.facturasCubiertasPorElPagoActual.push(facturaVencida);
+                _this.facturasCubiertasPorElPagoActual.push(facturaVencida);
                 montoDePagoDisponible -= facturaVencida.payedAmount;
             }
             else if (montoDePagoDisponible > 0) {
                 facturaVencida.payedAmount = montoDePagoDisponible;
                 facturaVencida.pendingToPaid =
                     facturaVencida.pendingToPaid - facturaVencida.payedAmount;
-                _this_1.facturasCubiertasPorElPagoActual.push(facturaVencida);
+                _this.facturasCubiertasPorElPagoActual.push(facturaVencida);
                 montoDePagoDisponible -= facturaVencida.payedAmount;
             }
         });
         callbak();
     };
     CobroDeFacturaVencidaControlador.prototype.prepararPago = function (montoDePago, callback) {
-        var _this_1 = this;
+        var _this = this;
         var documentoDePago = new PagoDeFacturaVencidaEncabezado();
         documentoDePago.paymentAmount = montoDePago;
         PagoConsignacionesServicio.ValidarSequenciaDeDocumentos(SecuenciaDeDocumentoTipo.PagoDeFacturaVencida, function (secuenciaValida) {
             if (secuenciaValida) {
-                _this_1.pagoServicio.obtenerSecuenciaDeDocumentoDePago(function (secuenciaDeDocumentos) {
+                _this.pagoServicio.obtenerSecuenciaDeDocumentoDePago(function (secuenciaDeDocumentos) {
                     documentoDePago.docNum = secuenciaDeDocumentos.numero;
                     documentoDePago.docSerie = secuenciaDeDocumentos.serie;
                     documentoDePago.branchName = secuenciaDeDocumentos.nombreSucursal;
                     documentoDePago.branchAddress =
                         secuenciaDeDocumentos.direccionSucursal;
-                    documentoDePago.codeCustomer = _this_1.cliente.clientId;
+                    documentoDePago.codeCustomer = _this.cliente.clientId;
                     documentoDePago.codeRoute = gCurrentRoute;
                     documentoDePago.isPosted = SiNo.No;
                     documentoDePago.loginId = gLastLogin;
                     documentoDePago.createdDate = getDateTime();
-                    documentoDePago.validateMinimumPercentOfPaid = _this_1.aplicaPorcentajeMinimoDePagoDeFacturasVencidas;
-                    documentoDePago.minimumPercentOfPaid = _this_1.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas;
-                    documentoDePago.percentCoveredWhitThePaid = _this_1.porcentajeDePagoDeFacturasVencidasCubiertoPorElPagoActual;
-                    documentoDePago.paidComment = _this_1.obtenerComentarioDePago();
-                    documentoDePago.paymentType = _this_1.tipoDePagoParaFacturasProcesadas;
-                    _this_1.facturasCubiertasPorElPagoActual.forEach(function (facturaVencida) {
+                    documentoDePago.validateMinimumPercentOfPaid = _this.aplicaPorcentajeMinimoDePagoDeFacturasVencidas;
+                    documentoDePago.minimumPercentOfPaid = _this.valorDeParametroDePorcentajeMinimoDePagoDeFacturasVencidas;
+                    documentoDePago.percentCoveredWhitThePaid = _this.porcentajeDePagoDeFacturasVencidasCubiertoPorElPagoActual;
+                    documentoDePago.paidComment = _this.obtenerComentarioDePago();
+                    documentoDePago.paymentType = _this.tipoDePagoParaFacturasProcesadas;
+                    _this.facturasCubiertasPorElPagoActual.forEach(function (facturaVencida) {
                         var pagoDefacturaDetalle = new PagoDeFacturaVencidaDetalle();
                         pagoDefacturaDetalle.docNum = documentoDePago.docNum;
                         pagoDefacturaDetalle.docSerie = documentoDePago.docSerie;
@@ -320,7 +320,7 @@ var CobroDeFacturaVencidaControlador = (function () {
                         pagoDefacturaDetalle.payedAmount = facturaVencida.payedAmount;
                         documentoDePago.overdueInvoicePaymentDetail.push(pagoDefacturaDetalle);
                     });
-                    _this_1.detalleDeTiposDePagoRealizadosEnElDocumentoAcutal.forEach(function (tipoDePago) {
+                    _this.detalleDeTiposDePagoRealizadosEnElDocumentoAcutal.forEach(function (tipoDePago) {
                         tipoDePago.docSerie = documentoDePago.docSerie;
                         tipoDePago.docNum = documentoDePago.docNum;
                         documentoDePago.overdueInvoicePaymentTypeDetail.push(tipoDePago);
@@ -385,14 +385,14 @@ var CobroDeFacturaVencidaControlador = (function () {
         callback();
     };
     CobroDeFacturaVencidaControlador.prototype.irAPantallaDeCliente = function () {
-        var _this_1 = this;
+        var _this = this;
         this.detalleDeTiposDePagoRealizadosEnElDocumentoAcutal.length = 0;
         this.vistaCargandosePorPrimeraVez = true;
         this.montoCubiertoPorUltimoPagoProcesado = 0;
         this.enviarInformacionDeDetalleDePagos(function () {
             if (tipoDePagoProcesadoEnCobroDeFacturasVencidas ===
                 TipoDePagoDeFactura.FacturaVencida) {
-                _this_1.irAPantalla("pos_client_page");
+                _this.irAPantalla("pos_client_page");
             }
             else {
                 ShorSummaryPage();

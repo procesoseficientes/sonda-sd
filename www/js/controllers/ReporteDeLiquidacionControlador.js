@@ -378,7 +378,7 @@ var ReporteDeLiquidacionControlador = (function () {
     };
 
     ReporteDeLiquidacionControlador.prototype.MostrarFinDeRuta = function () {
-        navigator.notification.confirm("¿Confirma Finalizar Ruta?", function (buttonIndex) {
+        navigator.notification.confirm("Confirma Finalizar Ruta?", function (buttonIndex) {
             if (buttonIndex === 2) {
                 InteraccionConUsuarioServicio.bloquearPantalla();
                 if (gIsOnline == EstaEnLinea.Si) {

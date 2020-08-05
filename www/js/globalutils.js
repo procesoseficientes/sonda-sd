@@ -70,12 +70,43 @@ var estaEnFacturaTemporal = false;
 var tokenListaDeDetalleDeDemandaDeDespachoConsolidado;
 var clienteProcesadoConInformacionDeCuentaCorrienteParaPagoDeFacturasAbiertas;
 var clienteProcesadoConInformacionDeCuentaCorriente;
+var estadisticaDeVentaControlador;
 
 var _globalUtils = this;
 var tipoDePagoProcesadoEnCobroDeFacturasVencidas;
 
-var SondaServerURL = ""; //DA
+//200.6.253.242:8595";
+//var SondaServerURL = 'http://192.168.1.5:8595';
+//var SondaServerURL = 'http://200.6.253.242:8090';
+//var SondaServerURL = 'http://192.168.1.112:8595';
+//var SondaServerURL = 'http://192.168.1.5:8595';
+//var SondaServerURL = "http://64.71.74.59:8595";//ways
+//var SondaServerURL = "http://192.168.1.114:9596";// Server QA interna
+//var SondaServerURL = "http://201.222.60.117:1433"; //nube
+//var SondaServerURL = "http://190.56.115.27:8596";// Server Dev publica
+//var SondaServerURL = "http://192.168.1.114:8596";// Server Dev interna
+//var SondaServerURL = "http://190.56.115.27:8596";// Server Dev publica
+//var SondaServerURL = "http://192.168.1.114:8596";// Server Dev interna
+//var SondaServerURL = "http://190.56.115.27:9596";// Server QA publica
+//var SondaServerURL = "http://190.143.198.108:8595"; // Servidor Arium publica
+//var SondaServerURL = "http://192.168.0.252:8595"; // Servidor Arium interna
+//var SondaServerURL = "http://192.168.1.179:8596"; // GLaDOS
+//var SondaServerURL = "http://168.61.186.243:8596/"; // AZURE
+//var SondaServerURL = "http://168.61.186.243:9596"; // AZURE MDA
+//var SondaServerURL = "http://168.61.186.243:8598"; //AZURE //PRUEBAS
+//var SondaServerURL = "http://192.168.1.179:8596"; // JD
+//var SondaServerURL = 'http://186.151.168.166:8595';
+var SondaServerURL = "http://172.16.22.79:8596"; //DA
+//var SondaServerURL = 'http://192.168.1.97:8596';//DA
+//var SondaServerURL = 'http://192.168.1.236:8596';//PA
+//var SondaServerURL = 'http://192.168.1.243:8596';//HG
+//var SondaServerURL = 'http://192.168.1.133:8596'; //RG
+//var SondaServerURL = "http://sonda.dcerouno.com/";// CERO UNO
+//var SondaServerURL = "http://sondaqa.dcerouno.com";// CERO UNO QA
+//var SondaServerURL = "http://40.69.162.117:8597";// TDA
+//var SondaServerURL = 'http://190.143.198.107:8595/';//Logistica Nave
 
+//var baseURL = SondaServerURL;
 var SondaServerOptions = {
   reconnect: true,
   "max reconnection attempts": 60000
@@ -121,30 +152,38 @@ var gDetailSerial = "";
 var gTaskOnRoutePlan = 1;
 var gIsOnNotificationPage = false;
 
-var currentBranch = "August1";
-var SondaVersion = "2020.8.5";
+var currentBranch = "G-Force@Salamandra";
+var SondaVersion = "8.2.2";
 
-var estaEnConfirmacionDeFacturacion = false;
+function SaveFile() {
+  var fail = function(error) {};
 
-var gPuedeIniciarRuta = false;
-var gInvoiceHeader;
-
-// INFO: variables globales para controladores
-var imagenDeEntregaControlador;
-var firmaControlador;
-var manifiestoControlador;
-var estadisticaDeVentaPorDiaControlador;
-var estadisticaDeVentaControlador;
-var resumenDeTareaControlador;
-var tareaControladorADelegar;
-var confirmacionControlador;
-
-// INFO: variable global para observacion de posicionamiento
-var identificadorDeObservacionDePosicionamiento = null;
-
-// INFO: variables globales para servicios
-var controlDeSecuenciaServicio;
-var facturacionElectronicaServicio;
+  var successFn = function(json, count) {
+    window.requestFileSystem(
+      LocalFileSystem.PERSISTENT,
+      0,
+      function(fileSystem) {
+        fileSystem.root.getFile(
+          "SondaDb.json",
+          { create: true, exclusive: false },
+          function(fileEntry) {
+            fileEntry.createWriter(function(writer) {
+              writer.onwriteend = function(evt) {
+                notify("Archivo Guardado");
+              };
+              writer.write(json.data);
+            }, fail);
+          },
+          fail
+        );
+      },
+      fail
+    );
+  };
+  cordova.plugins.sqlitePorter.exportDbToJson(SONDA_DB_Session, {
+    successFn: successFn
+  });
+}
 
 function onMenuKeyDown() {
   var myFooter;
@@ -206,19 +245,14 @@ function DeviceIsOnline() {
     notify("DeviceIsOnline: " + e.message);
   }
 }
-function DeviceIsOffline() {  
-  if ('onLine' in navigator && !navigator.onLine) {
-    gIsOnline = EstaEnLinea.No;
-    $("#login_isonline").text("Offline");
+function DeviceIsOffline() {
+  $("#login_isonline").text("Offline");
 
-    $("#login_isonline").text("OffLine");
-    $("#lblNetworkLogin").text("OffLine");
-    $("#lblNetworkDeliveryMenu").text("OffLine");
-  } else {
-    gIsOnline = EstaEnLinea.Si
-    DeviceIsOnline()
-  }
-  
+  $("#login_isonline").text("OffLine");
+  $("#lblNetworkLogin").text("OffLine");
+  $("#lblNetworkDeliveryMenu").text("OffLine");
+
+  gIsOnline = EstaEnLinea.No;
 }
 function my_dialog(pTitle, pMessage, pAction) {
   if (pAction === "open") {
@@ -434,85 +468,27 @@ function onBackKeyDown() {
                   doneButtonLabel: "OK",
                   cancelButtonLabel: "CANCELAR"
                 };
+
                 window.plugins.listpicker.showPicker(configOptions, function(
                   item
                 ) {
-                  var reglaServicio = new ReglaServicio();
-                  reglaServicio.obtenerRegla(
-                    "NuevaTareaConBaseEnTareaSinGestion",
-                    regla => {
-                      if (
-                        regla.rows.length > 0 &&
-                        regla.rows.item(0).ENABLED.toUpperCase() === "SI"
-                      ) {
-                        navigator.notification.confirm(
-                          "¿Desea crear una nueva tarea?",
-                          buttonIndex => {
-                            switch (buttonIndex) {
-                              case 1:
-                                // InteraccionConUsuarioServicio.bloquearPantalla();
-                                actualizarEstadoDeTarea(
-                                  gTaskId,
-                                  TareaGeneroGestion.No,
-                                  item,
-                                  () => {
-                                    onResume(() => {
-                                      EnviarData();
-                                      gTaskOnRoutePlan = 1;
-                                      $.mobile.changePage("#menu_page", {
-                                        transition: "pop",
-                                        reverse: true,
-                                        changeHash: true,
-                                        showLoadMsg: false
-                                      });
-                                    });
-                                  },
-                                  TareaEstado.Completada
-                                );
-                                break;
-                              case 2:
-                                resumenDeTareaControlador.crearNuevaTarea();
-                                actualizarEstadoDeTarea(
-                                  gTaskId,
-                                  TareaGeneroGestion.No,
-                                  item,
-                                  () => {
-                                    onResume(() => {
-                                      EnviarData();
-                                      gTaskOnRoutePlan = 1;
-                                    });
-                                  },
-                                  TareaEstado.Completada
-                                );
-                                break;
-                              default:
-                                break;
-                            }
-                          },
-                          "Sonda® SD " + SondaVersion,
-                          ["No", "Si"]
-                        );
-                      } else {
-                        actualizarEstadoDeTarea(
-                          gTaskId,
-                          TareaGeneroGestion.No,
-                          item,
-                          () => {
-                            onResume(() => {
-                              EnviarData();
-                              gTaskOnRoutePlan = 1;
-                              $.mobile.changePage("#menu_page", {
-                                transition: "pop",
-                                reverse: true,
-                                changeHash: true,
-                                showLoadMsg: false
-                              });
-                            });
-                          },
-                          TareaEstado.Completada
-                        );
-                      }
-                    }
+                  actualizarEstadoDeTarea(
+                    gTaskId,
+                    TareaGeneroGestion.No,
+                    item,
+                    function() {
+                      onResume(function() {
+                        EnviarData();
+
+                        $.mobile.changePage("#menu_page", {
+                          transition: "pop",
+                          reverse: true,
+                          changeHash: true,
+                          showLoadMsg: false
+                        });
+                      });
+                    },
+                    TareaEstado.Completada
                   );
                 });
               } else {
@@ -788,7 +764,9 @@ function onBackKeyDown() {
       break;
 
     case "UiPageScanManifest":
+      var manifiestoControlador = new ManifiestoControlador();
       manifiestoControlador.regresarAPantallaAnterior("menu_page");
+      manifiestoControlador = null;
       break;
 
     case "UiDeliveryPage":
@@ -837,24 +815,6 @@ function onBackKeyDown() {
       var detalleDePagoControlador = new DetalleDePagoControlador(mensajero);
       detalleDePagoControlador.documentoDePago = new PagoDeFacturaVencidaEncabezado();
       detalleDePagoControlador.irAPantalla("UiPaymentListPage");
-      break;
-
-    case "UiDeliveryImagePage":
-      imagenDeEntregaControlador.usuarioDeseaRegresarAPantallaAnterior();
-      break;
-    case "UiSignaturePage":
-      firmaControlador.usuarioDeseaVolverAPantallaAnterior();
-      break;
-    case "UiSaleStatisticPage":
-      estadisticaDeVentaPorDiaControlador.regresarPantallaAutorizacion();
-      break;
-    case "UiTaskResumePage":
-      $.mobile.changePage("#menu_page", {
-        transition: "none",
-        reverse: true,
-        changeHash: true,
-        showLoadMsg: false
-      });
       break;
   }
 }
@@ -912,8 +872,6 @@ function ShowInvoiceConfirmation() {
     changeHash: true,
     showLoadMsg: false
   });
-
-  estaEnConfirmacionDeFacturacion = false;
 }
 
 function take_picture(pID) {
@@ -1043,7 +1001,6 @@ function ActualizarCantidadDeNotificaciones() {
 }
 
 function notify(pMessage) {
-  InteraccionConUsuarioServicio.desbloquearPantalla();
   navigator.notification.alert(
     pMessage,
     function() {
@@ -1071,7 +1028,7 @@ function preparedb() {
           "CREATE TABLE IF NOT EXISTS SKUS(SKU, SKU_NAME, SKU_PRICE, SKU_LINK, REQUERIES_SERIE, IS_KIT, ON_HAND, ROUTE_ID, IS_PARENT, PARENT_SKU, EXPOSURE, PRIORITY, QTY_RELATED, LOADED_LAST_UPDATED, TAX_CODE, CODE_PACK_UNIT_STOCK, SALES_PACK_UNIT)"
         );
         tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS INVOICE_HEADER(INVOICE_NUM, TERMS, POSTED_DATETIME, CLIENT_ID, CLIENT_NAME, POS_TERMINAL, GPS, TOTAL_AMOUNT, ERP_INVOICE_ID, IS_POSTED, STATUS, IS_CREDIT_NOTE, VOID_REASON, VOID_NOTES, VOID_INVOICE_ID, PRINT_REQUEST, PRINTED_COUNT, AUTH_ID, SAT_SERIE, CHANGE, IMG1, IMG2, IMG3, CONSIGNMENT_ID, IS_PAID_CONSIGNMENT, INITIAL_TASK_IMAGE, IN_ROUTE_PLAN, ID_BO, IS_POSTED_VALIDATED, DETAIL_QTY,HANDLE_TAX, TAX_PERCENT, TELEPHONE_NUMBER, IS_FROM_DELIVERY_NOTE, DISCOUNT, COMMENT, DUE_DATE, CREDIT_AMOUNT, CASH_AMOUNT, PAID_TO_DATE, TASK_ID, GOAL_HEADER_ID, ELECTRONIC_SIGNATURE, DOCUMENT_SERIES, DOCUMENT_NUMBER, DOCUMENT_URL, SHIPMENT, VALIDATION_RESULT, SHIPMENT_DATETIME, SHIPMENT_RESPONSE, IS_CONTINGENCY_DOCUMENT, CONTINGENCY_DOC_SERIE, CONTINGENCY_DOC_NUM, FEL_DOCUMENT_TYPE, FEL_STABLISHMENT_CODE)"
+          "CREATE TABLE IF NOT EXISTS INVOICE_HEADER(INVOICE_NUM, TERMS, POSTED_DATETIME, CLIENT_ID, CLIENT_NAME, POS_TERMINAL, GPS, TOTAL_AMOUNT, ERP_INVOICE_ID, IS_POSTED, STATUS, IS_CREDIT_NOTE, VOID_REASON, VOID_NOTES, VOID_INVOICE_ID, PRINT_REQUEST, PRINTED_COUNT, AUTH_ID, SAT_SERIE, CHANGE, IMG1, IMG2, IMG3, CONSIGNMENT_ID, IS_PAID_CONSIGNMENT, INITIAL_TASK_IMAGE, IN_ROUTE_PLAN, ID_BO, IS_POSTED_VALIDATED, DETAIL_QTY,HANDLE_TAX, TAX_PERCENT, TELEPHONE_NUMBER, IS_FROM_DELIVERY_NOTE, DISCOUNT, COMMENT, DUE_DATE, CREDIT_AMOUNT, CASH_AMOUNT, PAID_TO_DATE, TASK_ID, GOAL_HEADER_ID)"
         );
         tx.executeSql(
           "CREATE TABLE IF NOT EXISTS INVOICE_DETAIL(INVOICE_NUM, SKU, SKU_NAME, QTY, PRICE, DISCOUNT, TOTAL_LINE, SERIE, SERIE_2, REQUERIES_SERIE, LINE_SEQ, IS_ACTIVE, COMBO_REFERENCE, PARENT_SEQ, EXPOSURE, PHONE, TAX_CODE, ON_HAND, IS_BONUS, PACK_UNIT, CODE_PACK_UNIT_STOCK, CONVERSION_FACTOR)"
@@ -1094,7 +1051,7 @@ function preparedb() {
           "CREATE TABLE IF NOT EXISTS FAVS_FACTS(SKU, SKU_NAME, QTY)"
         );
         tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS TASK(TASK_ID,TASK_TYPE,TASK_DATE,SCHEDULE_FOR,CREATED_STAMP,ASSIGEND_TO,ASSIGNED_BY,ACCEPTED_STAMP,COMPLETED_STAMP,EXPECTED_GPS,POSTED_GPS,TASK_COMMENTS,TASK_SEQ,TASK_ADDRESS,RELATED_CLIENT_CODE,RELATED_CLIENT_NAME,TASK_STATUS, IS_POSTED, TASK_BO_ID, COMPLETED_SUCCESSFULLY, REASON, RGA_CODE, NIT, PHONE_CUSTOMER, CODE_PRICE_LIST, IN_PLAN_ROUTE, MUNICIPALITY, DEPARTMENT)"
+          "CREATE TABLE IF NOT EXISTS TASK(TASK_ID,TASK_TYPE,TASK_DATE,SCHEDULE_FOR,CREATED_STAMP,ASSIGEND_TO,ASSIGNED_BY,ACCEPTED_STAMP,COMPLETED_STAMP,EXPECTED_GPS,POSTED_GPS,TASK_COMMENTS,TASK_SEQ,TASK_ADDRESS,RELATED_CLIENT_CODE,RELATED_CLIENT_NAME,TASK_STATUS, IS_POSTED, TASK_BO_ID, COMPLETED_SUCCESSFULLY, REASON, RGA_CODE, NIT, PHONE_CUSTOMER, CODE_PRICE_LIST)"
         );
 
         tx.executeSql(
@@ -1202,7 +1159,7 @@ function preparedb() {
         );
 
         tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS SONDA_DELIVERY_NOTE_HEADER(DELIVERY_NOTE_ID, DOC_SERIE, DOC_NUM, CODE_CUSTOMER, DELIVERY_NOTE_ID_HH, TOTAL_AMOUNT, IS_POSTED, CREATED_DATETIME, POSTED_DATETIME, TASK_ID, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE, BILLED_FROM_SONDA,IS_CANCELED, REASON_CANCEL, DISCOUNT, DELIVERY_IMAGE_2, DELIVERY_IMAGE_3, DELIVERY_IMAGE_4, DELIVERY_SIGNATURE)"
+          "CREATE TABLE IF NOT EXISTS SONDA_DELIVERY_NOTE_HEADER(DELIVERY_NOTE_ID, DOC_SERIE, DOC_NUM, CODE_CUSTOMER, DELIVERY_NOTE_ID_HH, TOTAL_AMOUNT, IS_POSTED, CREATED_DATETIME, POSTED_DATETIME, TASK_ID, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE, BILLED_FROM_SONDA,IS_CANCELED, REASON_CANCEL, DISCOUNT)"
         );
 
         tx.executeSql(
@@ -1210,7 +1167,7 @@ function preparedb() {
         );
 
         tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS NEXT_PICKING_DEMAND_DETAIL(PICKING_DEMAND_DETAIL_ID,PICKING_DEMAND_HEADER_ID,MATERIAL_ID, MATERIAL_DESCRIPTION, REQUERIES_SEERIE, QTY,LINE_NUM,ERP_OBJECT_TYPE,PRICE,WAS_IMPLODED,QTY_IMPLODED,MASTER_ID_MATERIAL,MATERIAL_OWNER,ATTEMPTED_WITH_ERROR,IS_POSTED_ERP,POSTED_ERP,ERP_REFERENCE,POSTED_STATUS,POSTED_RESPONSE,INNER_SALE_STATUS,INNER_SALE_RESPONSE,TONE,CALIBER, IS_BONUS, DISCOUNT, CODE_PACK_UNIT_STOCK, SALES_PACK_UNIT, CONVERSION_FACTOR)"
+          "CREATE TABLE IF NOT EXISTS NEXT_PICKING_DEMAND_DETAIL(PICKING_DEMAND_DETAIL_ID,PICKING_DEMAND_HEADER_ID,MATERIAL_ID, MATERIAL_DESCRIPTION, REQUERIES_SEERIE, QTY,LINE_NUM,ERP_OBJECT_TYPE,PRICE,WAS_IMPLODED,QTY_IMPLODED,MASTER_ID_MATERIAL,MATERIAL_OWNER,ATTEMPTED_WITH_ERROR,IS_POSTED_ERP,POSTED_ERP,ERP_REFERENCE,POSTED_STATUS,POSTED_RESPONSE,INNER_SALE_STATUS,INNER_SALE_RESPONSE,TONE,CALIBER, IS_BONUS, DISCOUNT)"
         );
 
         tx.executeSql(
@@ -1263,18 +1220,6 @@ function preparedb() {
 
         tx.executeSql(
           "CREATE TABLE IF NOT EXISTS OVERDUE_INVOICE_PAYMENT_TYPE_DETAIL([PAYMENT_TYPE_ID],[PAYMENT_HEADER_ID],[PAYMENT_TYPE],[FRONT_IMAGE],[BACK_IMAGE],[DOCUMENT_NUMBER],[BANK_ACCOUNT],[BANK_NAME],[AMOUNT],[DOC_SERIE],[DOC_NUM])"
-        );
-
-        tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS STATISTIC_SALES_BY_CUSTOMER([ID],[CLIENT_ID],[CODE_SKU],[SKU_NAME],[QTY],[SALE_PACK_UNIT])"
-        );
-
-        tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS SEQUENCE_CONTROL([SEQUENCE_TYPE], [LAST_USED], [CREATED_DATE], [LAST_UPDATE])"
-        );
-
-        tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS PHRASE_AND_SCENARIO([ID], [FEL_DOCUMENT_TYPE], [PHRASE_CODE], [SCENARIO_CODE], [DESCRIPTION], [TEXT_TO_SHOW])"
         );
       } catch (e) {
         notify("preparedb: " + e.message);
@@ -1362,15 +1307,9 @@ function OnConfirmFinishPOS(buttonIndex) {
 function startpos_action() {
   try {
     navigator.notification.confirm(
-      "¿Confirma Iniciar Ruta?", // message
+      "Confirma Iniciar Ruta?", // message
       function(buttonIndex) {
         if (buttonIndex === 2) {
-          var data = {
-            routeid: gCurrentRoute,
-            default_warehouse: gDefaultWhs,
-            dbuser: gdbuser,
-            dbuserpass: gdbuserpass
-          };
           my_dialog("Espere...", "Procesando caja", "open");
           InteraccionConUsuarioServicio.bloquearPantalla();
 
@@ -1464,6 +1403,12 @@ function startpos_action() {
 
           localStorage.setItem("ROUTE_RETURN_WAREHOUSE", gRouteReturnWarehouse);
 
+          var data = {
+            routeid: gCurrentRoute,
+            default_warehouse: gDefaultWhs,
+            dbuser: gdbuser,
+            dbuserpass: gdbuserpass
+          };
           SocketControlador.socketIo.emit("get_sales_inventory", data);
         }
       }, // callback to invoke with index of button pressed
@@ -1945,9 +1890,9 @@ function closeprinter() {
 }
 
 function CenterText(text) {
-  if (text.length > 45) {
-    var line1 = text.substring(0, 45);
-    var line2 = text.substring(46, text.length - 1);
+  if (text.length > 30) {
+    var line1 = text.substring(0, 30);
+    var line2 = text.substring(31, text.length - 1);
     return line1 + "\r\n" + line2;
   } else {
     return text;
@@ -1958,11 +1903,11 @@ function printinvoice_joininfo(invoiceId, pIsRePrinted, callBack, escopia) {
   var headerFormat = "";
   var detailFormat = "";
   var footerFormat = "";
+  var ppassed = 0;
+  var resultados;
 
   var facturaManejaImpuesto = false;
   var impuestoDeFactura = 0;
-  var rowPosition;
-  var pos = 0;
 
   var etiquetaDeImpuesto = localStorage.getItem("TAX_ID");
   var etiquetaDeResolucion = localStorage.getItem("TAX_RESOLUTION_ID");
@@ -1971,885 +1916,586 @@ function printinvoice_joininfo(invoiceId, pIsRePrinted, callBack, escopia) {
   try {
     var muestraPorcentaje = {};
     var configuracionDeDecimalesServicio = new ManejoDeDecimalesServicio();
-
-    var procesarImpresionDeFactura = function procesarImpresionDeFactura(
-      rutaUsaFel,
-      frasesYEscenarios
-    ) {
-      ParametroServicio.ObtenerParametro(
-        "INVOICE",
-        "SHOW_PERCENTAGE_INVOICE",
-        function(parametro) {
-          muestraPorcentaje = parametro;
-
-          configuracionDeDecimalesServicio.obtenerInformacionDeManejoDeDecimales(
-            function(configuracionDecimales) {
-              var pSQL =
-                "SELECT IFNULL(A.DISCOUNT,0) AS DISCOUNT_HEADER, A.*, B.*, ";
-              pSQL +=
-                "IFNULL((SELECT TASK_ADDRESS FROM TASK T WHERE T.TASK_ID = A.TASK_ID), '__________') ";
-              pSQL +=
-                "AS TASK_ADDRESS FROM INVOICE_HEADER A, INVOICE_DETAIL B ";
-              pSQL += "WHERE A.INVOICE_NUM = " + invoiceId;
-              pSQL +=
-                " AND B.INVOICE_NUM = A.INVOICE_NUM AND A.IS_CREDIT_NOTE = 0";
-
-              SONDA_DB_Session.transaction(function(tx) {
-                tx.executeSql(
-                  pSQL,
-                  [],
-                  function(tx, results) {
-                    resultados = results;
-                    var expiresAuth = localStorage.getItem("SAT_RES_EXPIRE");
-                    var resolution = localStorage.getItem("POS_SAT_RESOLUTION");
-                    var discount = results.rows.item(0).DISCOUNT_HEADER;
-                    var discountAmount =
-                      discount > 0
-                        ? (discount / 100) * results.rows.item(0).TOTAL_AMOUNT
-                        : 0;
-                    var creditAmount = results.rows.item(0).CREDIT_AMOUNT;
-                    facturaManejaImpuesto =
-                      results.rows.item(0).HANDLE_TAX === 1 ||
-                      results.rows.item(0).HANDLE_TAX === "1";
-
-                    headerFormat = "! 0 50 50 _DOC_LEN_ 1\r\n";
-                    headerFormat +=
-                      "! U1 LMARGIN 10\r\n! U\r\n! U1 PAGE-WIDTH 1400\r\nON-FEED IGNORE\r\n";
-
-                    pos = 10;
-                    headerFormat +=
-                      "CENTER 550 T 0 2 0 " +
-                      pos +
-                      " " +
-                      CenterText(gCompanyName) +
-                      "\r\n";
-
-                    pos += 30;
-                    headerFormat +=
-                      "CENTER 550 T 0 2 0 " +
-                      pos +
-                      " " +
-                      CenterText(gBranchName) +
-                      "\r\n";
-
-                    if (gBranchAddress.length > 30) {
-                      pos += 30;
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        pos +
-                        " " +
-                        gBranchAddress.substring(0, 30) +
-                        "\r\n";
-
-                      pos += 30;
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        pos +
-                        " " +
-                        gBranchAddress.substring(
-                          31,
-                          gBranchAddress.length - 1
-                        ) +
-                        "\r\n";
-                    } else {
-                      if (
-                        localStorage.getItem("direccionFacturacion01").length >
-                        0
-                      ) {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " " +
-                          localStorage.getItem("direccionFacturacion01") +
-                          "\r\n";
-                      }
-
-                      if (
-                        localStorage.getItem("direccionFacturacion02").length >
-                        0
-                      ) {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " " +
-                          localStorage.getItem("direccionFacturacion02") +
-                          "\r\n";
-                      }
-
-                      if (
-                        localStorage.getItem("direccionFacturacion03").length >
-                        0
-                      ) {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " " +
-                          localStorage.getItem("direccionFacturacion03") +
-                          "\r\n";
-                      }
-
-                      if (
-                        localStorage.getItem("direccionFacturacion04").length >
-                        0
-                      ) {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " " +
-                          localStorage.getItem("direccionFacturacion04") +
-                          "\r\n";
-                      }
-                    }
-
-                    //Cambio de informacion en el encabezado del documento impreso cuando es FEL
-                    if (rutaUsaFel) {
-                      pos += 30;
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        pos +
-                        " " +
-                        etiquetaDeImpuesto +
-                        ":  " +
-                        localStorage.getItem("NitEnterprise") +
-                        " \r\n";
-
-                      pos += 30;
-                      headerFormat += "L 5 " + pos + " 570 " + pos + " 1\r\n";
-
-                      if (results.rows.item(0).IS_CONTINGENCY_DOCUMENT === 1) {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " DOCUMENTO EN CONTINGENCIA \r\n";
-
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " SERIE: " +
-                          results.rows.item(0).CONTINGENCY_DOC_SERIE +
-                          " NUMERO: " +
-                          results.rows.item(0).CONTINGENCY_DOC_NUM +
-                          "\r\n";
-                      } else {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " DOCUMENTO TRIBUTARIO ELECTRONICO \r\n";
-
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " + pos + " FACTURA \r\n";
-
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " No. Autorizacion: \r\n";
-
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " " +
-                          results.rows.item(0).ELECTRONIC_SIGNATURE +
-                          "\r\n";
-
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " SERIE: " +
-                          results.rows.item(0).DOCUMENT_SERIES +
-                          " NUMERO: " +
-                          results.rows.item(0).DOCUMENT_NUMBER +
-                          "\r\n";
-                      }
-
-                      pos += 30;
-                      headerFormat += "L 5 " + pos + " 570 " + pos + " 1\r\n";
-
-                      pos += 30;
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        pos +
-                        " CLIENTE: " +
-                        results.rows.item(0).CLIENT_ID +
-                        "\r\n";
-
-                      pos += 30;
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        pos +
-                        " NOMBRE: " +
-                        results.rows.item(0).CLIENT_NAME +
-                        "\r\n";
-
-                      pos += 30;
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        pos +
-                        " " +
-                        etiquetaDeImpuesto +
-                        ": " +
-                        results.rows.item(0).ERP_INVOICE_ID +
-                        "\r\n";
-
-                      if (results.rows.item(0).TASK_ADDRESS.length > 45) {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " DIRECCION: " +
-                          results.rows.item(0).TASK_ADDRESS.substring(0, 45) +
-                          "\r\n";
-
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " " +
-                          results.rows
-                            .item(0)
-                            .TASK_ADDRESS.substring(
-                              46,
-                              results.rows.item(0).TASK_ADDRESS.length - 1
-                            ) +
-                          "\r\n";
-                      } else {
-                        pos += 30;
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          pos +
-                          " DIRECCION: " +
-                          results.rows.item(0).TASK_ADDRESS +
-                          "\r\n";
-                      }
-
-                      pos += 30;
-                      headerFormat += "L 5 " + pos + " 570 " + pos + " 1\r\n";
-
-                      pos += 30;
-                      rowPosition = pos;
-                    } else {
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (190 + pos) +
-                        " SUJETO A PAGOS TRIMESTRALES\r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (215 + pos) +
-                        " " +
-                        etiquetaDeImpuesto +
-                        ":  " +
-                        localStorage.getItem("NitEnterprise") +
-                        " \r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (235 + pos) +
-                        " " +
-                        etiquetaDeResolucion +
-                        ": " +
-                        resolution +
-                        " \r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (265 + pos) +
-                        " Autorización: " +
-                        pCurrentSAT_Res_Date +
-                        " \r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (295 + pos) +
-                        " Vencimiento: " +
-                        expiresAuth +
-                        " \r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (335 + pos) +
-                        " Del: " +
-                        pCurrentSAT_Res_DocStart +
-                        " Al: " +
-                        pCurrentSAT_Res_DocFinish +
-                        "\r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 3 0 " +
-                        (385 + pos) +
-                        " Factura Serie " +
-                        results.rows.item(0).SAT_SERIE +
-                        " # " +
-                        invoiceId +
-                        "\r\n";
-                      headerFormat +=
-                        "L 5 " + (375 + pos) + " 570 " + (375 + pos) + " 1\r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (415 + pos) +
-                        " NOMBRE: " +
-                        results.rows.item(0).CLIENT_NAME +
-                        "\r\n";
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (450 + pos) +
-                        " " +
-                        etiquetaDeImpuesto +
-                        ": " +
-                        results.rows.item(0).ERP_INVOICE_ID +
-                        "\r\n";
-                      headerFormat +=
-                        "L 5 " + (495 + pos) + " 570 " + (495 + pos) + " 1\r\n";
-                      if (escopia === 1) {
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          (525 + pos) +
-                          " *** COPIA CONTABILIDAD ***\r\n";
-                      } else {
-                        headerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          (525 + pos) +
-                          " *** ORIGINAL CLIENTE ***\r\n";
-                      }
-
-                      headerFormat +=
-                        "CENTER 550 T 0 2 0 " +
-                        (545 + pos) +
-                        "  " +
-                        pIsRePrinted +
-                        " \r\n";
-
-                      rowPosition = 570 + pos;
-                    }
-
-                    detailFormat = "";
-                    var pImei = 0;
-                    var pImeiPrint = 0;
-
-                    for (var i = 0; i <= results.rows.length - 1; i++) {
-                      if (results.rows.item(i).SKU_NAME.length > 35) {
-                        detailFormat =
-                          detailFormat +
-                          "LEFT 5 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          results.rows.item(i).SKU +
-                          " - " +
-                          results.rows.item(i).SKU_NAME.substring(0, 35) +
-                          "..." +
-                          "\r\n";
-                      } else {
-                        detailFormat =
-                          detailFormat +
-                          "LEFT 5 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          results.rows.item(i).SKU +
-                          " - " +
-                          results.rows.item(i).SKU_NAME +
-                          "\r\n";
-                      }
-
-                      rowPosition += parseInt(30);
-
-                      detailFormat =
-                        detailFormat +
-                        "LEFT 5 T 0 2 0 " +
-                        rowPosition +
-                        " CANTIDAD: " +
-                        format_number(
-                          results.rows.item(i).QTY,
-                          configuracionDecimales.defaultDisplayDecimalsForSkuQty
-                        ) +
-                        " / PREC.UNIT. : " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          results.rows.item(i).PRICE,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-                      rowPosition += parseInt(30);
-
-                      if (
-                        Object.keys(muestraPorcentaje).length !== 0 &&
-                        muestraPorcentaje.Value == 1
-                      ) {
-                        detailFormat =
-                          detailFormat +
-                          "LEFT 5 T 0 2 0 " +
-                          rowPosition +
-                          " DESC: " +
-                          format_number(
-                            results.rows.item(i).DISCOUNT,
-                            configuracionDecimales.defaultDisplayDecimalsForSkuQty
-                          ) +
-                          "% --- " +
-                          currencySymbol +
-                          ". " +
-                          format_number(
-                            results.rows.item(i).PRICE *
-                              results.rows.item(i).QTY *
-                              (results.rows.item(i).DISCOUNT / 100),
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
-                        rowPosition += parseInt(30);
-                      }
-
-                      pImei = results.rows.item(i).SERIE_2;
-                      if (isNaN(pImei)) {
-                        pImeiPrint = 0;
-                      } else {
-                        pImeiPrint = pImei;
-                      }
-
-                      var phone =
-                        results.rows.item(i).PHONE === null ||
-                        results.rows.item(i).PHONE === "null"
-                          ? "..."
-                          : results.rows.item(i).PHONE;
-
-                      detailFormat =
-                        detailFormat +
-                        "LEFT 5 T 0 2 0 " +
-                        rowPosition +
-                        " SERIE: " +
-                        results.rows.item(i).SERIE +
-                        "/ IMEI: " +
-                        pImeiPrint +
-                        "/ " +
-                        phone +
-                        "\r\n";
-                      rowPosition += parseInt(30);
-
-                      detailFormat =
-                        detailFormat +
-                        "RIGHT 550 T 0 2 0 " +
-                        (rowPosition - 90) +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          trunc_number(
-                            results.rows.item(i).PRICE *
-                              results.rows.item(i).QTY *
-                              (1 - results.rows.item(i).DISCOUNT / 100),
-                            configuracionDecimales.defaultCalculationsDecimals
-                          ),
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-
-                      detailFormat =
-                        detailFormat +
-                        "L 5 " +
-                        rowPosition +
-                        " 570 " +
-                        rowPosition +
-                        " 1\r\n";
-                      rowPosition += parseInt(10);
-                    }
-
-                    if (facturaManejaImpuesto) {
-                      if (impuestoDeFactura > 0) {
-                        rowPosition += parseInt(30);
-                        footerFormat =
-                          "LEFT 5 T 0 2 0 " + rowPosition + "SUB TOTAL: \r\n";
-                        footerFormat =
-                          footerFormat +
-                          "RIGHT 550 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          currencySymbol +
-                          ". " +
-                          format_number(
-                            results.rows.item(0).TOTAL_AMOUNT -
-                              impuestoDeFactura,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
-                      } else {
-                        rowPosition += parseInt(30);
-                        footerFormat =
-                          "LEFT 5 T 0 2 0 " + rowPosition + "SUB TOTAL: \r\n";
-                        footerFormat =
-                          footerFormat +
-                          "RIGHT 550 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          currencySymbol +
-                          ". " +
-                          format_number(
-                            results.rows.item(0).TOTAL_AMOUNT,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
-                      }
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " +
-                        rowPosition +
-                        " IMPUESTO " +
-                        etiquetaPorcentajeDeImpuesto +
-                        "%: \r\n";
-                      footerFormat +=
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          impuestoDeFactura,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " + rowPosition + " TOTAL: \r\n";
-                      footerFormat +=
-                        footerFormat +
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          results.rows.item(0).TOTAL_AMOUNT,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-
-                      if (creditAmount && creditAmount > 0) {
-                        rowPosition += parseInt(30);
-                        footerFormat +=
-                          "LEFT 5 T 0 2 0 " + rowPosition + " CREDITO: \r\n";
-                        footerFormat +=
-                          "RIGHT 550 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          currencySymbol +
-                          ". " +
-                          format_number(
-                            creditAmount,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
-                      }
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " + rowPosition + " EFECTIVO:\r\n";
-                      footerFormat +=
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        (creditAmount && creditAmount > 0
-                          ? format_number(
-                              Number(results.rows.item(0).CASH_AMOUNT),
-                              configuracionDecimales.defaultDisplayDecimals
-                            )
-                          : format_number(
-                              Number(results.rows.item(0).TOTAL_AMOUNT) +
-                                Number(results.rows.item(0).CHANGE),
-                              configuracionDecimales.defaultDisplayDecimals
-                            )) +
-                        "\r\n";
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " + rowPosition + " CAMBIO: \r\n";
-                      footerFormat +=
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          results.rows.item(0).CHANGE,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-                    } else {
-                      if (
-                        Object.keys(muestraPorcentaje).length !== 0 &&
-                        muestraPorcentaje.Value == 1
-                      ) {
-                        rowPosition += parseInt(30);
-                        footerFormat =
-                          "LEFT 5 T 0 2 0 " + rowPosition + " DESCUENTO: \r\n";
-                        footerFormat =
-                          footerFormat +
-                          "RIGHT 550 T 0 2 0 " +
-                          rowPosition +
-                          " %. " +
-                          format_number(
-                            discount,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          " --- " +
-                          currencySymbol +
-                          ". " +
-                          format_number(
-                            discountAmount,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
-                      }
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " + rowPosition + " TOTAL: \r\n";
-                      footerFormat +=
-                        footerFormat +
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          results.rows.item(0).TOTAL_AMOUNT - discountAmount,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-
-                      if (creditAmount && creditAmount > 0) {
-                        rowPosition += parseInt(30);
-                        footerFormat +=
-                          "LEFT 5 T 0 2 0 " + rowPosition + " CREDITO: \r\n";
-                        footerFormat +=
-                          "RIGHT 550 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          currencySymbol +
-                          ". " +
-                          format_number(
-                            creditAmount,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
-                      }
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " + rowPosition + " EFECTIVO: \r\n";
-                      footerFormat +=
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        (creditAmount && creditAmount > 0
-                          ? format_number(
-                              results.rows.item(0).CASH_AMOUNT,
-                              configuracionDecimales.defaultDisplayDecimals
-                            )
-                          : format_number(
-                              Number(
-                                results.rows.item(0).TOTAL_AMOUNT -
-                                  discountAmount
-                              ) + Number(results.rows.item(0).CHANGE),
-                              configuracionDecimales.defaultDisplayDecimals
-                            )) +
-                        "\r\n";
-
-                      rowPosition += parseInt(30);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " + rowPosition + " CAMBIO: \r\n";
-                      footerFormat +=
-                        "RIGHT 550 T 0 2 0 " +
-                        rowPosition +
-                        " " +
-                        currencySymbol +
-                        ". " +
-                        format_number(
-                          results.rows.item(0).CHANGE,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-                    }
-
-                    if (creditAmount && creditAmount > 0) {
-                      rowPosition += parseInt(50);
-                      footerFormat +=
-                        "LEFT 5 T 0 2 0 " +
-                        rowPosition +
-                        " Fecha de Vencimiento: " +
-                        (results.rows.item(0).DUE_DATE
-                          ? results.rows.item(0).DUE_DATE.split(" ")[0]
-                          : getDateTime()) +
-                        "\r\n";
-                    }
-
-                    if (rutaUsaFel) {
-                      rowPosition += 30;
-                      footerFormat =
-                        footerFormat +
-                        "L 5 " +
-                        rowPosition +
-                        " 570 " +
-                        rowPosition +
-                        " 1\r\n";
-
-                      if (results.rows.item(0).IS_CONTINGENCY_DOCUMENT === 0) {
-                        frasesYEscenarios.forEach(function(frase) {
-                          rowPosition += 25;
-                          footerFormat +=
-                            "LEFT 5 T 0 2 0 " +
-                            rowPosition +
-                            " " +
-                            frase.TextToShow +
-                            "\r\n";
-                        });
-
-                        rowPosition += 30;
-                        footerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          rowPosition +
-                          " DATOS DEL CERTIFICADOR \r\n";
-
-                        rowPosition += 20;
-                        footerFormat +=
-                          "LEFT 5 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          etiquetaDeImpuesto +
-                          ": " +
-                          (localStorage.getItem("FEL_CERTIFIER_TAX_ID") ||
-                            "N/A") +
-                          "\r\n";
-
-                        rowPosition += 20;
-                        footerFormat +=
-                          "LEFT 5 T 0 2 0 " +
-                          rowPosition +
-                          " " +
-                          (localStorage.getItem("FEL_CERTIFIER_NAME") ||
-                            "N/A") +
-                          "\r\n";
-                      } else {
-                        rowPosition += 25;
-                        footerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          rowPosition +
-                          " Emision en contingencia, verifique su validez en el sitio\r\n";
-
-                        rowPosition += 25;
-                        footerFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          rowPosition +
-                          " www.sat.gob.gt/fel\r\n";
-                      }
-
-                      rowPosition += 30;
-                      footerFormat =
-                        footerFormat +
-                        "L 5 " +
-                        rowPosition +
-                        " 570 " +
-                        rowPosition +
-                        " 1\r\n";
-                    }
-
-                    rowPosition += 30;
-                    footerFormat +=
-                      "CENTER 550 T 0 2 0 " +
-                      rowPosition +
-                      " [" +
-                      gIsOnline +
-                      "] " +
-                      getDateTime() +
-                      " / RUTA " +
-                      gCurrentRoute +
-                      " \r\n";
-
-                    rowPosition += parseInt(30);
-
-                    footerFormat = footerFormat + "\r\nPRINT\r\n";
-
-                    var invoiceFormat =
-                      headerFormat + detailFormat + footerFormat;
-
-                    invoiceFormat = invoiceFormat.replace(
-                      "_DOC_LEN_",
-                      rowPosition + 200
-                    );
-
-                    bluetoothSerial.write(
-                      invoiceFormat,
-                      function() {
-                        callBack();
-                      },
-                      function() {
-                        my_dialog("", "", "close");
-                        notify(
-                          "Lo sentimos no se pudo imprimir el documento..."
-                        );
-                        callBack();
-                      }
-                    );
-
-                    my_dialog("", "", "close");
-                  },
-                  function(_txError, err) {
-                    my_dialog("", "", "close");
-                    notify("ERROR: " + err.message);
-                    return err.code;
-                  }
-                );
-              });
-              my_dialog("", "", "close");
-            }
-          );
-        },
-        function(error) {
-          notify(
-            "Error al obtener parámetro para impresión de porcentaje: " +
-              error.message
-          );
-        }
-      );
-    };
-
-    var implementacionUsaFel = localStorage.getItem("IMPLEMENTS_FEL");
-    if (implementacionUsaFel && implementacionUsaFel == "true") {
-      var tipoDeDocumentoFel = localStorage.getItem("FEL_DOCUMENT_TYPE");
-
-      if (!tipoDeDocumentoFel || tipoDeDocumentoFel.length === 0) {
+    ParametroServicio.ObtenerParametro(
+      "INVOICE",
+      "SHOW_PERCENTAGE_INVOICE",
+      function(parametro) {
+        muestraPorcentaje = parametro;
+      },
+      function(error) {
         notify(
-          "Error al imprimir factura, no se ha encontrado el tipo de documento FEL a utilizar."
-        );
-        procesarImpresionDeFactura(false, []);
-      } else {
-        var facturacionElectronicaServicio = new FacturacionElectronicaServicio();
-        facturacionElectronicaServicio.obtenerFrasesYEscenariosPorTipoDeDocumentoFel(
-          tipoDeDocumentoFel,
-          function(frasesYEscenarios) {
-            procesarImpresionDeFactura(true, frasesYEscenarios);
-          },
-          function(resultado) {
-            notify(
-              "Error al imprimir factura, no se han podido obtener frases FEL. " +
-                resultado.mensaje
-            );
-            procesarImpresionDeFactura(false, []);
-          }
+          "Error al obtener parámetro para impresión de porcentaje: " +
+            error.message
         );
       }
-    } else {
-      procesarImpresionDeFactura(false, []);
-    }
+    );
+    configuracionDeDecimalesServicio.obtenerInformacionDeManejoDeDecimales(
+      function(configuracionDecimales) {
+        var pSQL =
+          "SELECT IFNULL(A.DISCOUNT,0) AS DISCOUNT_HEADER, A.*, B.* FROM INVOICE_HEADER A, INVOICE_DETAIL B WHERE A.INVOICE_NUM = " +
+          invoiceId;
+        pSQL += " AND B.INVOICE_NUM = A.INVOICE_NUM AND A.IS_CREDIT_NOTE = 0";
+
+        SONDA_DB_Session.transaction(function(tx) {
+          tx.executeSql(
+            pSQL,
+            [],
+            function(tx, results) {
+              resultados = results;
+              var expiresAuth = localStorage.getItem("SAT_RES_EXPIRE");
+              var resolution = localStorage.getItem("POS_SAT_RESOLUTION");
+              var discount = results.rows.item(0).DISCOUNT_HEADER;
+              var discountAmount =
+                discount > 0
+                  ? (discount / 100) * results.rows.item(0).TOTAL_AMOUNT
+                  : 0;
+              var creditAmount = results.rows.item(0).CREDIT_AMOUNT;
+              facturaManejaImpuesto =
+                results.rows.item(0).HANDLE_TAX === 1 ||
+                results.rows.item(0).HANDLE_TAX === "1";
+
+              headerFormat = "! 0 50 50 _DOC_LEN_ 1\r\n";
+              headerFormat +=
+                "! U1 LMARGIN 10\r\n! U\r\n! U1 PAGE-WIDTH 1400\r\nON-FEED IGNORE\r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 10 " + CenterText(gCompanyName) + "\r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 60 " + CenterText(gBranchName) + "\r\n";
+              var pos = 0;
+              if (gBranchAddress.length > 30) {
+                headerFormat +=
+                  "CENTER 550 T 0 2 0 130 " +
+                  gBranchAddress.substring(0, 30) +
+                  "\r\n";
+                headerFormat +=
+                  "CENTER 550 T 0 2 0 160 " +
+                  gBranchAddress.substring(31, gBranchAddress.length - 1) +
+                  "\r\n";
+              } else {
+                headerFormat +=
+                  "CENTER 550 T 0 2 0 130 " +
+                  localStorage.getItem("direccionFacturacion01") +
+                  "\r\n";
+
+                headerFormat +=
+                  "CENTER 550 T 0 2 0 160 " +
+                  localStorage.getItem("direccionFacturacion02") +
+                  "\r\n";
+                if (localStorage.getItem("direccionFacturacion03").length > 0) {
+                  headerFormat +=
+                    "CENTER 550 T 0 2 0 190 " +
+                    localStorage.getItem("direccionFacturacion03") +
+                    "\r\n";
+                  pos += 30;
+                }
+                if (localStorage.getItem("direccionFacturacion04").length > 0) {
+                  pos += 30;
+                  headerFormat +=
+                    "CENTER 550 T 0 2 0 220 " +
+                    localStorage.getItem("direccionFacturacion04") +
+                    "\r\n";
+                }
+              }
+
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (190 + pos) +
+                " SUJETO A PAGOS TRIMESTRALES\r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (215 + pos) +
+                " " +
+                etiquetaDeImpuesto +
+                ":  " +
+                localStorage.getItem("NitEnterprise") +
+                " \r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (235 + pos) +
+                " " +
+                etiquetaDeResolucion +
+                ": " +
+                resolution +
+                " \r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (265 + pos) +
+                " Autorización: " +
+                pCurrentSAT_Res_Date +
+                " \r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (295 + pos) +
+                " Vencimiento: " +
+                expiresAuth +
+                " \r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (335 + pos) +
+                " Del: " +
+                pCurrentSAT_Res_DocStart +
+                " Al: " +
+                pCurrentSAT_Res_DocFinish +
+                "\r\n";
+              headerFormat +=
+                "CENTER 550 T 0 3 0 " +
+                (385 + pos) +
+                " Factura Serie " +
+                results.rows.item(0).SAT_SERIE +
+                " # " +
+                invoiceId +
+                "\r\n";
+              headerFormat +=
+                "L 5 " + (375 + pos) + " 570 " + (375 + pos) + " 1\r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (415 + pos) +
+                " NOMBRE: " +
+                results.rows.item(0).CLIENT_NAME +
+                "\r\n";
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (450 + pos) +
+                " " +
+                etiquetaDeImpuesto +
+                ": " +
+                results.rows.item(0).ERP_INVOICE_ID +
+                "\r\n";
+              headerFormat +=
+                "L 5 " + (495 + pos) + " 570 " + (495 + pos) + " 1\r\n";
+              if (escopia === 1) {
+                headerFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  (525 + pos) +
+                  " *** COPIA CONTABILIDAD ***\r\n";
+              } else {
+                headerFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  (525 + pos) +
+                  " *** ORIGINAL CLIENTE ***\r\n";
+              }
+
+              headerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                (545 + pos) +
+                "  " +
+                pIsRePrinted +
+                " \r\n";
+
+              var rowPosition = 570 + pos;
+
+              detailFormat = "";
+              var pImei = 0;
+              var pImeiPrint = 0;
+
+              for (var i = 0; i <= results.rows.length - 1; i++) {
+                if (results.rows.item(i).SKU_NAME.length > 35) {
+                  detailFormat =
+                    detailFormat +
+                    "LEFT 5 T 0 2 0 " +
+                    rowPosition +
+                    " " +
+                    results.rows.item(i).SKU +
+                    " - " +
+                    results.rows.item(i).SKU_NAME.substring(0, 35) +
+                    "..." +
+                    "\r\n";
+                } else {
+                  detailFormat =
+                    detailFormat +
+                    "LEFT 5 T 0 2 0 " +
+                    rowPosition +
+                    " " +
+                    results.rows.item(i).SKU +
+                    " - " +
+                    results.rows.item(i).SKU_NAME +
+                    "\r\n";
+                }
+
+                rowPosition += parseInt(30);
+
+                detailFormat =
+                  detailFormat +
+                  "LEFT 5 T 0 2 0 " +
+                  rowPosition +
+                  " CANTIDAD: " +
+                  format_number(
+                    results.rows.item(i).QTY,
+                    configuracionDecimales.defaultDisplayDecimalsForSkuQty
+                  ) +
+                  " / PREC.UNIT. : " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    results.rows.item(i).PRICE,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+                rowPosition += parseInt(30);
+
+                if (
+                  Object.keys(muestraPorcentaje).length !== 0 &&
+                  muestraPorcentaje.Value == 1
+                ) {
+                  detailFormat =
+                    detailFormat +
+                    "LEFT 5 T 0 2 0 " +
+                    rowPosition +
+                    " DESC: " +
+                    format_number(
+                      results.rows.item(i).DISCOUNT,
+                      configuracionDecimales.defaultDisplayDecimalsForSkuQty
+                    ) +
+                    "% --- " +
+                    currencySymbol +
+                    ". " +
+                    format_number(
+                      results.rows.item(i).PRICE *
+                        results.rows.item(i).QTY *
+                        (results.rows.item(i).DISCOUNT / 100),
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                  rowPosition += parseInt(30);
+                }
+
+                pImei = results.rows.item(i).SERIE_2;
+                if (isNaN(pImei)) {
+                  pImeiPrint = 0;
+                } else {
+                  pImeiPrint = pImei;
+                }
+
+                var phone =
+                  results.rows.item(i).PHONE === null ||
+                  results.rows.item(i).PHONE === "null"
+                    ? "..."
+                    : results.rows.item(i).PHONE;
+
+                detailFormat =
+                  detailFormat +
+                  "LEFT 5 T 0 2 0 " +
+                  rowPosition +
+                  " SERIE: " +
+                  results.rows.item(i).SERIE +
+                  "/ IMEI: " +
+                  pImeiPrint +
+                  "/ " +
+                  phone +
+                  "\r\n";
+                rowPosition += parseInt(30);
+
+                detailFormat =
+                  detailFormat +
+                  "RIGHT 550 T 0 2 0 " +
+                  (rowPosition - 90) +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    trunc_number(
+                      results.rows.item(i).PRICE *
+                        results.rows.item(i).QTY *
+                        (1 - results.rows.item(i).DISCOUNT / 100),
+                      configuracionDecimales.defaultCalculationsDecimals
+                    ),
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+
+                detailFormat =
+                  detailFormat +
+                  "L 5 " +
+                  rowPosition +
+                  " 570 " +
+                  rowPosition +
+                  " 1\r\n";
+                rowPosition += parseInt(10);
+              }
+
+              if (facturaManejaImpuesto) {
+                if (impuestoDeFactura > 0) {
+                  rowPosition += parseInt(30);
+                  footerFormat =
+                    "LEFT 5 T 0 2 0 " + rowPosition + "SUB TOTAL: \r\n";
+                  footerFormat =
+                    footerFormat +
+                    "RIGHT 550 T 0 2 0 " +
+                    rowPosition +
+                    " " +
+                    currencySymbol +
+                    ". " +
+                    format_number(
+                      results.rows.item(0).TOTAL_AMOUNT - impuestoDeFactura,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                } else {
+                  rowPosition += parseInt(30);
+                  footerFormat =
+                    "LEFT 5 T 0 2 0 " + rowPosition + "SUB TOTAL: \r\n";
+                  footerFormat =
+                    footerFormat +
+                    "RIGHT 550 T 0 2 0 " +
+                    rowPosition +
+                    " " +
+                    currencySymbol +
+                    ". " +
+                    format_number(
+                      results.rows.item(0).TOTAL_AMOUNT,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                }
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " +
+                  rowPosition +
+                  " IMPUESTO " +
+                  etiquetaPorcentajeDeImpuesto +
+                  "%: \r\n";
+                footerFormat +=
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    impuestoDeFactura,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " + rowPosition + " TOTAL: \r\n";
+                footerFormat +=
+                  footerFormat +
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    results.rows.item(0).TOTAL_AMOUNT,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+
+                if (creditAmount && creditAmount > 0) {
+                  rowPosition += parseInt(30);
+                  footerFormat +=
+                    "LEFT 5 T 0 2 0 " + rowPosition + " CREDITO: \r\n";
+                  footerFormat +=
+                    "RIGHT 550 T 0 2 0 " +
+                    rowPosition +
+                    " " +
+                    currencySymbol +
+                    ". " +
+                    format_number(
+                      creditAmount,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                }
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " + rowPosition + " EFECTIVO:\r\n";
+                footerFormat +=
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  (creditAmount && creditAmount > 0
+                    ? format_number(
+                        Number(results.rows.item(0).CASH_AMOUNT),
+                        configuracionDecimales.defaultDisplayDecimals
+                      )
+                    : format_number(
+                        Number(results.rows.item(0).TOTAL_AMOUNT) +
+                          Number(results.rows.item(0).CHANGE),
+                        configuracionDecimales.defaultDisplayDecimals
+                      )) +
+                  "\r\n";
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " + rowPosition + " CAMBIO: \r\n";
+                footerFormat +=
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    results.rows.item(0).CHANGE,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+              } else {
+                if (
+                  Object.keys(muestraPorcentaje).length !== 0 &&
+                  muestraPorcentaje.Value == 1
+                ) {
+                  rowPosition += parseInt(30);
+                  footerFormat =
+                    "LEFT 5 T 0 2 0 " + rowPosition + " DESCUENTO: \r\n";
+                  footerFormat =
+                    footerFormat +
+                    "RIGHT 550 T 0 2 0 " +
+                    rowPosition +
+                    " %. " +
+                    format_number(
+                      discount,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    " --- " +
+                    currencySymbol +
+                    ". " +
+                    format_number(
+                      discountAmount,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                }
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " + rowPosition + " TOTAL: \r\n";
+                footerFormat +=
+                  footerFormat +
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    results.rows.item(0).TOTAL_AMOUNT - discountAmount,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+
+                if (creditAmount && creditAmount > 0) {
+                  rowPosition += parseInt(30);
+                  footerFormat +=
+                    "LEFT 5 T 0 2 0 " + rowPosition + " CREDITO: \r\n";
+                  footerFormat +=
+                    "RIGHT 550 T 0 2 0 " +
+                    rowPosition +
+                    " " +
+                    currencySymbol +
+                    ". " +
+                    format_number(
+                      creditAmount,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                }
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " + rowPosition + " EFECTIVO: \r\n";
+                footerFormat +=
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  (creditAmount && creditAmount > 0
+                    ? format_number(
+                        results.rows.item(0).CASH_AMOUNT,
+                        configuracionDecimales.defaultDisplayDecimals
+                      )
+                    : format_number(
+                        Number(
+                          results.rows.item(0).TOTAL_AMOUNT - discountAmount
+                        ) + Number(results.rows.item(0).CHANGE),
+                        configuracionDecimales.defaultDisplayDecimals
+                      )) +
+                  "\r\n";
+
+                rowPosition += parseInt(30);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " + rowPosition + " CAMBIO: \r\n";
+                footerFormat +=
+                  "RIGHT 550 T 0 2 0 " +
+                  rowPosition +
+                  " " +
+                  currencySymbol +
+                  ". " +
+                  format_number(
+                    results.rows.item(0).CHANGE,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) +
+                  "\r\n";
+              }
+
+              if (creditAmount && creditAmount > 0) {
+                rowPosition += parseInt(50);
+                footerFormat +=
+                  "LEFT 5 T 0 2 0 " +
+                  rowPosition +
+                  " Fecha de Vencimiento: " +
+                  (results.rows.item(0).DUE_DATE
+                    ? results.rows.item(0).DUE_DATE.split(" ")[0]
+                    : getDateTime()) +
+                  "\r\n";
+              }
+
+              rowPosition += parseInt(30);
+              footerFormat +=
+                "CENTER 550 T 0 2 0 " +
+                rowPosition +
+                " [" +
+                gIsOnline +
+                "] " +
+                getDateTime() +
+                " / RUTA " +
+                gCurrentRoute +
+                " \r\n";
+
+              rowPosition += parseInt(30);
+
+              footerFormat = footerFormat + "L 5  110 570 110 1\r\nPRINT\r\n";
+
+              var invoiceFormat = headerFormat + detailFormat + footerFormat;
+
+              invoiceFormat = invoiceFormat.replace(
+                "_DOC_LEN_",
+                rowPosition + 200
+              );
+
+              bluetoothSerial.write(
+                invoiceFormat,
+                function() {
+                  callBack();
+                },
+                function() {
+                  my_dialog("", "", "close");
+                  notify("Lo sentimos no se pudo imprimir el documento...");
+                  callBack();
+                }
+              );
+
+              my_dialog("", "", "close");
+            },
+            function(err) {
+              my_dialog("", "", "close");
+              notify("ERROR, 8.1.17: " + err.code);
+              return err.code;
+            }
+          );
+        });
+        my_dialog("", "", "close");
+      }
+    );
   } catch (e) {
-    notify("Error al intentar imprimir la factura debido a: " + e.message);
+    notify("printinvoice_joininfo: " + e.message);
     my_dialog("", "", "close");
+    return e.message;
   }
 }
 
@@ -3635,1151 +3281,778 @@ function formatoDeImpresionDiprocom(invoiceId, isReprint, callback, esCopia) {
     calcularImpuestoPorLineaDeFactura(function(resumenDefactura) {
       resumeInvoiceObject = resumenDefactura;
 
-      ParametroServicio.ObtenerParametro(
-        "INVOICE",
-        "LENGHT_TO_FILL_NUMBER",
-        resultado => {
-          var longitudDelNumero = resultado;
-          ParametroServicio.ObtenerParametro(
-            "INVOICE",
-            "CHARACTER_TO_FILL_NUMER",
-            resultado => {
-              var caracterDeRelleno = resultado;
+      configuracionDeDecimalesServicio.obtenerInformacionDeManejoDeDecimales(
+        function(configuracionDecimales) {
+          var pSql =
+            "SELECT IFNULL(IH.DISCOUNT,0) AS DISCOUNT_HEADER, IH.*, ID.*, IFNULL(T.TASK_ADDRESS, '') TASK_ADDRESS ";
+          pSql +=
+            " FROM INVOICE_HEADER IH INNER JOIN INVOICE_DETAIL ID ON IH.INVOICE_NUM = ID.INVOICE_NUM ";
+          pSql +=
+            " LEFT JOIN TASK T ON T.RELATED_CLIENT_CODE = IH.CLIENT_ID AND T.TASK_TYPE = 'SALE'  ";
+          pSql +=
+            " WHERE IH.IS_CREDIT_NOTE = 0 AND IH.INVOICE_NUM = " + invoiceId;
 
-              configuracionDeDecimalesServicio.obtenerInformacionDeManejoDeDecimales(
-                function(configuracionDecimales) {
-                  var pSql =
-                    "SELECT IFNULL(IH.DISCOUNT,0) AS DISCOUNT_HEADER, IH.*, ID.*, IFNULL(T.TASK_ADDRESS, '') TASK_ADDRESS ";
-                  pSql +=
-                    " FROM INVOICE_HEADER IH INNER JOIN INVOICE_DETAIL ID ON IH.INVOICE_NUM = ID.INVOICE_NUM ";
-                  pSql +=
-                    " LEFT JOIN TASK T ON T.RELATED_CLIENT_CODE = IH.CLIENT_ID AND T.TASK_TYPE = 'SALE'  ";
-                  pSql +=
-                    " WHERE IH.IS_CREDIT_NOTE = 0 AND IH.INVOICE_NUM = " +
-                    invoiceId;
+          SONDA_DB_Session.transaction(function(tx) {
+            tx.executeSql(
+              pSql,
+              [],
+              function(tx, results) {
+                resultados = results;
+                var discount = results.rows.item(0).DISCOUNT_HEADER;
+                var discountAmount =
+                  discount > 0
+                    ? (discount / 100) * results.rows.item(0).TOTAL_AMOUNT
+                    : 0;
+                var creditAmount = results.rows.item(0).CREDIT_AMOUNT;
 
-                  SONDA_DB_Session.transaction(function(tx) {
-                    tx.executeSql(
-                      pSql,
-                      [],
-                      function(tx, results) {
-                        resultados = results;
-                        var discount = results.rows.item(0).DISCOUNT_HEADER;
-                        var discountAmount =
-                          discount > 0
-                            ? (discount / 100) *
-                              results.rows.item(0).TOTAL_AMOUNT
-                            : 0;
-                        var creditAmount = results.rows.item(0).CREDIT_AMOUNT;
+                if (
+                  results.rows.item(0).HANDLE_TAX === 1 ||
+                  results.rows.item(0).HANDLE_TAX === "1"
+                ) {
+                  facturaManejaImpuesto = true;
+                  methodCalculationType = localStorage.getItem(
+                    "METHOD_CALCULATION_TAX"
+                  );
+                  impuestoDeFactura = results.rows.item(0).TAX_PERCENT;
+                }
 
-                        if (
-                          results.rows.item(0).HANDLE_TAX === 1 ||
-                          results.rows.item(0).HANDLE_TAX === "1"
-                        ) {
-                          facturaManejaImpuesto = true;
-                          methodCalculationType = localStorage.getItem(
-                            "METHOD_CALCULATION_TAX"
-                          );
-                          impuestoDeFactura = results.rows.item(0).TAX_PERCENT;
-                        }
+                var pRes = localStorage.getItem("POS_SAT_RESOLUTION");
 
-                        var pRes = localStorage.getItem("POS_SAT_RESOLUTION");
+                invoicePrintFormat = "! 0 50 50 _DocLength_ 1\r\n";
+                invoicePrintFormat += "! U1 LMARGIN 10\r\n";
+                invoicePrintFormat += "! U\r\n";
+                invoicePrintFormat += "! U1 PAGE-WIDTH 1400\r\n";
+                invoicePrintFormat += "ON-FEED IGNORE\r\n";
 
-                        invoicePrintFormat = "! 0 50 50 _DocLength_ 1\r\n";
-                        invoicePrintFormat += "! U1 LMARGIN 10\r\n";
-                        invoicePrintFormat += "! U\r\n";
-                        invoicePrintFormat += "! U1 PAGE-WIDTH 1400\r\n";
-                        invoicePrintFormat += "ON-FEED IGNORE\r\n";
+                //Informacion de la empresa-----------------------------------------------------------------------------------------------
 
-                        //Informacion de la empresa-----------------------------------------------------------------------------------------------
+                posY += 40;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " + posY + " " + gCompanyName + "\r\n";
 
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          posY +
-                          " " +
-                          gCompanyName +
-                          "\r\n";
+                posY += 40;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " + posY + " " + gBranchName + "\r\n";
 
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          posY +
-                          " " +
-                          gBranchName +
-                          "\r\n";
+                posY += 30;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  posY +
+                  " " +
+                  localStorage.getItem("direccionFacturacion01") +
+                  "\r\n";
 
+                posY += 30;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  posY +
+                  " " +
+                  localStorage.getItem("direccionFacturacion02") +
+                  "\r\n";
+
+                if (localStorage.getItem("direccionFacturacion03").length > 0) {
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "CENTER 550 T 0 2 0 " +
+                    posY +
+                    " " +
+                    localStorage.getItem("direccionFacturacion03") +
+                    "\r\n";
+                }
+
+                if (localStorage.getItem("direccionFacturacion04").length > 0) {
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "CENTER 550 T 0 2 0 " +
+                    posY +
+                    " " +
+                    localStorage.getItem("direccionFacturacion04") +
+                    "\r\n";
+                }
+
+                posY += 50;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  posY +
+                  " " +
+                  localStorage.getItem("correoElectronicoEmpresa") +
+                  "\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  posY +
+                  "  " +
+                  localStorage.getItem("telefonoEmpresa") +
+                  "\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "CENTER 550 T 0 2 0 " +
+                  posY +
+                  " " +
+                  etiquetaDeImpuesto +
+                  ": " +
+                  localStorage.getItem("NitEnterprise") +
+                  " \r\n";
+
+                posY += 40;
+                invoicePrintFormat += "L 5 " + posY + " 570 " + posY + " 1\r\n";
+
+                //Informacion de resolucion de facturacion (CAI) -------------------------------------------------------------------------------------------
+
+                posY += 30;
+                var fechaCreacion = new Date(
+                  results.rows.item(0).POSTED_DATETIME
+                );
+                invoicePrintFormat +=
+                  "CENTER 550 T 7 0 0 " +
+                  posY +
+                  " " +
+                  ((fechaCreacion.getDate() < 10
+                    ? "0" + fechaCreacion.getDate()
+                    : fechaCreacion.getDate()) +
+                    " de " +
+                    obtenerNombreDelMes(fechaCreacion.getMonth() + 1) +
+                    " de " +
+                    fechaCreacion.getFullYear()) +
+                  " \r\n";
+
+                posY += 30;
+                invoicePrintFormat += "SETBOLD 1\r\n";
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " FACTURA No.: " +
+                  results.rows.item(0).SAT_SERIE +
+                  invoiceId +
+                  "\r\n";
+                invoicePrintFormat += "SETBOLD 0\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " " +
+                  etiquetaDeResolucion +
+                  ": " +
+                  pRes +
+                  " \r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " RANGO AUTORIZADO DE FACTURAS \r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " INICIAL: " +
+                  (results.rows.item(0).SAT_SERIE + pCurrentSAT_Res_DocStart) +
+                  " \r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " FINAL: " +
+                  (results.rows.item(0).SAT_SERIE + pCurrentSAT_Res_DocFinish) +
+                  " \r\n";
+
+                var fechaLimite = new Date(
+                  localStorage.getItem("SAT_RES_EXPIRE")
+                );
+
+                var diaL = fechaLimite.getDate();
+                var mesL = fechaLimite.getMonth() + 1;
+                var añoL = fechaLimite.getFullYear();
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " FECHA LIMITE DE EMISION: " +
+                  (diaL < 10 ? "0" + diaL : diaL) +
+                  "/" +
+                  (mesL < 10 ? "0" + mesL : mesL) +
+                  "/" +
+                  añoL +
+                  " \r\n";
+
+                posY += 40;
+                invoicePrintFormat += "L 5 " + posY + " 570 " + posY + " 1\r\n";
+
+                //Informacion del comprador -----------------------------------------------------------------------------------
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " CLIENTE: " +
+                  results.rows.item(0).CLIENT_ID +
+                  "/" +
+                  results.rows.item(0).CLIENT_NAME +
+                  "\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " DIRECCION: " +
+                  (results.rows.item(0).TASK_ADDRESS.length > 30
+                    ? results.rows.item(0).TASK_ADDRESS.substring(0, 25) + "..."
+                    : results.rows.item(0).TASK_ADDRESS) +
+                  "\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " TELEFONO: " +
+                  (results.rows.item(0).TELEPHONE_NUMBER
+                    ? results.rows.item(0).TELEPHONE_NUMBER
+                    : "N/A") +
+                  "\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " " +
+                  etiquetaDeImpuesto +
+                  ": " +
+                  results.rows.item(0).ERP_INVOICE_ID +
+                  "\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " VENDEDOR: " +
+                  (gCurrentRoute + "/" + localStorage.getItem("NAME_USER")) +
+                  "\r\n";
+
+                posY += 40;
+                if (esCopia === 1) {
+                  invoicePrintFormat +=
+                    "CENTER 550 T 7 0 0 " + posY + " *Copia (Contabilidad)\r\n";
+                } else {
+                  invoicePrintFormat +=
+                    "CENTER 550 T 7 0 0 " + posY + " *Original (Cliente)\r\n";
+                }
+
+                posY += 40;
+                invoicePrintFormat += "L 5 " + posY + " 570 " + posY + " 1\r\n";
+
+                //Informacion de Productos comprados ---------------------------------------------------------------------------------------------------------
+                posY += 30;
+                invoicePrintFormat += "LEFT 5 T 7 0 5 " + posY + " CODIGO\r\n";
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 150 " + posY + " DESCRIPCION\r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 15 " + posY + " CANTIDAD\r\n";
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 165 " + posY + " PRECIO UNIT.\r\n";
+                invoicePrintFormat +=
+                  "RIGHT 550 T 7 0 0 " + posY + " TOTAL\r\n";
+
+                posY += 40;
+                invoicePrintFormat += "L 5 " + posY + " 570 " + posY + " 1\r\n";
+
+                var i;
+                for (i = 0; i <= results.rows.length - 1; i++) {
+                  var product = results.rows.item(i);
+
+                  var skuPrice =
+                    facturaManejaImpuesto && methodCalculationType == "BY_ROW"
+                      ? product.PRICE -
+                        obtenerValorADescontarEnBaseaImpuesto(
+                          product,
+                          resumeInvoiceObject
+                        ) /
+                          product.QTY
+                      : product.PRICE;
+
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 5 " + posY + " " + product.SKU + "\r\n";
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 150 " +
+                    posY +
+                    " " +
+                    (product.SKU_NAME.length > 30
+                      ? product.SKU_NAME.substring(0, 25) + "..."
+                      : product.SKU_NAME) +
+                    "\r\n";
+
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 0 2 15 " +
+                    posY +
+                    " " +
+                    (format_number(
+                      product.QTY,
+                      configuracionDecimales.defaultDisplayDecimalsForSkuQty
+                    ) +
+                      " " +
+                      product.PACK_UNIT) +
+                    "\r\n";
+                  invoicePrintFormat +=
+                    "LEFT 5 T 0 2 165 " +
+                    posY +
+                    " " +
+                    format_number(
+                      trunc_number(
+                        skuPrice,
+                        configuracionDecimales.defaultCalculationsDecimals
+                      ),
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                  invoicePrintFormat +=
+                    "RIGHT 550 T 0 2 0 " +
+                    posY +
+                    " " +
+                    format_number(
+                      skuPrice * product.QTY,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+                }
+
+                posY += 30;
+                invoicePrintFormat += "L 5 " + posY + " 570 " + posY + " 1\r\n";
+
+                if (facturaManejaImpuesto) {
+                  switch (methodCalculationType) {
+                    case "BY_ROW":
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " + posY + " EXENTO \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          resumeInvoiceObject.exento,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          trunc_number(
+                            resumeInvoiceObject.subTotal,
+                            configuracionDecimales.defaultCalculationsDecimals
+                          ),
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      if (
+                        Object.keys(muestraPorcentaje).length !== 0 &&
+                        muestraPorcentaje.Value == 1
+                      ) {
                         posY += 30;
                         invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
+                          "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
+                        invoicePrintFormat +=
+                          "LEFT 5 T 7 0 350 " +
                           posY +
                           " " +
-                          localStorage.getItem("direccionFacturacion01") +
-                          "\r\n";
-
-                        posY += 30;
+                          currencySymbol +
+                          ".\r\n";
                         invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
+                          "RIGHT 550 T 7 0 0 " +
                           posY +
                           " " +
-                          localStorage.getItem("direccionFacturacion02") +
-                          "\r\n";
-
-                        if (
-                          localStorage.getItem("direccionFacturacion03")
-                            .length > 0
-                        ) {
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "CENTER 550 T 0 2 0 " +
-                            posY +
-                            " " +
-                            localStorage.getItem("direccionFacturacion03") +
-                            "\r\n";
-                        }
-
-                        if (
-                          localStorage.getItem("direccionFacturacion04")
-                            .length > 0
-                        ) {
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "CENTER 550 T 0 2 0 " +
-                            posY +
-                            " " +
-                            localStorage.getItem("direccionFacturacion04") +
-                            "\r\n";
-                        }
-
-                        posY += 50;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          posY +
-                          " " +
-                          localStorage.getItem("correoElectronicoEmpresa") +
-                          "\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          posY +
-                          "  " +
-                          localStorage.getItem("telefonoEmpresa") +
-                          "\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 0 2 0 " +
-                          posY +
-                          " " +
-                          etiquetaDeImpuesto +
-                          ": " +
-                          localStorage.getItem("NitEnterprise") +
-                          " \r\n";
-
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "L 5 " + posY + " 570 " + posY + " 1\r\n";
-
-                        //Informacion de resolucion de facturacion (CAI) -------------------------------------------------------------------------------------------
-
-                        posY += 30;
-                        var fechaCreacion = new Date(
-                          results.rows.item(0).POSTED_DATETIME
-                        );
-                        invoicePrintFormat +=
-                          "CENTER 550 T 7 0 0 " +
-                          posY +
-                          " " +
-                          ((fechaCreacion.getDate() < 10
-                            ? "0" + fechaCreacion.getDate()
-                            : fechaCreacion.getDate()) +
-                            " de " +
-                            obtenerNombreDelMes(fechaCreacion.getMonth() + 1) +
-                            " de " +
-                            fechaCreacion.getFullYear()) +
-                          " \r\n";
-
-                        posY += 30;
-                        invoicePrintFormat += "SETBOLD 1\r\n";
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " FACTURA No.: " +
-                          results.rows.item(0).SAT_SERIE +
-                          rellenarPalabra(
-                            longitudDelNumero.Value,
-                            caracterDeRelleno.Value,
-                            invoiceId.toString()
+                          format_number(
+                            0,
+                            configuracionDecimales.defaultDisplayDecimals
                           ) +
                           "\r\n";
-                        invoicePrintFormat += "SETBOLD 0\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " " +
-                          etiquetaDeResolucion +
-                          ": " +
-                          pRes +
-                          " \r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " RANGO AUTORIZADO DE FACTURAS \r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " INICIAL: " +
-                          (results.rows.item(0).SAT_SERIE +
-                            rellenarPalabra(
-                              longitudDelNumero.Value,
-                              caracterDeRelleno.Value,
-                              pCurrentSAT_Res_DocStart.toString()
-                            )) +
-                          " \r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " FINAL: " +
-                          (results.rows.item(0).SAT_SERIE +
-                            rellenarPalabra(
-                              longitudDelNumero.Value,
-                              caracterDeRelleno.Value,
-                              pCurrentSAT_Res_DocFinish.toString()
-                            )) +
-                          " \r\n";
-
-                        var fechaLimite = new Date(
-                          localStorage.getItem("SAT_RES_EXPIRE")
-                        );
-
-                        var diaL = fechaLimite.getDate();
-                        var mesL = fechaLimite.getMonth() + 1;
-                        var añoL = fechaLimite.getFullYear();
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " FECHA LIMITE DE EMISION: " +
-                          (diaL < 10 ? "0" + diaL : diaL) +
-                          "/" +
-                          (mesL < 10 ? "0" + mesL : mesL) +
-                          "/" +
-                          añoL +
-                          " \r\n";
-
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "L 5 " + posY + " 570 " + posY + " 1\r\n";
-
-                        //Informacion del comprador -----------------------------------------------------------------------------------
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " CLIENTE: " +
-                          results.rows.item(0).CLIENT_ID +
-                          "/" +
-                          results.rows.item(0).CLIENT_NAME +
-                          "\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " DIRECCION: " +
-                          (results.rows.item(0).TASK_ADDRESS.length > 30
-                            ? results.rows
-                                .item(0)
-                                .TASK_ADDRESS.substring(0, 25) + "..."
-                            : results.rows.item(0).TASK_ADDRESS) +
-                          "\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " TELEFONO: " +
-                          (results.rows.item(0).TELEPHONE_NUMBER
-                            ? results.rows.item(0).TELEPHONE_NUMBER
-                            : "N/A") +
-                          "\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " " +
-                          etiquetaDeImpuesto +
-                          ": " +
-                          results.rows.item(0).ERP_INVOICE_ID +
-                          "\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " VENDEDOR: " +
-                          (gCurrentRoute +
-                            "/" +
-                            localStorage.getItem("NAME_USER")) +
-                          "\r\n";
-
-                        posY += 40;
-                        if (esCopia === 1) {
-                          invoicePrintFormat +=
-                            "CENTER 550 T 7 0 0 " +
-                            posY +
-                            " *Copia (Contabilidad)\r\n";
-                        } else {
-                          invoicePrintFormat +=
-                            "CENTER 550 T 7 0 0 " +
-                            posY +
-                            " *Original (Cliente)\r\n";
-                        }
-
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "L 5 " + posY + " 570 " + posY + " 1\r\n";
-
-                        //Informacion de Productos comprados ---------------------------------------------------------------------------------------------------------
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 5 " + posY + " CODIGO\r\n";
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 150 " + posY + " DESCRIPCION\r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 15 " + posY + " CANTIDAD\r\n";
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 165 " + posY + " PRECIO UNIT.\r\n";
-                        invoicePrintFormat +=
-                          "RIGHT 550 T 7 0 0 " + posY + " TOTAL\r\n";
-
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "L 5 " + posY + " 570 " + posY + " 1\r\n";
-
-                        var i;
-                        for (i = 0; i <= results.rows.length - 1; i++) {
-                          var product = results.rows.item(i);
-
-                          var skuPrice =
-                            facturaManejaImpuesto &&
-                            methodCalculationType == "BY_ROW"
-                              ? product.PRICE -
-                                obtenerValorADescontarEnBaseaImpuesto(
-                                  product,
-                                  resumeInvoiceObject
-                                ) /
-                                  product.QTY
-                              : product.PRICE;
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 5 " +
-                            posY +
-                            " " +
-                            product.SKU +
-                            "\r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 150 " +
-                            posY +
-                            " " +
-                            (product.SKU_NAME.length > 30
-                              ? product.SKU_NAME.substring(0, 25) + "..."
-                              : product.SKU_NAME) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 0 2 15 " +
-                            posY +
-                            " " +
-                            (format_number(
-                              product.QTY,
-                              configuracionDecimales.defaultDisplayDecimalsForSkuQty
-                            ) +
-                              " " +
-                              product.PACK_UNIT) +
-                            "\r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 0 2 165 " +
-                            posY +
-                            " " +
-                            format_number(
-                              trunc_number(
-                                skuPrice,
-                                configuracionDecimales.defaultCalculationsDecimals
-                              ),
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 0 2 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              skuPrice * product.QTY,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-                        }
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "L 5 " + posY + " 570 " + posY + " 1\r\n";
-
-                        if (facturaManejaImpuesto) {
-                          switch (methodCalculationType) {
-                            case "BY_ROW":
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " BASE GRAVADA " +
-                                etiquetaPorcentajeDeImpuesto +
-                                "% \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  resumeInvoiceObject.baseGravada,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " BASE GRAVADA 18% \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  0,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " + posY + " BASE EXENTA \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  resumeInvoiceObject.exento,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " BASE EXONERADA \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  0,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  trunc_number(
-                                    resumeInvoiceObject.subTotal,
-                                    configuracionDecimales.defaultCalculationsDecimals
-                                  ),
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              if (
-                                Object.keys(muestraPorcentaje).length !== 0 &&
-                                muestraPorcentaje.Value == 1
-                              ) {
-                                posY += 30;
-                                invoicePrintFormat +=
-                                  "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
-                                invoicePrintFormat +=
-                                  "LEFT 5 T 7 0 350 " +
-                                  posY +
-                                  " " +
-                                  currencySymbol +
-                                  ".\r\n";
-                                invoicePrintFormat +=
-                                  "RIGHT 550 T 7 0 0 " +
-                                  posY +
-                                  " " +
-                                  format_number(
-                                    0,
-                                    configuracionDecimales.defaultDisplayDecimals
-                                  ) +
-                                  "\r\n";
-                              }
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " " +
-                                etiquetaTipoDeImpuesto +
-                                " -" +
-                                etiquetaPorcentajeDeImpuesto +
-                                "%- \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  resumeInvoiceObject.impuesto,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " + posY + " ISV -18%- \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  0,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " TOTAL A PAGAR \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  resumeInvoiceObject.total,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              break;
-
-                            case "BY_TOTAL_AMOUNT":
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " BASE GRAVADA " +
-                                etiquetaPorcentajeDeImpuesto +
-                                "%- \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  resumeInvoiceObject.baseGravada,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " BASE GRAVADA 18% \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  0,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " + posY + " BASE EXENTA \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  resumeInvoiceObject.exento,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " BASE EXONERADA \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  0,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  trunc_number(
-                                    results.rows.item(0).TOTAL_AMOUNT -
-                                      impuestoDeFactura,
-                                    configuracionDecimales.defaultCalculationsDecimals
-                                  ),
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              if (
-                                Object.keys(muestraPorcentaje).length !== 0 &&
-                                muestraPorcentaje.Value == 1
-                              ) {
-                                posY += 30;
-                                invoicePrintFormat +=
-                                  "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
-                                invoicePrintFormat +=
-                                  "LEFT 5 T 7 0 350 " +
-                                  posY +
-                                  " " +
-                                  currencySymbol +
-                                  ".\r\n";
-                                invoicePrintFormat +=
-                                  "RIGHT 550 T 7 0 0 " +
-                                  posY +
-                                  " " +
-                                  format_number(
-                                    0,
-                                    configuracionDecimales.defaultDisplayDecimals
-                                  ) +
-                                  "\r\n";
-                              }
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " +
-                                posY +
-                                " " +
-                                etiquetaTipoDeImpuesto +
-                                " -" +
-                                etiquetaPorcentajeDeImpuesto +
-                                "%- \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  impuestoDeFactura,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              posY += 30;
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
-                              invoicePrintFormat +=
-                                "LEFT 5 T 7 0 350 " +
-                                posY +
-                                " " +
-                                currencySymbol +
-                                ".\r\n";
-                              invoicePrintFormat +=
-                                "RIGHT 550 T 7 0 0 " +
-                                posY +
-                                " " +
-                                format_number(
-                                  results.rows.item(0).TOTAL_AMOUNT,
-                                  configuracionDecimales.defaultDisplayDecimals
-                                ) +
-                                "\r\n";
-
-                              break;
-                          }
-                        } else {
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " +
-                            posY +
-                            " BASE GRAVADA " +
-                            etiquetaPorcentajeDeImpuesto +
-                            "%- \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              resumeInvoiceObject.baseGravada,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " + posY + " BASE GRAVADA 18% \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              0,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " + posY + " BASE EXENTA \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              0,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " + posY + " BASE EXONERADA \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              0,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              results.rows.item(0).TOTAL_AMOUNT,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          if (
-                            Object.keys(muestraPorcentaje).length !== 0 &&
-                            muestraPorcentaje.Value == 1
-                          ) {
-                            posY += 30;
-                            invoicePrintFormat +=
-                              "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
-                            invoicePrintFormat +=
-                              "LEFT 5 T 7 0 350 " +
-                              posY +
-                              " " +
-                              currencySymbol +
-                              ".\r\n";
-                            invoicePrintFormat +=
-                              "RIGHT 550 T 7 0 0 " +
-                              posY +
-                              " " +
-                              format_number(
-                                discount,
-                                configuracionDecimales.defaultDisplayDecimals
-                              ) +
-                              "\r\n";
-                          }
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " +
-                            posY +
-                            " " +
-                            etiquetaTipoDeImpuesto +
-                            " -" +
-                            etiquetaPorcentajeDeImpuesto +
-                            "%- \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              0,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " + posY + " ISV -18%- \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              0,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " + posY + " TOTAL A PAGAR \r\n";
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 350 " +
-                            posY +
-                            " " +
-                            currencySymbol +
-                            ".\r\n";
-                          invoicePrintFormat +=
-                            "RIGHT 550 T 7 0 0 " +
-                            posY +
-                            " " +
-                            format_number(
-                              results.rows.item(0).TOTAL_AMOUNT,
-                              configuracionDecimales.defaultDisplayDecimals
-                            ) +
-                            "\r\n";
-                        }
-
-                        //Pie de factura --------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-                        var totalInvoicedInWords =
-                          numberToWord(
-                            results.rows.item(0).TOTAL_AMOUNT
-                          ).toUpperCase() +
-                          " " +
-                          localStorage.getItem("NAME_CURRENCY");
-
-                        if (totalInvoicedInWords.length > 45) {
-                          posY += 50;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " +
-                            posY +
-                            " " +
-                            totalInvoicedInWords.substring(0, 46) +
-                            " \r\n";
-
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " +
-                            posY +
-                            " " +
-                            totalInvoicedInWords.substring(
-                              46,
-                              totalInvoicedInWords.length
-                            ) +
-                            " \r\n";
-                        } else {
-                          posY += 50;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " +
-                            posY +
-                            " " +
-                            totalInvoicedInWords +
-                            " \r\n";
-                        }
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "L 5 " + posY + " 570 " + posY + " 1\r\n";
-
-                        posY += 25;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " No. ORDEN COMPRA EXENTA: \r\n";
-
-                        posY += 20;
-                        invoicePrintFormat +=
-                          "LEFT 35 L 285 " + posY + " 550 " + posY + " 1 \r\n";
-
-                        posY += 20;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " No. REGISTRO EXONERADOS: \r\n";
-
-                        posY += 20;
-                        invoicePrintFormat +=
-                          "LEFT 35 L 280 " + posY + " 550 " + posY + " 1 \r\n";
-
-                        posY += 20;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " No. REGISTRO S.A.G.: \r\n";
-
-                        posY += 20;
-                        invoicePrintFormat +=
-                          "LEFT 35 L 235 " + posY + " 550 " + posY + " 1 \r\n";
-
-                        posY += 50;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " +
-                          posY +
-                          " FORMA DE PAGO: " +
-                          (creditAmount && creditAmount > 0
-                            ? "Crédito"
-                            : "Contado") +
-                          " \r\n";
-                        if (creditAmount && creditAmount > 0) {
-                          posY += 30;
-                          invoicePrintFormat +=
-                            "LEFT 5 T 7 0 0 " +
-                            posY +
-                            " FECHA DE VENCIMIENTO: " +
-                            (results.rows.item(0).DUE_DATE
-                              ? results.rows.item(0).DUE_DATE.split(" ")[0]
-                              : getDateTime()) +
-                            " \r\n";
-                        }
-
-                        posY += 150;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " + posY + " FIRMA: \r\n";
-
-                        posY += 20;
-                        invoicePrintFormat +=
-                          "LEFT 35 L 70 " + posY + " 550 " + posY + " 1 \r\n";
-
-                        posY += 50;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 7 0 0 " +
-                          posY +
-                          " GRACIAS POR SU COMPRA \r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 7 0 0 " +
-                          posY +
-                          " LA FACTURA ES BENEFICIO DE TODOS, EXIJALA \r\n";
-
-                        posY += 30;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 7 0 0 " +
-                          posY +
-                          " ORIGINAL: Cliente - COPIA: Emisor \r\n";
-
-                        posY += 40;
-                        invoicePrintFormat +=
-                          "CENTER 550 T 7 0 0 " +
-                          posY +
-                          "  " +
-                          isReprint +
-                          " \r\n";
-
-                        invoicePrintFormat += "PRINT\r\n";
-
-                        invoicePrintFormat = invoicePrintFormat.replace(
-                          "_DocLength_",
-                          (posY + 200).toString()
-                        );
-
-                        bluetoothSerial.write(
-                          invoicePrintFormat,
-                          function() {
-                            callback();
-                          },
-                          function() {
-                            my_dialog("", "", "close");
-                            notify(
-                              "Lo sentimos no se pudo imprimir el documento..."
-                            );
-                            callback();
-                          }
-                        );
-
-                        my_dialog("", "", "close");
-                      },
-                      function(err) {
-                        my_dialog("", "", "close");
-                        notify("ERROR, 8.1.17: " + err.code);
-                        return err.code;
                       }
-                    );
-                  });
-                  my_dialog("", "", "close");
+
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " +
+                        posY +
+                        " " +
+                        etiquetaTipoDeImpuesto +
+                        " -" +
+                        etiquetaPorcentajeDeImpuesto +
+                        "%- \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          resumeInvoiceObject.impuesto,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          resumeInvoiceObject.total,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      break;
+
+                    case "BY_TOTAL_AMOUNT":
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " + posY + " EXENTO \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          resumeInvoiceObject.exento,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          trunc_number(
+                            results.rows.item(0).TOTAL_AMOUNT -
+                              impuestoDeFactura,
+                            configuracionDecimales.defaultCalculationsDecimals
+                          ),
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      if (
+                        Object.keys(muestraPorcentaje).length !== 0 &&
+                        muestraPorcentaje.Value == 1
+                      ) {
+                        posY += 30;
+                        invoicePrintFormat +=
+                          "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
+                        invoicePrintFormat +=
+                          "LEFT 5 T 7 0 350 " +
+                          posY +
+                          " " +
+                          currencySymbol +
+                          ".\r\n";
+                        invoicePrintFormat +=
+                          "RIGHT 550 T 7 0 0 " +
+                          posY +
+                          " " +
+                          format_number(
+                            0,
+                            configuracionDecimales.defaultDisplayDecimals
+                          ) +
+                          "\r\n";
+                      }
+
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " +
+                        posY +
+                        " " +
+                        etiquetaTipoDeImpuesto +
+                        " -" +
+                        etiquetaPorcentajeDeImpuesto +
+                        "%- \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          impuestoDeFactura,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
+                      invoicePrintFormat +=
+                        "LEFT 5 T 7 0 350 " +
+                        posY +
+                        " " +
+                        currencySymbol +
+                        ".\r\n";
+                      invoicePrintFormat +=
+                        "RIGHT 550 T 7 0 0 " +
+                        posY +
+                        " " +
+                        format_number(
+                          results.rows.item(0).TOTAL_AMOUNT,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) +
+                        "\r\n";
+
+                      break;
+                  }
+                } else {
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " + posY + " EXENTO \r\n";
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat +=
+                    "RIGHT 550 T 7 0 0 " +
+                    posY +
+                    " " +
+                    format_number(
+                      0,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat +=
+                    "RIGHT 550 T 7 0 0 " +
+                    posY +
+                    " " +
+                    format_number(
+                      results.rows.item(0).TOTAL_AMOUNT,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+
+                  if (
+                    Object.keys(muestraPorcentaje).length !== 0 &&
+                    muestraPorcentaje.Value == 1
+                  ) {
+                    posY += 30;
+                    invoicePrintFormat +=
+                      "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
+                    invoicePrintFormat +=
+                      "LEFT 5 T 7 0 350 " +
+                      posY +
+                      " " +
+                      currencySymbol +
+                      ".\r\n";
+                    invoicePrintFormat +=
+                      "RIGHT 550 T 7 0 0 " +
+                      posY +
+                      " " +
+                      format_number(
+                        discount,
+                        configuracionDecimales.defaultDisplayDecimals
+                      ) +
+                      "\r\n";
+                  }
+
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " +
+                    posY +
+                    " " +
+                    etiquetaTipoDeImpuesto +
+                    " -" +
+                    etiquetaPorcentajeDeImpuesto +
+                    "%- \r\n";
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat +=
+                    "RIGHT 550 T 7 0 0 " +
+                    posY +
+                    " " +
+                    format_number(
+                      0,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
+
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat +=
+                    "RIGHT 550 T 7 0 0 " +
+                    posY +
+                    " " +
+                    format_number(
+                      results.rows.item(0).TOTAL_AMOUNT,
+                      configuracionDecimales.defaultDisplayDecimals
+                    ) +
+                    "\r\n";
                 }
-              );
-            },
-            error => {
-              notify(
-                "Error al obtener parámetro para la longitud del numero: " +
-                  error
-              );
-            }
-          );
-        },
-        error => {
-          notify(
-            "Error al obtener parámetro para la longitud del numero: " + error
-          );
+
+                //Pie de factura --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                var totalInvoicedInWords =
+                  numberToWord(
+                    results.rows.item(0).TOTAL_AMOUNT
+                  ).toUpperCase() +
+                  " " +
+                  localStorage.getItem("NAME_CURRENCY");
+
+                if (totalInvoicedInWords.length > 45) {
+                  posY += 50;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " +
+                    posY +
+                    " " +
+                    totalInvoicedInWords.substring(0, 46) +
+                    " \r\n";
+
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " +
+                    posY +
+                    " " +
+                    totalInvoicedInWords.substring(
+                      46,
+                      totalInvoicedInWords.length
+                    ) +
+                    " \r\n";
+                } else {
+                  posY += 50;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " +
+                    posY +
+                    " " +
+                    totalInvoicedInWords +
+                    " \r\n";
+                }
+
+                posY += 50;
+                invoicePrintFormat +=
+                  "LEFT 5 T 7 0 0 " +
+                  posY +
+                  " FORMA DE PAGO: " +
+                  (creditAmount && creditAmount > 0 ? "Crédito" : "Contado") +
+                  " \r\n";
+                if (creditAmount && creditAmount > 0) {
+                  posY += 30;
+                  invoicePrintFormat +=
+                    "LEFT 5 T 7 0 0 " +
+                    posY +
+                    " FECHA DE VENCIMIENTO: " +
+                    (results.rows.item(0).DUE_DATE
+                      ? results.rows.item(0).DUE_DATE.split(" ")[0]
+                      : getDateTime()) +
+                    " \r\n";
+                }
+
+                posY += 150;
+                invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " FIRMA: \r\n";
+
+                posY += 20;
+                invoicePrintFormat +=
+                  "LEFT 35 L 70 " + posY + " 550 " + posY + " 1 \r\n";
+
+                posY += 50;
+                invoicePrintFormat +=
+                  "CENTER 550 T 7 0 0 " + posY + " GRACIAS POR SU COMPRA \r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "CENTER 550 T 7 0 0 " +
+                  posY +
+                  " LA FACTURA ES BENEFICIO DE TODOS, EXIJALA \r\n";
+
+                posY += 30;
+                invoicePrintFormat +=
+                  "CENTER 550 T 7 0 0 " + posY + "  " + isReprint + " \r\n";
+
+                invoicePrintFormat += "PRINT\r\n";
+
+                invoicePrintFormat = invoicePrintFormat.replace(
+                  "_DocLength_",
+                  (posY + 200).toString()
+                );
+
+                bluetoothSerial.write(
+                  invoicePrintFormat,
+                  function() {
+                    callback();
+                  },
+                  function() {
+                    my_dialog("", "", "close");
+                    notify("Lo sentimos no se pudo imprimir el documento...");
+                    callback();
+                  }
+                );
+
+                my_dialog("", "", "close");
+              },
+              function(err) {
+                my_dialog("", "", "close");
+                notify("ERROR, 8.1.17: " + err.code);
+                return err.code;
+              }
+            );
+          });
+          my_dialog("", "", "close");
         }
       );
     });
@@ -5173,315 +4446,172 @@ function formatoDeImpresionSaritaHonduras(
                   switch (methodCalculationType) {
                     case "BY_ROW":
                       posY += 10;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " EXENTO \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
-                          resumeInvoiceObject.exento,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Exonerado \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0,configuracionDecimales.defaultDisplayDecimals) + "\r\n";
 
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Exento \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(resumeInvoiceObject.exento, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Grabado " + etiquetaPorcentajeDeImpuesto + "% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
                           trunc_number(
                             resumeInvoiceObject.subTotal,
                             configuracionDecimales.defaultCalculationsDecimals
                           ),
                           configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                        ) + "\r\n";
 
-                      // if (
-                      //   Object.keys(muestraPorcentaje).length !== 0 &&
-                      //   muestraPorcentaje.Value == 1
-                      // ) {
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Grabado 18% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Descuento \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
                           discount,
                           configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-                      //}
+                        ) + "\r\n";
 
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " +
-                        posY +
-                        " " +
-                        etiquetaTipoDeImpuesto +
-                        " -" +
-                        etiquetaPorcentajeDeImpuesto +
-                        "%- \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " " + etiquetaTipoDeImpuesto + " " + etiquetaPorcentajeDeImpuesto + "% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
                           resumeInvoiceObject.impuesto,
                           configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                        ) + "\r\n";
 
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
-                          resumeInvoiceObject.total,
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " " + etiquetaTipoDeImpuesto + " 18% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " TOTAL A PAGAR \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(resumeInvoiceObject.total,
                           configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                        ) + "\r\n";
 
                       break;
 
                     case "BY_TOTAL_AMOUNT":
                       posY += 10;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " EXENTO \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
-                          resumeInvoiceObject.exento,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Exonerado \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0,configuracionDecimales.defaultDisplayDecimals) + "\r\n";
 
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Exento \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(resumeInvoiceObject.exento,
+                          configuracionDecimales.defaultDisplayDecimals
+                        ) + "\r\n";
+
+                        posY += 30;
+                        invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Grabado " + etiquetaPorcentajeDeImpuesto + "% \r\n";
+                        invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                        invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
                           trunc_number(
                             results.rows.item(0).TOTAL_AMOUNT -
                               impuestoDeFactura,
                             configuracionDecimales.defaultCalculationsDecimals
                           ),
                           configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
-
+                        ) + "\r\n";
+  
+                      posY += 30;
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Grabado 18% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+  
                       if (
                         Object.keys(muestraPorcentaje).length !== 0 &&
                         muestraPorcentaje.Value == 1
                       ) {
                         posY += 30;
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
-                        invoicePrintFormat +=
-                          "LEFT 5 T 7 0 350 " +
-                          posY +
-                          " " +
-                          currencySymbol +
-                          ".\r\n";
-                        invoicePrintFormat +=
-                          "RIGHT 550 T 7 0 0 " +
-                          posY +
-                          " " +
-                          format_number(
-                            0,
-                            configuracionDecimales.defaultDisplayDecimals
-                          ) +
-                          "\r\n";
+                        invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Descuento \r\n";
+                        invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                        invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
                       }
 
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " +
-                        posY +
-                        " " +
-                        etiquetaTipoDeImpuesto +
-                        " -" +
-                        etiquetaPorcentajeDeImpuesto +
-                        "%- \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
-                          impuestoDeFactura,
-                          configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " " + etiquetaTipoDeImpuesto + " " + etiquetaPorcentajeDeImpuesto + "% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
+                        impuestoDeFactura,
+                        configuracionDecimales.defaultDisplayDecimals
+                      ) + "\r\n";
 
                       posY += 30;
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
-                      invoicePrintFormat +=
-                        "LEFT 5 T 7 0 350 " +
-                        posY +
-                        " " +
-                        currencySymbol +
-                        ".\r\n";
-                      invoicePrintFormat +=
-                        "RIGHT 550 T 7 0 0 " +
-                        posY +
-                        " " +
-                        format_number(
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " " + etiquetaTipoDeImpuesto + " 18% \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                      posY += 30;
+                      invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " TOTAL A PAGAR \r\n";
+                      invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                      invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
                           results.rows.item(0).TOTAL_AMOUNT,
                           configuracionDecimales.defaultDisplayDecimals
-                        ) +
-                        "\r\n";
+                        ) + "\r\n";
 
                       break;
                   }
                 } else {
                   posY += 10;
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 0 " + posY + " EXENTO \r\n";
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
-                  invoicePrintFormat +=
-                    "RIGHT 550 T 7 0 0 " +
-                    posY +
-                    " " +
-                    format_number(
-                      0,
-                      configuracionDecimales.defaultDisplayDecimals
-                    ) +
-                    "\r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Exonerado \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0,configuracionDecimales.defaultDisplayDecimals) + "\r\n";
 
                   posY += 30;
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 0 " + posY + " SUB TOTAL \r\n";
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
-                  invoicePrintFormat +=
-                    "RIGHT 550 T 7 0 0 " +
-                    posY +
-                    " " +
-                    format_number(
-                      results.rows.item(0).TOTAL_AMOUNT,
-                      configuracionDecimales.defaultDisplayDecimals
-                    ) +
-                    "\r\n";
-
-                  // if (
-                  //   Object.keys(muestraPorcentaje).length !== 0 &&
-                  //   muestraPorcentaje.Value == 1
-                  // ) {
-                  posY += 30;
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 0 " + posY + " DESCUENTO \r\n";
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
-                  invoicePrintFormat +=
-                    "RIGHT 550 T 7 0 0 " +
-                    posY +
-                    " " +
-                    format_number(
-                      discount,
-                      configuracionDecimales.defaultDisplayDecimals
-                    ) +
-                    "\r\n";
-                  //}
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Exento \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) + "\r\n";
 
                   posY += 30;
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 0 " +
-                    posY +
-                    " " +
-                    etiquetaTipoDeImpuesto +
-                    " -" +
-                    etiquetaPorcentajeDeImpuesto +
-                    "%- \r\n";
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
-                  invoicePrintFormat +=
-                    "RIGHT 550 T 7 0 0 " +
-                    posY +
-                    " " +
-                    format_number(
-                      0,
-                      configuracionDecimales.defaultDisplayDecimals
-                    ) +
-                    "\r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Grabado " + etiquetaPorcentajeDeImpuesto + "% \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
+                    results.rows.item(0).TOTAL_AMOUNT,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) + "\r\n";
 
                   posY += 30;
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 0 " + posY + " TOTAL \r\n";
-                  invoicePrintFormat +=
-                    "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
-                  invoicePrintFormat +=
-                    "RIGHT 550 T 7 0 0 " +
-                    posY +
-                    " " +
-                    format_number(
-                      results.rows.item(0).TOTAL_AMOUNT,
-                      configuracionDecimales.defaultDisplayDecimals
-                    ) +
-                    "\r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Importe Grabado 18% \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+                  
+                  posY += 30;
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " Descuento \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(discount, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                  posY += 30;
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " " + etiquetaTipoDeImpuesto + " " + etiquetaPorcentajeDeImpuesto + "% \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                  posY += 30;
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " " + etiquetaTipoDeImpuesto + " 18% \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(0, configuracionDecimales.defaultDisplayDecimals) + "\r\n";
+
+                  posY += 30;
+                  invoicePrintFormat += "LEFT 5 T 7 0 0 " + posY + " TOTAL A PAGAR \r\n";
+                  invoicePrintFormat += "LEFT 5 T 7 0 350 " + posY + " " + currencySymbol + ".\r\n";
+                  invoicePrintFormat += "RIGHT 550 T 7 0 0 " + posY + " " + format_number(
+                    results.rows.item(0).TOTAL_AMOUNT,
+                    configuracionDecimales.defaultDisplayDecimals
+                  ) + "\r\n";
                 }
 
                 //Pie de factura --------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5576,13 +4706,6 @@ function formatoDeImpresionSaritaHonduras(
                 invoicePrintFormat +=
                   "LEFT 35 L 70 " + posY + " 570 " + posY + " 1 \r\n";
 
-                // posY += 10;
-                // if (esCopia === 1) {
-                //   invoicePrintFormat += "CENTER 550 T 7 0 0 " + posY + " *Copia (Contabilidad)\r\n";
-                // } else {
-                //   invoicePrintFormat += "CENTER 550 T 7 0 0 " + posY + " *Original (Cliente)\r\n";
-                // }
-
                 posY += 20;
                 invoicePrintFormat +=
                   "CENTER 550 T 7 0 0 " + posY + " GRACIAS POR SU COMPRA \r\n";
@@ -5657,7 +4780,7 @@ function obtenerValorADescontarEnBaseaImpuesto(product, resumeInvoiceObject) {
 function printinvoice(pInvoice, pIsRePrinted, callBack) {
   try {
     my_dialog("Imprimiendo Factura", "#" + pInvoice + " Espere...", "open");
-    var to;
+
     var procesarImpresionDeFactura = function(invoiceId, isReprint, callback) {
       switch (localStorage.getItem("PRINT_FORMAT")) {
         case "GT-STANDARD":
@@ -5670,9 +4793,8 @@ function printinvoice(pInvoice, pIsRePrinted, callBack) {
             0
           );
 
-          to = setTimeout(function() {
+          setTimeout(function() {
             printinvoice_joininfo(invoiceId, isReprint, function() {}, 1);
-            clearTimeout(to);
           }, 2000);
 
           break;
@@ -5687,9 +4809,8 @@ function printinvoice(pInvoice, pIsRePrinted, callBack) {
             0
           );
 
-          to = setTimeout(function() {
+          setTimeout(function() {
             formatoImpresionHonduras(invoiceId, isReprint, function() {}, 1);
-            clearTimeout(to);
           }, 2000);
 
           break;
@@ -5704,9 +4825,8 @@ function printinvoice(pInvoice, pIsRePrinted, callBack) {
             0
           );
 
-          to = setTimeout(function() {
+          setTimeout(function() {
             formatoDeImpresionDiprocom(invoiceId, isReprint, function() {}, 1);
-            clearTimeout(to);
           }, 2000);
 
           break;
@@ -5721,14 +4841,13 @@ function printinvoice(pInvoice, pIsRePrinted, callBack) {
             0
           );
 
-          to = setTimeout(function() {
+          setTimeout(function() {
             formatoDeImpresionSaritaHonduras(
               invoiceId,
               isReprint,
               function() {},
               1
             );
-            clearTimeout(to);
           }, 2000);
 
           break;
@@ -5743,9 +4862,8 @@ function printinvoice(pInvoice, pIsRePrinted, callBack) {
             0
           );
 
-          to = setTimeout(function() {
+          setTimeout(function() {
             printinvoice_joininfo(invoiceId, isReprint, function() {}, 1);
-            clearTimeout(to);
           }, 2000);
 
           break;
@@ -5814,11 +4932,6 @@ function onBatteryStatus(info) {
   $("#lblBattLevelDevolucion").text(gBatteryLevel + "%");
   $("#lblBattLevelDevolucion").buttonMarkup({ icon: "eye" });
   $("#lblBattLevelDevolucion").css("color", "white");
-
-  // dato de estadistica page
-  $("#lblBattLevelEstadistica").text(gBatteryLevel + "%");
-  $("#lblBattLevelEstadistica").buttonMarkup({ icon: "eye" });
-  $("#lblBattLevelEstadistica").css("color", "white");
 }
 function onBatteryCritical(info) {
   // Handle the battery critical event
@@ -5848,11 +4961,6 @@ function onBatteryCritical(info) {
   $("#lblBattLevelDevolucion").buttonMarkup({ icon: "delete" });
   $("#lblBattLevelDevolucion").css("color", "red");
 
-  // dato de estadistica page
-  $("#lblBattLevelEstadistica").text(gBatteryLevel + "%");
-  $("#lblBattLevelEstadistica").buttonMarkup({ icon: "delete" });
-  $("#lblBattLevelEstadistica").css("color", "red");
-
   notify("Battery Level Critical " + info.level + "%\n Recarge pronto!");
 }
 function onBatteryLow(info) {
@@ -5879,11 +4987,6 @@ function onBatteryLow(info) {
   $("#lblBattLevelSkusPOS_1").css("color", "yellow");
 
   //alert("Battery Level Low " + info.level + "%");
-
-  // dato de estadistica page
-  $("#lblBattLevelEstadistica").text(gBatteryLevel + "%");
-  $("#lblBattLevelEstadistica").buttonMarkup({ icon: "alert" });
-  $("#lblBattLevelEstadistica").css("color", "yellow");
 }
 function ShowInventoryPage() {
   $.mobile.changePage("#inv_page", {
@@ -5944,10 +5047,6 @@ function listallinvoices() {
                   telephoneNumber = results.rows.item(i).TELEPHONE_NUMBER;
                   var isFromDeliveryNote = results.rows.item(i)
                     .IS_FROM_DELIVERY_NOTE;
-                  var isContingencyDocument = results.rows.item(i)
-                    .IS_CONTINGENCY_DOCUMENT;
-                  var taskId = results.rows.item(i).TASK_ID;
-                  var validationResult = results.rows.item(i).VALIDATION_RESULT;
 
                   try {
                     var pcName = results.rows.item(i).CLIENT_NAME.trim();
@@ -5965,15 +5064,9 @@ function listallinvoices() {
                       "'," +
                       results.rows.item(i).IS_PAID_CONSIGNMENT +
                       "," +
-                      (telephoneNumber === "" ? "''" : telephoneNumber) +
+                      telephoneNumber +
                       "," +
                       (isFromDeliveryNote ? isFromDeliveryNote : 0) +
-                      "," +
-                      (isContingencyDocument ? isContingencyDocument : 0) +
-                      "," +
-                      taskId +
-                      "," +
-                      validationResult +
                       ");";
                   } catch (e) {
                     notify("listallinvoices.add.catch:" + e.message);
@@ -5987,34 +5080,6 @@ function listallinvoices() {
                     xmsg =
                       "<img src='css/styles/images/icons-png/forbidden-black.png'></img>";
                   }
-
-                  var imgDocType = "";
-                  if (localStorage.getItem("IMPLEMENTS_FEL") === "true") {
-                    let styles = [];
-                    let properties = [];
-                    styles.push("right: 0px;");
-                    styles.push("width: 10%;");
-                    styles.push("height: 24%;");
-                    styles.push("position: absolute;");
-                    styles.push("transform: rotate(-20deg);");
-                    // properties.push("width='30'");
-                    // properties.push("height='30'");
-                    properties.push("style='" + styles.join(" ") + "'");
-                    if (results.rows.item(i).VALIDATION_RESULT == 1) {
-                      imgDocType =
-                        "<img src='css/styles/images/icons-png/signed-doc.png' " +
-                        properties.join(" ") +
-                        "></img>";
-                    } else {
-                      if (results.rows.item(i).IS_CONTINGENCY_DOCUMENT === 1) {
-                        imgDocType =
-                          "<img src='css/styles/images/icons-png/contingency-doc.png' " +
-                          properties.join(" ") +
-                          "></img>";
-                      }
-                    }
-                  }
-
                   vLI = "";
                   if (results.rows.item(i).STATUS == 3) {
                     vLI = '<li class="ui-nodisc-icon ui-alt-icon">';
@@ -6024,9 +5089,7 @@ function listallinvoices() {
                       xmsg +
                       " Factura #" +
                       results.rows.item(i).INVOICE_NUM +
-                      " (Anulada)</span>" +
-                      imgDocType +
-                      "</p>";
+                      " (Anulada)</span></p>";
                   } else {
                     vLI =
                       '<li class="ui-nodisc-icon ui-alt-icon" onclick="' +
@@ -6047,9 +5110,7 @@ function listallinvoices() {
                         results.rows.item(i).CREDIT_AMOUNT > 0
                           ? "Crédito"
                           : "Contado") +
-                        ")</span>" +
-                        imgDocType +
-                        "</p>";
+                        ")</span></p>";
                     } else {
                       vLI =
                         vLI +
@@ -6062,9 +5123,7 @@ function listallinvoices() {
                         results.rows.item(i).CREDIT_AMOUNT > 0
                           ? "Crédito"
                           : "Contado") +
-                        ")</span>" +
-                        imgDocType +
-                        "</p>";
+                        ")</span></p>";
                     }
                   }
 
@@ -6354,26 +5413,17 @@ function viewinvoice(pInvoiceID, pInvoiceCustName, pAmount, telephoneNumber) {
   }
 }
 
-var logOb;
-
 function onDeviceReady() {
-  const path = cordova.file.externalDataDirectory;
-  console.log(path)
-  window.resolveLocalFileSystemURL(path, (dir) => {
-    console.log("got main dir",dir);
-    dir.getFile("conf.json", {create:true}, (file) => {
-      console.log("got the file", file);
-      logOb = file;
-    });
-  });
+  var pDebug = "1";
   try {
-    controlDeSecuenciaServicio = new ControlDeSecuenciaServicio();
-
     var validacionDeLicenciaControlador = new ValidacionDeLicenciaControlador();
     validacionDeLicenciaControlador.delegarValidacionDeLicenciaControlador();
     validacionDeLicenciaControlador = null;
 
-    DeviceIsOffline()
+    $("#login_isonline").text("OffLine");
+    $("#lblNetworkLogin").text("OffLine");
+    $("#lblNetworkDeliveryMenu").text("OffLine");
+    $("#lblNetworkSkusPOS_1").text("OffLine");
     $("#lblSondaVersion").text(SondaVersion);
 
     delegate_events();
@@ -6426,8 +5476,9 @@ function onDeviceReady() {
     asociarTelefonoAFacturaControlador.delegarAsociacionDeTelefonoAFacturaControlador();
     asociarTelefonoAFacturaControlador = null;
 
-    manifiestoControlador = new ManifiestoControlador(mensajero);
+    var manifiestoControlador = new ManifiestoControlador(mensajero);
     manifiestoControlador.delegarManifiestoControlador();
+    manifiestoControlador = null;
 
     var entregaControlador = new EntregaControlador(mensajero);
     entregaControlador.delegarEntregaControlador();
@@ -6437,9 +5488,7 @@ function onDeviceReady() {
     entregaDetalleControlador.delegarEntregaControlador();
     entregaDetalleControlador = null;
 
-    var confirmacionDeNotaDeEntrega = new ConfirmacionDeNotaDeEntregaControlador(
-      mensajero
-    );
+    var confirmacionDeNotaDeEntrega = new ConfirmacionDeNotaDeEntregaControlador();
     confirmacionDeNotaDeEntrega.delegarConfirmacionDeNotaDeEntregaControlador();
     confirmacionDeNotaDeEntrega = null;
 
@@ -6479,24 +5528,6 @@ function onDeviceReady() {
     detalleDePagoControlador.delegarDetalleDePagoControlador();
     detalleDePagoControlador = null;
 
-    imagenDeEntregaControlador = new ImagenDeEntregaControlador(mensajero);
-    imagenDeEntregaControlador.delegarImagenDeEntregaControlador();
-
-    firmaControlador = new FirmaControlador(mensajero);
-    firmaControlador.delegarFirmaControlador();
-
-    estadisticaDeVentaPorDiaControlador = new EstadisticaDeVentaPorDiaControlador();
-    estadisticaDeVentaPorDiaControlador.delegarEstadisticaDeVentaPorDiaControlador();
-
-    resumenDeTareaControlador = new ResumenDeTareaControlador(mensajero);
-    resumenDeTareaControlador.delegarResumenDeTareaControlador();
-
-    tareaControladorADelegar = new TareaControlador();
-    confirmacionControlador = new ConfirmacionControlador();
-    confirmacionControlador.asignarEventoABotonSolicitarFirma();
-
-    facturacionElectronicaServicio = new FacturacionElectronicaServicio();
-
     if (gPrepared === 0) {
       try {
         preparedb();
@@ -6525,31 +5556,19 @@ function onDeviceReady() {
 
       var menuControlador = new MenuControlador();
       menuControlador.mostrarUOcultarOpcionesDeFacturacion(function() {
-        goHome("none");
+        $.mobile.changePage("#menu_page", {
+          transition: "none",
+          reverse: false,
+          showLoadMsg: false
+        });
       });
-      menuControlador.cargarInformacionFel(
-        localStorage.getItem("user_type"),
-        (display, implementaFel, secuenciaDocumento) => {
-          menuControlador.seValidoCorrectamente(display, secuenciaDocumento);
-          goHome("none");
-        },
-        error => {
-          notify("No se pudo validar si usará FEL debido a: " + error.mensaje);
-        }
-      );
 
       ToastThis("Bienvenido " + gLastLogin);
 
-      debugger;
-      console.log(SocketControlador.socketIo)
       if (
         !SocketControlador.socketIo ||
         !SocketControlador.socketIo.connected
       ) {
-        console.log(
-          localStorage.getItem("UserID"),
-          localStorage.getItem("UserCode")
-        )
         var validacionDeLicencia = new ValidacionDeLicenciaControlador();
         validacionDeLicencia.validarLicencia(
           localStorage.getItem("UserID"),
@@ -6560,9 +5579,6 @@ function onDeviceReady() {
     } else {
       $("#txtUserID").focus();
     }
-
-    // Inicializa la tabla de secuencias de documentos locales de la aplicacion
-    controlDeSecuenciaServicio.inicializarControlDeSequencias();
 
     //Polyfill de metodos que no se incluyen en librerias de android 4
     //https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Array/includes
@@ -6927,35 +5943,22 @@ function delegate_events() {
     var unitMeasure = $("#lblSKU_IDCant").attr("UM");
 
     if (qtySku.val() !== "") {
-      if (vieneDeListadoDeDocumentosDeEntrega) {
-        if (parseFloat(qtySku.val()) >= 0) {
-          SetSpecifiSKUQty(parseFloat(qtySku.val()), unitMeasure);
+      if (
+        parseFloat(qtySku.val()) > 0 ||
+        (vieneDeListadoDeDocumentosDeEntrega && parseFloat(qtySku.val()) >= 0)
+      ) {
+        SetSpecifiSKUQty(parseFloat(qtySku.val()), unitMeasure);
 
-          window.vieneDeIngresoCantidad = true;
-          $.mobile.changePage("#pos_skus_page", {
-            transition: "pop",
-            reverse: true,
-            changeHash: true,
-            showLoadMsg: false
-          });
-        } else {
-          notify("Debe ingresar la cantidad correcta.");
-          qtySku.focus();
-        }
+        window.vieneDeIngresoCantidad = true;
+        $.mobile.changePage("#pos_skus_page", {
+          transition: "pop",
+          reverse: true,
+          changeHash: true,
+          showLoadMsg: false
+        });
       } else {
-        if (parseFloat(qtySku.val()) > 0) {
-          SetSpecifiSKUQty(parseFloat(qtySku.val()), unitMeasure);
-          window.vieneDeIngresoCantidad = true;
-          $.mobile.changePage("#pos_skus_page", {
-            transition: "pop",
-            reverse: true,
-            changeHash: true,
-            showLoadMsg: false
-          });
-        } else {
-          notify("Debe ingresar una cantidad mayor a cero.");
-          qtySku.focus();
-        }
+        notify("Debe ingresar una cantidad mayor a cero.");
+        qtySku.focus();
       }
     } else {
       notify("Debe ingresar la cantidad deseada de SKU.");
@@ -6988,29 +5991,19 @@ function delegate_events() {
     SavePrinter();
   });
   $("#btnSyncAuthInvInfo").bind("touchstart", function() {
-    var data = {
-      routeid: gCurrentRoute,
-      default_warehouse: gDefaultWhs,
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass
-    };
-    SocketControlador.socketIo.emit("ValidateRoute", data);
+    GetRouteAuth("FACTURA"); /*GetRouteAuth('NOTA_CREDITO');*/
   });
   $("#btnOut").bind("touchstart", function() {
     navigator.app.exitApp();
   });
   $("#btnPrintIT").bind("touchstart", function() {
-    if (localStorage.getItem("IMPLEMENTS_FEL") === "true") {
-      printinvoice(gInvoiceNUM, "", function() {});
+    if (gcountPrints > 0) {
+      notify("Ya se ejecuto el proceso de impresion de la Factura actual.");
     } else {
-      if (gcountPrints > 0) {
-        notify("Ya se ejecuto el proceso de impresion de la Factura actual.");
-      } else {
-        printinvoice(gInvoiceNUM, "", function() {
-          //ImprimirDetalleDeConsignacion();
-        });
-        gcountPrints++;
-      }
+      printinvoice(gInvoiceNUM, "", function() {
+        //ImprimirDetalleDeConsignacion();
+      });
+      gcountPrints++;
     }
   });
 
@@ -7094,79 +6087,19 @@ function delegate_events() {
   $("#btnCancel_series").bind("touchstart", function() {
     ReturnSkus();
   });
-
-  $("#btnContinue_Client").on("click", function(ev) {
-    InteraccionConUsuarioServicio.bloquearPantalla();
-    ev.preventDefault();
-    verificarDatosDeFacturacion(function(nit, nombreFacturacion) {
-      if ($("#lblClientCode").html() != "C000000") {
-        InteraccionConUsuarioServicio.desbloquearPantalla();
-        ContinueToSkus();
-      } else {
-        TareaServicio.CrearTareaParaClienteConsumidorFinal(
-          nit,
-          nombreFacturacion,
-          function(nuevaTarea) {
-            gTaskId = nuevaTarea.taskId;
-            gTaskType = nuevaTarea.taskType;
-            gClientCode = nuevaTarea.relatedClientCode;
-            gClientName = nuevaTarea.relatedClientName;
-            esEntregaParcial = false;
-            gClientID = nuevaTarea.relatedClientCode;
-
-            $.mobile.changePage("#pos_skus_page", {
-              transition: "none",
-              reverse: true,
-              changeHash: true,
-              showLoadMsg: false
-            });
-
-            InteraccionConUsuarioServicio.desbloquearPantalla();
-          },
-          function(error) {
-            notify(error);
-          }
-        );
-      }
-    });
+  $("#btnContinue_Client").bind("touchstart", function() {
+    ContinueToSkus();
   });
-
   $("#btnSetCF").bind("touchstart", function() {
     SetCF();
   });
-
-  if ($(window).height() < 580) {
-    $(".product-list-table").height(
-      $(window).height() - ($(window).height() * 30) / 100
-    );
-  } else if ($(window).height() < 764) {
-    $(".product-list-table").height(
-      $(window).height() - ($(window).height() * 20) / 100
-    );
-  } else if ($(window).height() < 992) {
-    $(".product-list-table").height(
-      $(window).height() - ($(window).height() * 15) / 100
-    );
-  }
-
-  $("#panelTotalSKUSumm").on("click", function(e) {
-    e.preventDefault();
-    if (estaEnConfirmacionDeFacturacion) {
-      return false;
-    }
-
-    estaEnConfirmacionDeFacturacion = true;
-
+  $("#panelTotalSKUSumm").bind("touchstart", function() {
     VerificarLimiteDeCreditoExcedidoPorVentaActual(function() {
-      confirmacionControlador.validarSiImplementaraFEL(function() {
-        ConfirmPostInvoice();
-      });
+      ConfirmPostInvoice();
     });
   });
-
   $("#btnConfirmedInvoice").bind("touchstart", function() {
     ConfirmedInvoice();
-    EnviarData();
   });
 
   $("#btnPreviewImg1").bind("touchstart", function() {
@@ -7249,6 +6182,9 @@ function delegate_events() {
               );
             },
             function(error) {
+              console.dir({
+                "Error al verificar si se muestra modulo de metas": error
+              });
               estadisticaDeVentaControlador.mostrarUOcultarContenedorDeModuloDeMEtas(
                 false
               );
@@ -7263,17 +6199,6 @@ function delegate_events() {
       function(error) {
         notify(error);
         ActualizarCantidadDeNotificaciones();
-      }
-    );
-    let menuControlador = new MenuControlador();
-    menuControlador.cargarInformacionFel(
-      localStorage.getItem("user_type"),
-      (display, implementaFel, secuenciaDocumento) => {
-        menuControlador.seValidoCorrectamente(display, secuenciaDocumento);
-        goHome("none");
-      },
-      error => {
-        notify("No se pudo validar si usará FEL debido a: " + error.mensaje);
       }
     );
   });
@@ -7315,6 +6240,7 @@ function delegate_events() {
     $("#UiLblCurrencyVueltoSumm").text(currencySymbol + ". ");
 
     $("#txtVuelto_summ").text(format_number(0, 2));
+
     var cuentaCorrienteServicio = new CuentaCorrienteServicio();
     cuentaCorrienteServicio.procesarInformacionDeCuentaCorrienteDeCliente(
       gClientCode,
@@ -7807,6 +6733,7 @@ function delegate_events() {
     window.estaEnFacturaTemporal = false;
 
     var notificadorDeError = function(error) {
+      console.log("Error al validar las reglas de la pantalla: " + error);
       notify("Ha ocurrido un error al validar las reglas de la pantalla");
     };
 
@@ -7856,8 +6783,6 @@ function delegate_events() {
             }
             botonPrincipalDeImpresion = null;
             contenedorDeOpcionesDeImpresion = null;
-
-            InteraccionConUsuarioServicio.desbloquearPantalla();
           },
           function(error) {
             notificadorDeError(error);
@@ -8022,7 +6947,6 @@ function calcularImpuestoPorLineaDeFactura(callback) {
           subTotal: 0,
           impuesto: 0,
           exento: 0,
-          baseGravada: 0,
           skusDeDetalle: []
         };
 
@@ -8035,12 +6959,8 @@ function calcularImpuestoPorLineaDeFactura(callback) {
 
           objetoResumen.skusDeDetalle.push(skusConInfoDeImpuesto[i]);
 
-          if (skusConInfoDeImpuesto[i].TAX_VALUE === 0) {
+          if (skusConInfoDeImpuesto[i].TAX_VALUE === 0)
             objetoResumen.exento += skusConInfoDeImpuesto[i].TOTAL_LINE;
-          } else {
-            objetoResumen.baseGravada +=
-              skusConInfoDeImpuesto[i].PRICE_WITHOUT_TAX;
-          }
         }
 
         callback(objetoResumen);
@@ -8264,87 +7184,28 @@ function TotalSKU_Click(vieneDe) {
             var configOptions = {
               title: "¿Por qué finaliza la tarea sin venta?: ",
               items: listaRazones,
-              doneButtonLabel: "ACEPTAR",
+              doneButtonLabel: "OK",
               cancelButtonLabel: "CANCELAR"
             };
 
             window.plugins.listpicker.showPicker(configOptions, function(item) {
-              var reglaServicio = new ReglaServicio();
-              reglaServicio.obtenerRegla(
-                "NuevaTareaConBaseEnTareaSinGestion",
-                regla => {
-                  if (
-                    regla.rows.length > 0 &&
-                    regla.rows.item(0).ENABLED.toUpperCase() === "SI"
-                  ) {
-                    navigator.notification.confirm(
-                      "¿Desea crear una nueva tarea?",
-                      buttonIndex => {
-                        switch (buttonIndex) {
-                          case 1:
-                            // InteraccionConUsuarioServicio.bloquearPantalla();
-                            actualizarEstadoDeTarea(
-                              gTaskId,
-                              TareaGeneroGestion.No,
-                              item,
-                              () => {
-                                onResume(() => {
-                                  EnviarData();
-                                  gTaskOnRoutePlan = 1;
-                                  $.mobile.changePage("#menu_page", {
-                                    transition: "pop",
-                                    reverse: true,
-                                    changeHash: true,
-                                    showLoadMsg: false
-                                  });
-                                });
-                              },
-                              TareaEstado.Completada
-                            );
-                            break;
-                          case 2:
-                            resumenDeTareaControlador.crearNuevaTarea();
-                            actualizarEstadoDeTarea(
-                              gTaskId,
-                              TareaGeneroGestion.No,
-                              item,
-                              () => {
-                                onResume(() => {
-                                  EnviarData();
-                                  gTaskOnRoutePlan = 1;
-                                });
-                              },
-                              TareaEstado.Completada
-                            );
-                            break;
-                          default:
-                            break;
-                        }
-                      },
-                      "Sonda® SD " + SondaVersion,
-                      ["No", "Si"]
-                    );
-                  } else {
-                    actualizarEstadoDeTarea(
-                      gTaskId,
-                      TareaGeneroGestion.No,
-                      item,
-                      () => {
-                        onResume(() => {
-                          EnviarData();
-                          gTaskOnRoutePlan = 1;
-                          $.mobile.changePage("#menu_page", {
-                            transition: "pop",
-                            reverse: true,
-                            changeHash: true,
-                            showLoadMsg: false
-                          });
-                        });
-                      },
-                      TareaEstado.Completada
-                    );
-                  }
-                }
+              actualizarEstadoDeTarea(
+                gTaskId,
+                TareaGeneroGestion.No,
+                item,
+                function() {
+                  onResume(function() {
+                    EnviarData();
+                    gTaskOnRoutePlan = 1;
+                    $.mobile.changePage("#menu_page", {
+                      transition: "pop",
+                      reverse: true,
+                      changeHash: true,
+                      showLoadMsg: false
+                    });
+                  });
+                },
+                TareaEstado.Completada
               );
             });
           } else {
@@ -8374,6 +7235,7 @@ function ShorSummaryPage() {
   try {
     LimpiarDatosConsignacion();
 
+    var pTotal = $("#lblTotalSKU").text();
     var pNit = vieneDeListadoDeDocumentosDeEntrega ? gNit : $("#txtNIT").val();
     var pCustName = vieneDeListadoDeDocumentosDeEntrega
       ? gClientName
@@ -8382,7 +7244,6 @@ function ShorSummaryPage() {
     $("#lblClientName_summ").text(pNit + "-" + pCustName);
     $("#lblClientName_summ").attr("taxid", pNit);
     $("#lblClientName_summ").attr("clientid", pNit);
-    estaEnConfirmacionDeFacturacion = false;
 
     $.mobile.changePage("#summary_page", {
       transition: "flow",
@@ -8403,26 +7264,15 @@ function showInvoiceActions(
   pClientName,
   isPaidConsignment,
   telephoneNumber,
-  isFromDeliveryNote,
-  isContingencyDocument,
-  taskId,
-  isSigned = 0
+  isFromDeliveryNote
 ) {
   try {
-    gTaskId = taskId;
     var opcionesAMostrar = [
       { text: "Re-imprimir", value: "reprint" },
+      { text: "Anular", value: "void" },
       { text: "Ver Detalle", value: "detail" }
     ];
-    if (localStorage.getItem("IMPLEMENTS_FEL") === "true") {
-      if (isSigned === 0) {
-        if (isContingencyDocument === 1) {
-          opcionesAMostrar.push({ text: "Solicitar firma", value: "sign" });
-        }
-      }
-    } else {
-      opcionesAMostrar.push({ text: "Anular", value: "void" });
-    }
+
     var callback = function(opciones) {
       var config = {
         title: "Opciones",
@@ -8471,9 +7321,6 @@ function showInvoiceActions(
               changeHash: true,
               showLoadMsg: false
             });
-            break;
-          case "sign":
-            confirmacionControlador.usuarioDeseaSolicitarFirmaElectronica(1);
             break;
         }
       });
@@ -8676,7 +7523,7 @@ function obtenerCuentasDeBancos(callback, errCallback) {
           [],
           function(tx, results) {
             if (results.rows.length > 0) {
-              var cuentasDeBancos = [];
+              var cuentasDeBancos = Array();
               for (var i = 0; i < results.rows.length; i++) {
                 var cuentaDeBanco = {
                   banco: results.rows.item(i).BANK,
@@ -8722,7 +7569,7 @@ function showBankAccounts() {
   try {
     obtenerCuentasDeBancos(
       function(cuentaDeBanco) {
-        var items = [];
+        var items = Array();
         for (var i = 0; i < cuentaDeBanco.length; i++) {
           var item = {
             text:
@@ -8784,9 +7631,6 @@ function AddToTask(data) {
       pSql += ", NIT";
       pSql += ", PHONE_CUSTOMER";
       pSql += ", CODE_PRICE_LIST";
-      pSql += ", IN_PLAN_ROUTE";
-      pSql += ", DEPARTMENT";
-      pSql += ", MUNICIPALITY";
       pSql += " ) VALUES (";
       pSql += data.row.TASK_ID;
       pSql += ",'" + data.row.TASK_TYPE + "'";
@@ -8811,9 +7655,6 @@ function AddToTask(data) {
       pSql += ",'" + data.row.NIT + "'";
       pSql += ",'" + data.row.PHONE_CUSTOMER + "'";
       pSql += ",'" + data.row.CODE_PRICE_LIST + "'";
-      pSql += ",'" + data.row.IN_PLAN_ROUTE + "'";
-      pSql += ",'" + data.row.DEPARTAMENT + "'";
-      pSql += ",'" + data.row.MUNICIPALITY + "'";
       pSql += ")";
 
       tx.executeSql(pSql);
@@ -8874,8 +7715,6 @@ function PopulateSalesTasks(estadoTarea) {
                 results.rows.item(i).NIT +
                 "','" +
                 results.rows.item(i).TASK_TYPE +
-                "','" +
-                results.rows.item(i).TASK_STATUS +
                 "')";
 
               vLI += '<a href="#" onclick="' + xonclick2 + '">';
@@ -8957,8 +7796,7 @@ function InvoiceThisTask(
   client_code,
   client_name,
   client_nit,
-  taskType,
-  taskStatus
+  taskType
 ) {
   try {
     gTaskId = taskid;
@@ -8966,7 +7804,6 @@ function InvoiceThisTask(
     gClientCode = client_code;
     gClientName = client_name;
     esEntregaParcial = false;
-    gClientID = client_code;
 
     if (taskType === "DELIVERY_SD") {
       var tarea = new Tarea();
@@ -8987,123 +7824,89 @@ function InvoiceThisTask(
         }
       );
     } else {
-      if (taskStatus === "COMPLETED") {
-        $.mobile.changePage("#UiTaskResumePage", {
-          reverse: false,
-          changeHash: true,
-          showLoadMsg: false
-        });
-      } else {
-        vieneDeListadoDeDocumentosDeEntrega = false;
-        ClearUpInvoice();
-        PagoConsignacionesServicio.LimpiarTablasTemporales();
-        PagoConsignacionesControlador.EstaEnPagoDeConsignacion = false;
-        PagoConsignacionesControlador.EstaEnDetalle = false;
-        PagoConsignacionesControlador.EstaEnIngresoDeCantidadSku = false;
+      vieneDeListadoDeDocumentosDeEntrega = false;
+      ClearUpInvoice();
+      PagoConsignacionesServicio.LimpiarTablasTemporales();
+      PagoConsignacionesControlador.EstaEnPagoDeConsignacion = false;
+      PagoConsignacionesControlador.EstaEnDetalle = false;
+      PagoConsignacionesControlador.EstaEnIngresoDeCantidadSku = false;
 
-        var consignmentsClient = 0;
-        var totalConsignacion = 0;
+      var consignmentsClient = 0;
+      var totalConsignacion = 0;
 
-        var procesarTareaParaFactura = function(parametroDeNit) {
-          if (gClientCode === "C000000") {
-            $("#lblClientCode").text(client_code);
-            $("#txtNIT").val(parametroDeNit.Value);
-            $("#txtNIT").attr("taskid", taskid);
+      var procesarTareaParaFactura = function(parametroDeNit) {
+        if (gClientCode === "C000000") {
+          $("#lblClientCode").text(client_code);
+          $("#txtNIT").val(parametroDeNit.Value);
+          $("#txtNIT").attr("taskid", taskid);
 
-            $("#txtNombre").val(client_name);
+          $("#txtNombre").val(client_name);
 
-            ShowClientPage();
-          } else {
-            window.ObtenerConsignaciones(
-              function(consignaciones) {
-                gNit =
-                  client_nit == "NULL" ||
-                  client_nit == "null" ||
-                  client_nit == null ||
-                  client_nit == "Cf" ||
-                  client_nit == "..."
-                    ? parametroDeNit.Value
-                    : client_nit;
-                if (consignaciones.length > 0) {
-                  for (var i = 0; i < consignaciones.length; i++) {
-                    var consignacion = consignaciones[i];
-                    if (
-                      consignacion.CustomerId === gClientCode &&
-                      (consignacion.Status === ConsignmentStatus.Activa ||
-                        consignacion.Status === ConsignmentStatus.Vencida)
-                    ) {
-                      consignmentsClient++;
-                      totalConsignacion += consignacion.TotalAmount;
-                    }
+          ShowClientPage();
+        } else {
+          window.ObtenerConsignaciones(
+            function(consignaciones) {
+              gNit =
+                client_nit == "NULL" ||
+                client_nit == "null" ||
+                client_nit == null ||
+                client_nit == "Cf" ||
+                client_nit == "..."
+                  ? parametroDeNit.Value
+                  : client_nit;
+              if (consignaciones.length > 0) {
+                for (var i = 0; i < consignaciones.length; i++) {
+                  var consignacion = consignaciones[i];
+                  if (
+                    consignacion.CustomerId === gClientCode &&
+                    (consignacion.Status === ConsignmentStatus.Activa ||
+                      consignacion.Status === ConsignmentStatus.Vencida)
+                  ) {
+                    consignmentsClient++;
+                    totalConsignacion += consignacion.TotalAmount;
                   }
+                }
 
-                  if (totalConsignacion > 0) {
-                    document
-                      .getElementById("UiClientHasConsignment")
-                      .setAttribute(
-                        "CONSIGNMENTS",
-                        consignmentsClient.toString()
-                      );
-                    document.getElementById(
-                      "UiClientHasConsignment"
-                    ).style.display = "block";
-                    document.getElementById("UiLblTotalConsignment").innerText =
-                      currencySymbol +
-                      ". " +
-                      format_number(totalConsignacion, 2);
-                    document.getElementById(
-                      "UiBtnTotalEnProcesoDeConsignacion"
-                    ).innerText =
-                      currencySymbol +
-                      ". " +
-                      format_number(totalConsignacion, 2);
-                    document.getElementById("UiTotalCash").innerText =
-                      currencySymbol + ". " + "0.00";
-                    document.getElementById("UiTotalConsignacion").innerText =
-                      currencySymbol + ". " + "0.00";
-                    document.getElementById("UiTotalRecogido").innerText =
-                      currencySymbol + ". " + "0.00";
-
-                    var listaConsignaciones = $("#UiListaConsignacionesAPagar");
-                    listaConsignaciones.children().remove("li");
-                    listaConsignaciones = null;
-
-                    var objetoListaDetalleDeConsignacion = $(
-                      "#UiListaDetalleDeConsignacionAPagar"
+                if (totalConsignacion > 0) {
+                  document
+                    .getElementById("UiClientHasConsignment")
+                    .setAttribute(
+                      "CONSIGNMENTS",
+                      consignmentsClient.toString()
                     );
-                    objetoListaDetalleDeConsignacion.children().remove("li");
-                    objetoListaDetalleDeConsignacion = null;
+                  document.getElementById(
+                    "UiClientHasConsignment"
+                  ).style.display = "block";
+                  document.getElementById("UiLblTotalConsignment").innerText =
+                    currencySymbol + ". " + format_number(totalConsignacion, 2);
+                  document.getElementById(
+                    "UiBtnTotalEnProcesoDeConsignacion"
+                  ).innerText =
+                    currencySymbol + ". " + format_number(totalConsignacion, 2);
+                  document.getElementById("UiTotalCash").innerText =
+                    currencySymbol + ". " + "0.00";
+                  document.getElementById("UiTotalConsignacion").innerText =
+                    currencySymbol + ". " + "0.00";
+                  document.getElementById("UiTotalRecogido").innerText =
+                    currencySymbol + ". " + "0.00";
 
-                    $("#lblClientCode").text(client_code);
-                    $("#txtNIT").val(gNit);
-                    $("#txtNIT").attr("taskid", taskid);
+                  var listaConsignaciones = $("#UiListaConsignacionesAPagar");
+                  listaConsignaciones.children().remove("li");
+                  listaConsignaciones = null;
 
-                    $("#txtNombre").val(client_name);
+                  var objetoListaDetalleDeConsignacion = $(
+                    "#UiListaDetalleDeConsignacionAPagar"
+                  );
+                  objetoListaDetalleDeConsignacion.children().remove("li");
+                  objetoListaDetalleDeConsignacion = null;
 
-                    ShowClientPage();
-                  } else {
-                    document
-                      .getElementById("UiClientHasConsignment")
-                      .setAttribute(
-                        "CONSIGNMENTS",
-                        consignmentsClient.toString()
-                      );
-                    document.getElementById(
-                      "UiClientHasConsignment"
-                    ).style.display = "none";
-                    document.getElementById("UiLblTotalConsignment").innerText =
-                      currencySymbol +
-                      ". " +
-                      format_number(totalConsignacion, 2);
+                  $("#lblClientCode").text(client_code);
+                  $("#txtNIT").val(gNit);
+                  $("#txtNIT").attr("taskid", taskid);
 
-                    $("#lblClientCode").text(client_code);
-                    $("#txtNIT").val(gNit);
-                    $("#txtNIT").attr("taskid", taskid);
+                  $("#txtNombre").val(client_name);
 
-                    $("#txtNombre").val(client_name);
-
-                    ShowClientPage();
-                  }
+                  ShowClientPage();
                 } else {
                   document
                     .getElementById("UiClientHasConsignment")
@@ -9125,26 +7928,43 @@ function InvoiceThisTask(
 
                   ShowClientPage();
                 }
-              },
-              function(error) {
-                InteraccionConUsuarioServicio.desbloquearPantalla();
-                notify(error.message);
-              }
-            );
-          }
-        };
+              } else {
+                document
+                  .getElementById("UiClientHasConsignment")
+                  .setAttribute("CONSIGNMENTS", consignmentsClient.toString());
+                document.getElementById(
+                  "UiClientHasConsignment"
+                ).style.display = "none";
+                document.getElementById("UiLblTotalConsignment").innerText =
+                  currencySymbol + ". " + format_number(totalConsignacion, 2);
 
-        ParametroServicio.ObtenerParametro(
-          "INVOICE",
-          "DEFAULT_NIT_VALUE",
-          function(parametroDeNitDefault) {
-            procesarTareaParaFactura(parametroDeNitDefault);
-          },
-          function(error) {
-            procesarTareaParaFactura({ Value: "C/F" });
-          }
-        );
-      }
+                $("#lblClientCode").text(client_code);
+                $("#txtNIT").val(gNit);
+                $("#txtNIT").attr("taskid", taskid);
+
+                $("#txtNombre").val(client_name);
+
+                ShowClientPage();
+              }
+            },
+            function(error) {
+              InteraccionConUsuarioServicio.desbloquearPantalla();
+              notify(error.message);
+            }
+          );
+        }
+      };
+
+      ParametroServicio.ObtenerParametro(
+        "INVOICE",
+        "DEFAULT_NIT_VALUE",
+        function(parametroDeNitDefault) {
+          procesarTareaParaFactura(parametroDeNitDefault);
+        },
+        function(error) {
+          procesarTareaParaFactura({ Value: "C/F" });
+        }
+      );
     }
   } catch (e) {
     InteraccionConUsuarioServicio.desbloquearPantalla();
@@ -9502,31 +8322,4 @@ function cortarLineaDeTexto(texto, maximoDeCaracteres) {
   }
 
   return objetoARetornar;
-}
-
-function goHome(
-  transition,
-  reverse = false,
-  changeHash = false,
-  showLoadMsg = false
-) {
-  $.mobile.changePage("#menu_page", {
-    transition,
-    reverse,
-    changeHash,
-    showLoadMsg
-  });
-}
-
-function verificarDatosDeFacturacion(callback) {
-  var nit = $("#txtNIT").val();
-  var nombreFacturacion = $("#txtNombre").val();
-
-  if (!nit || !nombreFacturacion) {
-    notify(
-      "Los datos de facturación no debn estar vacíos, por favor verifique y vuelva a intentar."
-    );
-  } else {
-    callback(nit, nombreFacturacion);
-  }
 }

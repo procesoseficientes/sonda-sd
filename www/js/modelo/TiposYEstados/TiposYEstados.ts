@@ -92,7 +92,3 @@ enum TipoDePagoDeFactura {
   FacturaVencida = "OVERDUE_INVOICE" as any,
   FacturaAbierta = "OPEN_INVOICE" as any
 }
-
-enum TiposDeSecuenciaAControlar {
-  NuevaTarea = "NEW_TASK" as any
-}

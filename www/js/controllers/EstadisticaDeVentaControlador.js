@@ -16,16 +16,16 @@ var EstadisticaDeVentaControlador = (function () {
         contenedorDeMetas = null;
     };
     EstadisticaDeVentaControlador.prototype.obtenerInformacionDeEstadisticaDeVentaActual = function () {
-        var _this_1 = this;
+        var _this = this;
         this.estadisticaDeVentaServicio.obtenerInformacionDeEstadisticaDeVenta(function (estadistica) {
-            _this_1.construirVisualizacionDeInformacionDeEstadisticaDeVenta(estadistica);
+            _this.construirVisualizacionDeInformacionDeEstadisticaDeVenta(estadistica);
         });
     };
     EstadisticaDeVentaControlador.prototype.construirVisualizacionDeInformacionDeEstadisticaDeVenta = function (estadisticaDeVenta) {
-        var _this_1 = this;
+        var _this = this;
         try {
             this.decimalesServicio.obtenerInformacionDeManejoDeDecimales(function (configuracionDeDecimales) {
-                _this_1.decimales = configuracionDeDecimales;
+                _this.decimales = configuracionDeDecimales;
                 var teamName = $("#teamName");
                 var goalName = $("#goalName");
                 var ranking = $("#ranking");
@@ -43,14 +43,14 @@ var EstadisticaDeVentaControlador = (function () {
                 teamName.text(estadisticaDeVenta.teamName);
                 goalName.text(estadisticaDeVenta.goalName);
                 ranking.text(estadisticaDeVenta.ranking);
-                goalAmount.text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmount, _this_1.decimales.defaultDisplayDecimals));
+                goalAmount.text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmount, _this.decimales.defaultDisplayDecimals));
                 accumulatedAmount.text(currencySymbol + " " + format_number(estadisticaDeVenta.accumulatedAmount +
-                    estadisticaDeVenta.soldToday, _this_1.decimales.defaultDisplayDecimals) + " (" + _this_1.obtenerPorcentajeDeMetaCubiertoPorVentas(estadisticaDeVenta) + "%) ");
+                    estadisticaDeVenta.soldToday, _this.decimales.defaultDisplayDecimals) + " (" + _this.obtenerPorcentajeDeMetaCubiertoPorVentas(estadisticaDeVenta) + "%) ");
                 remainingDays.text("" + estadisticaDeVenta.remainingDays);
-                goalAmountOfDay.text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmountOfDay, _this_1.decimales.defaultDisplayDecimals));
-                soldToday.text(currencySymbol + " " + format_number(estadisticaDeVenta.soldToday, _this_1.decimales.defaultDisplayDecimals));
+                goalAmountOfDay.text(currencySymbol + " " + format_number(estadisticaDeVenta.goalAmountOfDay, _this.decimales.defaultDisplayDecimals));
+                soldToday.text(currencySymbol + " " + format_number(estadisticaDeVenta.soldToday, _this.decimales.defaultDisplayDecimals));
                 salesOrdersOfDay.text("(" + estadisticaDeVenta.salesOrdersOfDay + ")");
-                pendingToSaleToday.text(currencySymbol + " " + format_number(estadisticaDeVenta.pendingToSaleToday, _this_1.decimales.defaultDisplayDecimals));
+                pendingToSaleToday.text(currencySymbol + " " + format_number(estadisticaDeVenta.pendingToSaleToday, _this.decimales.defaultDisplayDecimals));
                 currencySymbol = null;
                 teamName = null;
                 goalName = null;

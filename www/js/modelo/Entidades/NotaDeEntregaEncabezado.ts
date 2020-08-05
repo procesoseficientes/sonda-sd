@@ -19,8 +19,4 @@
     isCanceled: number;
     reasonCancel: string;
     discount: number;
-    deliveryImage2: string;
-    deliveryImage3: string;
-    deliveryImage4: string;
-    deliverySignature: string;
 }

@@ -3,13 +3,13 @@ var ValidacionDeLicenciaControlador = (function () {
         this.validacionDeLicenciaServicio = new ValidacionDeLicenciaServicio();
     }
     ValidacionDeLicenciaControlador.prototype.delegarValidacionDeLicenciaControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         $("#btnLogme").bind("touchstart", function () {
-            _this_1.validateCredentials();
+            _this.validateCredentials();
         });
         $("#txtPin").on("keypress", function (e) {
             if (e.keyCode === 13) {
-                _this_1.validateCredentials();
+                _this.validateCredentials();
             }
         });
     };
@@ -26,7 +26,7 @@ var ValidacionDeLicenciaControlador = (function () {
             else {
                 if (pPINCode === "") {
                     notify("ERROR, ingrese usuario/pin.");
-                    return;
+                    return -1;
                 }
                 my_dialog("Espere...", "validando usuario y password", "open");
                 InteraccionConUsuarioServicio.bloquearPantalla();
@@ -49,30 +49,26 @@ var ValidacionDeLicenciaControlador = (function () {
         my_dialog("", "", "close");
     };
     ValidacionDeLicenciaControlador.prototype.validarLicencia = function (usuario, contraseña, estaIniciandoSession) {
-        var _this_1 = this;
-        console.log('validacion:', usuario, contraseña)
+        var _this = this;
         this.validacionDeLicenciaServicio.validarLicencia(usuario, contraseña, device.uuid, function (data) {
             try {
-                console.log('establecerConexionConElServidor:', usuario, contraseña, device.uuid)
-                console.log(data)
-                _this_1.establecerConexionConElServidor(usuario, contraseña, data.CommunicationAddress, data.ValidationType, estaIniciandoSession);
+                _this.establecerConexionConElServidor(usuario, contraseña, data.CommunicationAddress, data.ValidationType, estaIniciandoSession);
             }
             catch (e) {
+                _this.desbloquearPantalla();
                 notify("Error al validar licencia: " + e.message);
-                _this_1.desbloquearPantalla();
             }
         }, function (error) {
+            _this.desbloquearPantalla();
             notify(error.mensaje);
-            _this_1.desbloquearPantalla();
         });
     };
     ValidacionDeLicenciaControlador.prototype.establecerConexionConElServidor = function (usuario, contrass, direccionDeComunicacion, tipoDeValidacionDeLicencia, estaIniciandoSession) {
-        var _this_1 = this;
+        var _this = this;
         try {
             localStorage.setItem("UserID", usuario);
             localStorage.setItem("UserCode", contrass);
             SocketControlador.establecerConexionConServidor(direccionDeComunicacion);
-            console.log(SocketControlador.socketIo)
             var intent_1 = 0;
             var idInterval_1 = setInterval(function () {
                 if (intent_1 === 5) {
@@ -85,7 +81,6 @@ var ValidacionDeLicenciaControlador = (function () {
                 intent_1++;
             }, 1000);
             SocketControlador.socketIo.on("connect", function () {
-                SocketControlador.socketIo.sendBuffer.length = 0;
                 var lblNetworkDeliveryMenu = $("#lblNetworkDeliveryMenu");
                 var lblNetworkSkusPOS_1 = $("#lblNetworkSkusPOS_1");
                 var lblNetworkDeliverySumm = $("#lblNetworkDeliverySumm");
@@ -98,7 +93,7 @@ var ValidacionDeLicenciaControlador = (function () {
                 var lblNetworkStatusMenuPage = $("#lblNetworkStatusMenuPage");
                 var lblSondaVersion = $("#lblSondaVersion");
                 if (SocketControlador.vieneDeDesconexion === false) {
-                    _this_1.delegarConexionDeServidor(SocketControlador.socketIo);
+                    _this.delegarConexionDeServidor(SocketControlador.socketIo);
                 }
                 lblNetwork.text(states[gNetworkState]);
                 btnNetworkStatus.buttonMarkup({ icon: "cloud" });
@@ -122,7 +117,7 @@ var ValidacionDeLicenciaControlador = (function () {
                 if (estaIniciandoSession) {
                     gLastLogin = usuario;
                     estaIniciandoSession = false;
-                    var time_1 = setTimeout(function () {
+                    setTimeout(function () {
                         SocketControlador.socketIo.emit("validatecredentials", {
                             loginid: usuario,
                             pin: contrass,
@@ -132,7 +127,6 @@ var ValidacionDeLicenciaControlador = (function () {
                             validationtype: tipoDeValidacionDeLicencia,
                             version: SondaVersion
                         });
-                        clearTimeout(time_1);
                     }, 1000);
                 }
                 else {
@@ -219,8 +213,6 @@ var ValidacionDeLicenciaControlador = (function () {
         delegarSocketsDeObjetosJs(socket);
         ParametroServicio.delegarSockets(socket);
         ClasificacionControlador.delegarSockets(socket);
-        tareaControladorADelegar.DelegarSocketsDeTareaControlador(socket);
-        confirmacionControlador.delegarSockets(socket);
     };
     ValidacionDeLicenciaControlador.prototype.usuarioTieneConexionAInternet = function () {
         return !(!navigator.onLine || navigator.connection.type === "none");

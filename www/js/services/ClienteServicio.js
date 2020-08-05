@@ -63,12 +63,12 @@ var ClienteServicio = (function () {
         }
     };
     ClienteServicio.prototype.guardarScouting = function (scouting, callbak, errCallback) {
-        var _this_1 = this;
+        var _this = this;
         SONDA_DB_Session.transaction(function (tx) {
-            var formatoDeInsercionDeClienteNuevo = _this_1.obtenerFormatoDeInsercionDeClienteNuevo(scouting);
+            var formatoDeInsercionDeClienteNuevo = _this.obtenerFormatoDeInsercionDeClienteNuevo(scouting);
             tx.executeSql(formatoDeInsercionDeClienteNuevo);
             scouting.tags.map(function (etiqueta) {
-                var formatoDeInsercionDeEtiquetaDeCliente = _this_1
+                var formatoDeInsercionDeEtiquetaDeCliente = _this
                     .obtenerFormatoDeInsercionDeEtiquetaDeClienteNuevo(scouting, etiqueta);
                 tx.executeSql(formatoDeInsercionDeEtiquetaDeCliente);
             });
@@ -84,7 +84,7 @@ var ClienteServicio = (function () {
         });
     };
     ClienteServicio.prototype.obtenerClientesConEtiquetasNoSincronizados = function (callback, errCallback) {
-        var _this_1 = this;
+        var _this = this;
         var sql = "";
         var clientsReturn = new Array();
         SONDA_DB_Session.transaction(function (tx) {
@@ -120,7 +120,7 @@ var ClienteServicio = (function () {
                             tagsQty: clientTemp.TAGS_QTY,
                             syncId: clientTemp.SYNC_ID
                         };
-                        _this_1.obtenerEtiquetasPorCliente(txResult, clientResult, i, function (clientComplete, index) {
+                        _this.obtenerEtiquetasPorCliente(txResult, clientResult, i, function (clientComplete, index) {
                             clientsReturn.push(clientComplete);
                             if (index === results.rows.length - 1) {
                                 callback(clientsReturn);

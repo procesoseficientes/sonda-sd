@@ -10,19 +10,19 @@ var ConfirmacionDePagoControlador = (function () {
         subscriber.clienteProcesado = message.cliente;
     };
     ConfirmacionDePagoControlador.prototype.delegarConfirmacionDePagoControlador = function () {
-        var _this_1 = this;
+        var _this = this;
         $("#UiPaymentConfirmationPage").on("pageshow", function () {
-            _this_1.cargarDatosPrincipales();
+            _this.cargarDatosPrincipales();
         });
         $("#UiBtnPaymentConfirmed").on("click", function () {
-            _this_1.definirPantallaDeDestinoEnBaseAParametroDePorcentajeMinimoDePago(function (pantallaDeDestino) {
-                _this_1.irAPantalla(pantallaDeDestino);
+            _this.definirPantallaDeDestinoEnBaseAParametroDePorcentajeMinimoDePago(function (pantallaDeDestino) {
+                _this.irAPantalla(pantallaDeDestino);
             });
         });
         $("#UiBtnPrintPaidProcessed").on("click", function () {
-            _this_1.pagoProcesado.printsQuantity = 0;
+            _this.pagoProcesado.printsQuantity = 0;
             InteraccionConUsuarioServicio.bloquearPantalla();
-            _this_1.imprimirDocumentoDePago(function () {
+            _this.imprimirDocumentoDePago(function () {
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             });
         });
@@ -36,7 +36,7 @@ var ConfirmacionDePagoControlador = (function () {
         });
     };
     ConfirmacionDePagoControlador.prototype.definirPantallaDeDestinoEnBaseAParametroDePorcentajeMinimoDePago = function (callback) {
-        var _this_1 = this;
+        var _this = this;
         var procesarVentaDeCliente = function () {
             var nitDeCliente = $("#txtNIT");
             nitDeCliente.val(gNit);
@@ -47,7 +47,7 @@ var ConfirmacionDePagoControlador = (function () {
             if (this.pagoProcesado.percentCoveredWhitThePaid >=
                 this.pagoProcesado.minimumPercentOfPaid) {
                 this.enviarInformacionDeDetalleDePagos(function () {
-                    if (_this_1.pagoProcesado.paymentType ===
+                    if (_this.pagoProcesado.paymentType ===
                         TipoDePagoDeFactura.FacturaVencida) {
                         procesarVentaDeCliente();
                     }
@@ -71,17 +71,17 @@ var ConfirmacionDePagoControlador = (function () {
         }
     };
     ConfirmacionDePagoControlador.prototype.regresarAPantallaDeFacturasVendidasDebidoANoAlcanzarElPagoMinimoParaNuevaVenta = function (porcentajeMinimo, callback) {
-        var _this_1 = this;
+        var _this = this;
         if (this.pagoProcesado.paymentType === TipoDePagoDeFactura.FacturaVencida) {
             publicarClienteParaProcesoDeCobroDeFacturasVencidas(function () {
-                _this_1.enviarInformacionDeDetalleDePagos(function () {
+                _this.enviarInformacionDeDetalleDePagos(function () {
                     callback("UiOverdueInvoicePaymentPage");
                 });
             });
         }
         else {
             this.enviarInformacionDeClientePertenecienteAlPagoActual(function () {
-                _this_1.enviarInformacionDeDetalleDePagos(function () {
+                _this.enviarInformacionDeDetalleDePagos(function () {
                     callback("UiOverdueInvoicePaymentPage");
                 });
             });
@@ -95,14 +95,14 @@ var ConfirmacionDePagoControlador = (function () {
         etiquetaDePagoProcesado = null;
     };
     ConfirmacionDePagoControlador.prototype.imprimirDocumentoDePago = function (callback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (this.pagoProcesado.printsQuantity === 2)
                 return callback();
             this.pagoServicio.imprimirPago(this.pagoProcesado, function () {
-                _this_1.pagoProcesado.isReprint = true;
-                _this_1.pagoProcesado.printsQuantity++;
-                _this_1.imprimirDocumentoDePago(callback);
+                _this.pagoProcesado.isReprint = true;
+                _this.pagoProcesado.printsQuantity++;
+                _this.imprimirDocumentoDePago(callback);
             }, function (error) {
                 InteraccionConUsuarioServicio.desbloquearPantalla();
                 console.log("Error al imprimir el documento de pago debido a: " + error);

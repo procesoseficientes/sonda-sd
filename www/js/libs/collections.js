@@ -1,10 +1,7 @@
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -536,12 +533,12 @@ var collections;
     var LinkedDictionary = (function (_super) {
         __extends(LinkedDictionary, _super);
         function LinkedDictionary(toStrFunction) {
-            var _this_1 = _super.call(this, toStrFunction) || this;
-            _this_1.head = new LinkedDictionaryPair(null, null);
-            _this_1.tail = new LinkedDictionaryPair(null, null);
-            _this_1.head.next = _this_1.tail;
-            _this_1.tail.prev = _this_1.head;
-            return _this_1;
+            var _this = _super.call(this, toStrFunction) || this;
+            _this.head = new LinkedDictionaryPair(null, null);
+            _this.tail = new LinkedDictionaryPair(null, null);
+            _this.head.next = _this.tail;
+            _this.tail.prev = _this.head;
+            return _this;
         }
         LinkedDictionary.prototype.appendToTail = function (entry) {
             var lastNode = this.tail.prev;

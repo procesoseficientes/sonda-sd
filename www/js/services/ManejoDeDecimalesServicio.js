@@ -9,7 +9,6 @@ var ManejoDeDecimalesServicio = (function () {
             decimales.displayDecimalsRoundConfiguration = localStorage.getItem("DISPLAY_DECIMALS_ROUND_CONFIGURATION");
             decimales.displayDecimalsRoundType = localStorage.getItem("DISPLAY_DECIMALS_ROUND_TYPE");
             decimales.defaultDisplayDecimalsForSkuQty = parseInt(localStorage.getItem("DEFAULT_DISPLAY_DECIMALS_FOR_SKU_QTY"));
-            decimales.currencySymbol = localStorage.getItem("CURRENCY_SYMBOL") || "Q";
             callback(decimales);
         }
         catch (e) {
@@ -18,7 +17,6 @@ var ManejoDeDecimalesServicio = (function () {
             decimales.displayDecimalsRoundConfiguration = "TOTAL";
             decimales.displayDecimalsRoundType = "ROUND";
             decimales.defaultDisplayDecimalsForSkuQty = 2;
-            decimales.currencySymbol = "Q";
             callback(decimales);
         }
     };
@@ -43,6 +41,7 @@ var ManejoDeDecimalesServicio = (function () {
         }
         return resultadoValor;
     };
+    ;
     return ManejoDeDecimalesServicio;
 }());
 //# sourceMappingURL=ManejoDeDecimalesServicio.js.map

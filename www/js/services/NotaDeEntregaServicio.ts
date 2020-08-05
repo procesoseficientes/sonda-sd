@@ -17,9 +17,7 @@
                 let sql: string[] = [];
                 sql.push("SELECT DELIVERY_NOTE_ID, DOC_SERIE, DOC_NUM, CODE_CUSTOMER");
                 sql.push(", DELIVERY_NOTE_ID_HH, TOTAL_AMOUNT, IS_POSTED, CREATED_DATETIME");
-                sql.push(", POSTED_DATETIME, TASK_ID, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID");
-                sql.push(", DELIVERY_IMAGE, BILLED_FROM_SONDA, IS_CANCELED, REASON_CANCEL, DISCOUNT");
-                sql.push(", DELIVERY_IMAGE_2, DELIVERY_IMAGE_3, DELIVERY_IMAGE_4, DELIVERY_SIGNATURE");
+                sql.push(", POSTED_DATETIME, TASK_ID, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE, BILLED_FROM_SONDA, IS_CANCELED, REASON_CANCEL, DISCOUNT");
                 sql.push(" FROM SONDA_DELIVERY_NOTE_HEADER WHERE IS_POSTED IN(0,1,3)");
 
                 readTrans.executeSql(sql.join(""), [], (readTransResult: SqlTransaction, results: SqlResultSet) => {
@@ -45,10 +43,6 @@
                         encabezadoNotaDeEntrega.isCanceled = encabezadoNotaEntregaTemp.IS_CANCELED;
                         encabezadoNotaDeEntrega.reasonCancel = encabezadoNotaEntregaTemp.REASON_CANCEL;
                         encabezadoNotaDeEntrega.discount = encabezadoNotaEntregaTemp.DISCOUNT;
-                        encabezadoNotaDeEntrega.deliveryImage2 = encabezadoNotaEntregaTemp.DELIVERY_IMAGE_2;
-                        encabezadoNotaDeEntrega.deliveryImage3 = encabezadoNotaEntregaTemp.DELIVERY_IMAGE_3;
-                        encabezadoNotaDeEntrega.deliveryImage4 = encabezadoNotaEntregaTemp.DELIVERY_IMAGE_4;
-                        encabezadoNotaDeEntrega.deliverySignature = encabezadoNotaEntregaTemp.DELIVERY_SIGNATURE;
 
                         documentos.push(encabezadoNotaDeEntrega);
                     }
@@ -213,8 +207,7 @@
         sqlEncabezado.push(`DELIVERY_NOTE_ID, DOC_SERIE, DOC_NUM`);
         sqlEncabezado.push(`, CODE_CUSTOMER, DELIVERY_NOTE_ID_HH, TOTAL_AMOUNT`);
         sqlEncabezado.push(`, IS_POSTED, CREATED_DATETIME, POSTED_DATETIME, TASK_ID`);
-        sqlEncabezado.push(`, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE`);
-        sqlEncabezado.push(`, BILLED_FROM_SONDA, DISCOUNT, DELIVERY_IMAGE_2, DELIVERY_IMAGE_3, DELIVERY_IMAGE_4, DELIVERY_SIGNATURE`)
+        sqlEncabezado.push(`, INVOICE_ID, CONSIGNMENT_ID, DEVOLUTION_ID, DELIVERY_IMAGE, BILLED_FROM_SONDA, DISCOUNT`);
         sqlEncabezado.push(`) VALUES(`);
         sqlEncabezado.push(`${notaDeEntregaEncabezado.deliveryNoteId}`);
         sqlEncabezado.push(`,'${notaDeEntregaEncabezado.docSerie}'`);
@@ -232,10 +225,6 @@
         sqlEncabezado.push(`,'${notaDeEntregaEncabezado.deliveryImage}'`);
         sqlEncabezado.push(`,${notaDeEntregaEncabezado.billedFromSonda}`);
         sqlEncabezado.push(`,${gDiscount}`);
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliveryImage2 && notaDeEntregaEncabezado.deliveryImage2.length > 0 ? `,'${notaDeEntregaEncabezado.deliveryImage2}'` : ',NULL');
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliveryImage3 && notaDeEntregaEncabezado.deliveryImage3.length > 0 ? `,'${notaDeEntregaEncabezado.deliveryImage3}'` : ',NULL');
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliveryImage4 && notaDeEntregaEncabezado.deliveryImage4.length > 0 ? `,'${notaDeEntregaEncabezado.deliveryImage4}'` : ',NULL');
-        sqlEncabezado.push(notaDeEntregaEncabezado.deliverySignature && notaDeEntregaEncabezado.deliverySignature.length > 0 ? `,'${notaDeEntregaEncabezado.deliverySignature}'` : ',NULL');
         sqlEncabezado.push(`)`);
 
         return sqlEncabezado.join("");

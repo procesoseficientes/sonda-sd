@@ -1,38 +1,28 @@
 ﻿class ConfirmacionDeNotaDeEntregaControlador {
-    tokenImagenesDeEntrega: SubscriptionToken;
 
     fotoObligatoria: boolean = false;
-    firmaObligatoria: boolean = false;
-    imagenesDeEntrega: Array<string> = [];
-    reglaServicio = new ReglaServicio();
-
-    constructor(public mensajero: Messenger) {
-        this.tokenImagenesDeEntrega = mensajero.subscribe<FotografiaMensaje>(this.recibirImagenesDeEntrega, getType(FotografiaMensaje), this);
-    }
 
     delegarConfirmacionDeNotaDeEntregaControlador() {
 
         $("#UiDeliveryNoteConfirmationPage").on("pageshow",
             () => {
                 estaEnFacturaTemporal = false;
+                gImageURI_1 = "";
                 this.obtenerRegla();
             });
 
         $("#UiBtnAcceptDeliveryNoteConfirmation").on("click",
-            (e: JQueryEventObject) => {
-                InteraccionConUsuarioServicio.bloquearPantalla();
-                if (this.validarSiLaFotoEsObligatorio() && this.verificarObligatoriedadDeFirma()) {
+            () => {
+                if (this.validarSiLaFotoEsObligatorio()) {
                     this.usuarioConfimarGuardarLaNotaDeEntrega();
                 }
             });
 
         $("#UiBtnDeliveryCamera").on("click", (e) => {
+            e.preventDefault();
             this.tomarFotografiaEntrega();
         });
 
-        $("#UiBtnDeliverySignature").on("click", (e) => {
-            this.capturarFirmaDeEntrega();
-        });
     }
 
     volverAMenuPrincipal() {
@@ -68,9 +58,6 @@
             // ReSharper disable once AssignToImplicitGlobalInFunctionScope
             esEntregaPorDocumento = false;
 
-            imagenDeEntregaControlador.imagenesCapturadas.length = 0;
-            firmaControlador.firmaCapturada = null;
-
             $.mobile.changePage("#menu_page", {
                 transition: "pop",
                 reverse: true,
@@ -78,110 +65,66 @@
                 showLoadMsg: false
             });
             EnviarData();
-            InteraccionConUsuarioServicio.desbloquearPantalla();
         });
     }
 
     usuarioConfimarGuardarLaNotaDeEntrega() {
         GrabarNotaDeEntrega(() => {
+            gImageURI_1 = "";
             actualizarEstadoDeTarea(gTaskId, TareaGeneroGestion.Si, "Genero Gestión", () => {
                 this.volverAMenuPrincipal();
             }, TareaEstado.Completada);
 
-        }, (error: any) => {
+        }, (error) => {
             notify(error.mensaje);
         });
     }
 
     tomarFotografiaEntrega() {
-        $.mobile.changePage("#UiDeliveryImagePage");
+        DispositivoServicio.TomarFoto((foto) => {
+            gImageURI_1 = foto;
+        }, (mensajeError) => {
+            if (mensajeError !== "Camera cancelled.")
+                notify(`Error al tomar fotografía de entrega: ${mensajeError}`);
+        });
     }
 
     obtenerRegla() {
         try {
-            this.reglaServicio.obtenerRegla("FotografiaObligatoriaEnEntrega", (regla: any) => {
+            let reglaServicio = new ReglaServicio();
+
+            reglaServicio.obtenerRegla("FotografiaObligatoriaEnEntrega", (regla: any) => {
                 if (regla.rows.length > 0 && regla.rows.item(0).ENABLED.toUpperCase() === "SI") {
                     this.fotoObligatoria = true;
                 } else {
                     this.fotoObligatoria = false;
                 }
-                this.obtenerReglaDeFirmaObligatoria();
             }, (error) => {
                 notify(error);
-                this.obtenerReglaDeFirmaObligatoria();
             });
         } catch (error) {
             notify(error.message);
-            this.obtenerReglaDeFirmaObligatoria();
         }
-    }
-
-    obtenerReglaDeFirmaObligatoria() {
-        try {
-            this.reglaServicio.obtenerRegla("FirmaObligatoriaEnEntrega", (regla: any) => {
-                if (regla.rows.length > 0 && regla.rows.item(0).ENABLED.toUpperCase() === "SI") {
-                    this.firmaObligatoria = true;
-                } else {
-                    this.firmaObligatoria = false;
-                }
-                this.cambiarVisualizacionDeBotonDeFirma(this.firmaObligatoria);
-            }, (error) => {
-                notify(error);
-                this.cambiarVisualizacionDeBotonDeFirma(false);
-            });
-        } catch (error) {
-            notify(error.message);
-            this.cambiarVisualizacionDeBotonDeFirma(false);
-        }
-    }
-
-    cambiarVisualizacionDeBotonDeFirma(visualizarBoton: boolean): void {
-        let contenedorDeBotonDeFirma: JQuery = $("#UiBtnDeliverySignatureContainer");
-        if (visualizarBoton) {
-            contenedorDeBotonDeFirma.show();
-        } else {
-            contenedorDeBotonDeFirma.hide();
-        }
-        contenedorDeBotonDeFirma = null;
     }
 
     validarSiLaFotoEsObligatorio(): boolean {
         let validacion: boolean = false;
-        if (this.fotoObligatoria) {
-            if (this.imagenesDeEntrega.length > 0) {
+        try {
+            if (this.fotoObligatoria) {
+                if (gImageURI_1 !== "") {
+                    validacion = true;
+                }
+                else {
+                    notify("Debe tomar una fotografía para finalizar la entrega.");
+                    validacion = false;
+                }
+            } else {
                 validacion = true;
             }
-            else {
-                notify("Debe tomar al menos una fotografía para finalizar la entrega.");
-                validacion = false;
-            }
-        } else {
-            validacion = true;
+        } catch (error) {
+            notify(error.message);
+            validacion = false;
         }
         return validacion;
-    }
-
-    recibirImagenesDeEntrega(mensaje: FotografiaMensaje, suscriptor: ConfirmacionDeNotaDeEntregaControlador): void {
-        suscriptor.imagenesDeEntrega = mensaje.fotografias;
-    }
-
-    verificarObligatoriedadDeFirma(): boolean {
-        let validacion: boolean = false;
-        if (this.firmaObligatoria) {
-            if (firmaControlador.firmaCapturada && firmaControlador.firmaCapturada.length > 0) {
-                validacion = true;
-            }
-            else {
-                notify("Debe tomar la firma para finalizar la entrega.");
-                validacion = false;
-            }
-        } else {
-            validacion = true;
-        }
-        return validacion;
-    }
-
-    capturarFirmaDeEntrega() {
-        $.mobile.changePage("#UiSignaturePage");
     }
 }

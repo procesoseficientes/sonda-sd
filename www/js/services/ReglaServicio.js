@@ -78,8 +78,8 @@ var ReglaServicio = (function () {
             SONDA_DB_Session.transaction(function (tx) {
                 var sql = "SELECT *  ";
                 sql += " FROM RULE ";
-                sql +=
-                    " WHERE [TYPE] IN('PuedeVenderAConsignacion','TomarFotoAlInicio','VisualizacionDeEstadisticaDeVentaDelCliente') ";
+                sql += " WHERE (TYPE = 'PuedeVenderAConsignacion' ";
+                sql += " OR TYPE = 'TomarFotoAlInicio') ";
                 sql += " AND (ENABLED = 'Si' OR ENABLED = 'SI') ";
                 sql += " ORDER BY EVENT_ORDER";
                 tx.executeSql(sql, [], function (txResult, results) {
@@ -97,7 +97,7 @@ var ReglaServicio = (function () {
         }
     };
     ReglaServicio.prototype.ejecutarReglasDeInicioDeRuta = function (reglas, reglaActual, callback, errorCallback) {
-        var _this_1 = this;
+        var _this = this;
         try {
             if (reglas == null) {
                 callback();
@@ -107,8 +107,7 @@ var ReglaServicio = (function () {
                 var reglaAct = reglas.rows.item(reglaActual);
                 switch (reglaAct.TYPE) {
                     case "PuedeVenderAConsignacion":
-                        var cantidadConsignaciones = document
-                            .getElementById("UiClientHasConsignment")
+                        var cantidadConsignaciones = document.getElementById("UiClientHasConsignment")
                             .getAttribute("CONSIGNMENTS");
                         if (parseInt(cantidadConsignaciones) > 0) {
                             this.obtenerRegla("CobrarConsignacion", function (regla) {
@@ -118,7 +117,7 @@ var ReglaServicio = (function () {
                                         PagoConsignacionesControlador.MostrarPantallaPrincipalDePagoDeConsignacion();
                                     }
                                     else {
-                                        _this_1.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
+                                        _this.ejecutarReglasDeInicioDeRuta(reglas, (reglaActual + 1), function () {
                                             callback();
                                         }, function (err) {
                                             errorCallback(err.message);
@@ -126,7 +125,7 @@ var ReglaServicio = (function () {
                                     }
                                 }
                                 else {
-                                    _this_1.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
+                                    _this.ejecutarReglasDeInicioDeRuta(reglas, (reglaActual + 1), function () {
                                         callback();
                                     }, function (err) {
                                         errorCallback(err.message);
@@ -137,7 +136,7 @@ var ReglaServicio = (function () {
                             });
                         }
                         else {
-                            this.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
+                            this.ejecutarReglasDeInicioDeRuta(reglas, (reglaActual + 1), function () {
                                 callback();
                             }, function (err) {
                                 errorCallback(err.message);
@@ -147,7 +146,7 @@ var ReglaServicio = (function () {
                     case "TomarFotoAlInicio":
                         DispositivoServicio.TomarFoto(function (fotografia) {
                             gInitialTaskImage = "data:image/jpeg;base64," + fotografia;
-                            _this_1.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
+                            _this.ejecutarReglasDeInicioDeRuta(reglas, (reglaActual + 1), function () {
                                 callback();
                             }, function (err) {
                                 errorCallback(err.message);
@@ -155,46 +154,6 @@ var ReglaServicio = (function () {
                         }, function (err) {
                             errorCallback(err.message);
                         });
-                        break;
-                    case "VisualizacionDeEstadisticaDeVentaDelCliente":
-                        if (gClientID != "C000000") {
-                            var estadisticaDeVentaPorDiaServicio = new EstadisticaDeVentaServicio();
-                            estadisticaDeVentaPorDiaServicio.obtenerEstadisticaDeVentaPorCliente(gClientID, function (estadisticas) {
-                                if (estadisticas && estadisticas.length > 0) {
-                                    estadisticaDeVentaPorDiaControlador.funcionDeRetornoAProcesoPrincipal = function () {
-                                        _this_1.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
-                                            callback();
-                                        }, function (err) {
-                                            errorCallback(err.message);
-                                        });
-                                    };
-                                    estadisticaDeVentaPorDiaControlador.construirVisualizacionDeEstadisticaDeCliente(estadisticas, function () {
-                                        $.mobile.changePage("#UiSaleStatisticPage", {
-                                            transition: "none",
-                                            reverse: true,
-                                            changeHash: true,
-                                            showLoadMsg: false
-                                        });
-                                    });
-                                }
-                                else {
-                                    _this_1.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
-                                        callback();
-                                    }, function (err) {
-                                        errorCallback(err.message);
-                                    });
-                                }
-                            }, function (resultado) {
-                                errorCallback(resultado.mensaje);
-                            });
-                        }
-                        else {
-                            this.ejecutarReglasDeInicioDeRuta(reglas, reglaActual + 1, function () {
-                                callback();
-                            }, function (err) {
-                                errorCallback(err.message);
-                            });
-                        }
                         break;
                     default:
                         callback();

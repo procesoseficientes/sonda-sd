@@ -87,8 +87,4 @@ var TipoDePagoDeFactura;
     TipoDePagoDeFactura[TipoDePagoDeFactura["FacturaVencida"] = "OVERDUE_INVOICE"] = "FacturaVencida";
     TipoDePagoDeFactura[TipoDePagoDeFactura["FacturaAbierta"] = "OPEN_INVOICE"] = "FacturaAbierta";
 })(TipoDePagoDeFactura || (TipoDePagoDeFactura = {}));
-var TiposDeSecuenciaAControlar;
-(function (TiposDeSecuenciaAControlar) {
-    TiposDeSecuenciaAControlar[TiposDeSecuenciaAControlar["NuevaTarea"] = "NEW_TASK"] = "NuevaTarea";
-})(TiposDeSecuenciaAControlar || (TiposDeSecuenciaAControlar = {}));
 //# sourceMappingURL=TiposYEstados.js.map

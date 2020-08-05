@@ -4,7 +4,7 @@ var SocketsGlobalesServicio = (function () {
         this.estadisticaDeVentaServicio = new EstadisticaDeVentaServicio();
     }
     SocketsGlobalesServicio.prototype.delegarSocketsGlobales = function (socketIo) {
-        var _this_1 = this;
+        var _this = this;
         socketIo.on("broadcast_receive", function (data) {
             navigator.geolocation.getCurrentPosition(function (position) {
                 gCurrentGPS = position.coords.latitude + "," + position.coords.longitude;
@@ -73,7 +73,6 @@ var SocketsGlobalesServicio = (function () {
             gdbuser = data.dbuser;
             gdbuserpass = data.dbuserpass;
             gRouteReturnWarehouse = data.route_return_warehouse;
-            localStorage.setItem("user_type", data.user_type);
             UpdateLoginInfo("set");
             if (gIsOnline == EstaEnLinea.Si) {
                 GetBankAccounts();
@@ -120,37 +119,6 @@ var SocketsGlobalesServicio = (function () {
                         });
                     }
                     break;
-            }
-        });
-        socketIo.on("ValidateRoute_success", function (data) {
-            try {
-                GetRouteAuth("FACTURA");
-            }
-            catch (err) {
-                notify("ValidateRoute.catch:" + err.message);
-                InteraccionConUsuarioServicio.desbloquearPantalla();
-            }
-        });
-        socketIo.on("ValidateRoute_fail", function (data) {
-            try {
-                if (!data.message) {
-                    notify("No se puede iniciar ruta por: " + data.message);
-                }
-                InteraccionConUsuarioServicio.desbloquearPantalla();
-            }
-            catch (err) {
-                notify("ValidateRoute.catch:" + err.message);
-                InteraccionConUsuarioServicio.desbloquearPantalla();
-            }
-        });
-        socketIo.on("ValidateRoute_error", function (data) {
-            try {
-                notify("Error al intentar iniciar ruta: " + data.message);
-                InteraccionConUsuarioServicio.desbloquearPantalla();
-            }
-            catch (err) {
-                notify("ValidateRoute.catch:" + err.message);
-                InteraccionConUsuarioServicio.desbloquearPantalla();
             }
         });
         socketIo.on("GetInitialRouteSend", function (data) {
@@ -232,8 +200,9 @@ var SocketsGlobalesServicio = (function () {
                                     "', '" +
                                     data.row.TAX_CODE +
                                     "', " +
-                                    (data.row.CODE_PACK_UNIT_STOCK
-                                        ? "'" + data.row.CODE_PACK_UNIT_STOCK + "'"
+                                    (data.row
+                                        .CODE_PACK_UNIT_STOCK
+                                        ? ("'" + data.row.CODE_PACK_UNIT_STOCK + "'")
                                         : null) +
                                     ", '" +
                                     data.row.SALES_PACK_UNIT +
@@ -313,8 +282,6 @@ var SocketsGlobalesServicio = (function () {
                                         data.row.NIT +
                                         "','" +
                                         data.row.TASK_TYPE +
-                                        "','" +
-                                        data.row.TASK_STATUS +
                                         "')";
                                 vLI = vLI + '<a href="#" onclick="' + xonclick2 + '">';
                                 vLI = vLI + '<h2><span class="small-roboto">';
@@ -416,14 +383,6 @@ var SocketsGlobalesServicio = (function () {
                         break;
                     case "GetDocumentSequence_AddDocument":
                         AperturaDeCajaServicio.AgregarSecuenciaDeDocumento(data.row);
-                        if (data.row.DOC_TYPE === "ONLINE_INVOICE") {
-                            var menuControlador_1 = new MenuControlador();
-                            menuControlador_1.cargarInformacionFel(localStorage.getItem("user_type"), function (display, implementaFel, secuenciaDocumento) {
-                                menuControlador_1.seValidoCorrectamente(display, secuenciaDocumento);
-                            }, function (error) {
-                                notify("No se pudo validar si usar\u00E1 FEL debido a: " + error.mensaje);
-                            });
-                        }
                         break;
                     case "GetInitialRouteComplete":
                         localStorage.setItem("POS_STATUS", "OPEN");
@@ -547,22 +506,16 @@ var SocketsGlobalesServicio = (function () {
                         cuentaCorrienteServicio.agregarCuentaCorrienteDeCliente(data.row);
                         break;
                     case "GetPackUnit_AddPackUnit":
-                        _this_1.unidadDeMedidaServicio.agregarUnidadDeMedida(data.row);
+                        _this.unidadDeMedidaServicio.agregarUnidadDeMedida(data.row);
                         break;
                     case "GetPackConversion_AddPackConversion":
-                        _this_1.unidadDeMedidaServicio.agregarPaqueteDeConversion(data.row);
+                        _this.unidadDeMedidaServicio.agregarPaqueteDeConversion(data.row);
                         break;
                     case "statistics_not_found":
                         notify("No se encontraron las estadisticas de venta.");
                         break;
                     case "add_statistic":
-                        _this_1.estadisticaDeVentaServicio.agregarEstadisticaDeVenta(data.row);
-                        break;
-                    case "add_statistic_costumer":
-                        _this_1.estadisticaDeVentaServicio.agregarEstadisticaDeVentaPorCliente(data.row);
-                        break;
-                    case "add_phrase_and_stage":
-                        facturacionElectronicaServicio.agregarFraseEscenario(data.row);
+                        _this.estadisticaDeVentaServicio.agregarEstadisticaDeVenta(data.row);
                         break;
                 }
             }
@@ -715,8 +668,6 @@ var SocketsGlobalesServicio = (function () {
                         $("#lblCompanyName").text(data.row.NAME_ENTERPRISE);
                         localStorage.setItem("SAT_RES_EXPIRE", date_autho_limit);
                         localStorage.setItem("NAME_USER", data.row.NAME_USER);
-                        localStorage.setItem("FEL_DOCUMENT_TYPE", data.row.FEL_DOCUMENT_TYPE);
-                        localStorage.setItem("FEL_STABLISHMENT_CODE", data.row.FEL_STABLISHMENT_CODE);
                     }
                 }
                 else {
@@ -801,6 +752,15 @@ var SocketsGlobalesServicio = (function () {
         socketIo.on("getalertlimit_completed", function (data) {
             my_dialog("", "", "close");
         });
+        socketIo.on("requested_bank_accounts", function (data) {
+            SONDA_DB_Session.transaction(function (tx) {
+                var pSql = "DELETE FROM BANK_ACCOUNTS";
+                tx.executeSql(pSql);
+            }, function (err) {
+                my_dialog("", "", "close");
+                notify(err.code.toString());
+            });
+        });
         socketIo.on("add_to_bank_accounts", function (data) {
             SONDA_DB_Session.transaction(function (tx) {
                 var pSql = "INSERT INTO BANK_ACCOUNTS(BANK, ACCOUNT_BASE, ACCOUNT_NAME, ACCOUNT_NUMBER) VALUES('" +
@@ -817,6 +777,9 @@ var SocketsGlobalesServicio = (function () {
                 my_dialog("", "", "close");
                 notify(err.message);
             });
+        });
+        socketIo.on("add_to_bank_completed", function (data) {
+            my_dialog("", "", "close");
         });
         socketIo.on("requested_void_reasons", function (data) {
             gVoidReasons = [];

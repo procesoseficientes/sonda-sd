@@ -25,10 +25,6 @@ var Tarea = (function () {
         this.nit = "";
         this.phoneCustomer = "";
         this.deliveryPicture = "";
-        this.codePriceList = "";
-        this.inPlanRoute = 0;
-        this.department = "";
-        this.municipality = "";
     }
     return Tarea;
 }());
