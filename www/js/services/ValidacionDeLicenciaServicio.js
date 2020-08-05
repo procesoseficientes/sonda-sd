@@ -2,6 +2,7 @@ var ValidacionDeLicenciaServicio = (function () {
     function ValidacionDeLicenciaServicio() {
     }
     ValidacionDeLicenciaServicio.prototype.validarLicencia = function (user, pass, deviceId, callback, errorCallback) {
+        console.log('ValidacionDeLicenciaServicio.validarLicencia')
         try {
             getConf((data) => {
                 console.log(data)
@@ -9,6 +10,7 @@ var ValidacionDeLicenciaServicio = (function () {
             })
         }
         catch (e) {
+            console.error(e)
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
         }
     };
@@ -60,41 +62,45 @@ function writeLog(str) {
 }
 
 function justForTesting() {
-    if(!logOb) return;
-	logOb.file(function(file) {
-		var reader = new FileReader();
-
-		reader.onloadend = function(e) {
-			console.log(this.result);
-		};
-
-		reader.readAsText(file);
-	}, (err) => {
-        console.log("FileSystem Error");
-	    console.dir(err);
-    });
+    //if(!logOb) return;
+    setTimeout(()=> {
+        logOb.file(function(file) {
+            var reader = new FileReader();
+    
+            reader.onloadend = function(e) {
+                console.log(this.result);
+            };
+    
+            reader.readAsText(file);
+        }, (err) => {
+            console.log("FileSystem Error");
+            console.dir(err);
+        });
+    }, 1500)
 
 }
 
 function getConf(callback) {
-    if(!logOb) return;
-    logOb.file(function(file) {
-        var reader = new FileReader();
-
-        reader.onloadend = function(e) {
-            if (this.result == '') {
-                writeLog(`{"url": "20.190.236.87:8085"}`)
-                this.result = `{"url": "20.190.236.87:8085"}`
-            }
-            callback(JSON.parse(this.result));
-        };
-
-
-        reader.readAsText(file);
-    }, (err) => {
-        console.log("FileSystem Error");
-        console.dir(err);
-    });
+    //if(!logOb) return;
+    setTimeout(()=> {
+        logOb.file(function(file) {
+            var reader = new FileReader();
+    
+            reader.onloadend = function(e) {
+                if (this.result == '') {
+                    writeLog(`{"url": "20.190.236.87:8085"}`)
+                    this.result = `{"url": "20.190.236.87:8085"}`
+                }
+                callback(JSON.parse(this.result));
+            };
+    
+    
+            reader.readAsText(file);
+        }, (err) => {
+            console.log("FileSystem Error");
+            console.dir(err);
+        });
+    },1000)
 }
 
 function writeConfig() {

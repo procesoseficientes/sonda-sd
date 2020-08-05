@@ -121,8 +121,8 @@ var gDetailSerial = "";
 var gTaskOnRoutePlan = 1;
 var gIsOnNotificationPage = false;
 
-var currentBranch = "G-Force@Jakarta";
-var SondaVersion = "9.2.0";
+var currentBranch = "August1";
+var SondaVersion = "2020.8.5";
 
 var estaEnConfirmacionDeFacturacion = false;
 
@@ -6539,10 +6539,16 @@ function onDeviceReady() {
 
       ToastThis("Bienvenido " + gLastLogin);
 
+      debugger;
+      console.log(SocketControlador.socketIo)
       if (
         !SocketControlador.socketIo ||
         !SocketControlador.socketIo.connected
       ) {
+        console.log(
+          localStorage.getItem("UserID"),
+          localStorage.getItem("UserCode")
+        )
         var validacionDeLicencia = new ValidacionDeLicenciaControlador();
         validacionDeLicencia.validarLicencia(
           localStorage.getItem("UserID"),
