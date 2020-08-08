@@ -152,8 +152,8 @@ var gDetailSerial = "";
 var gTaskOnRoutePlan = 1;
 var gIsOnNotificationPage = false;
 
-var currentBranch = "G-Force@Salamandra";
-var SondaVersion = "8.2.2";
+var currentBranch = "Agosto2020";
+var SondaVersion = "2020.8.5.1";
 
 function SaveFile() {
   var fail = function(error) {};

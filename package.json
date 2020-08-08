@@ -1,6 +1,6 @@
 {
     "name": "mobility.sonda.sd",
-    "version": "2020.8.5",
+    "version": "2020.8.5.1",
     "displayName": "SondaSD",
     "cordova": {
         "platforms": [

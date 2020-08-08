@@ -708,7 +708,7 @@ function ObtenerRegistrosDeTrazabilidadDeConsignacionNoPosteados(callBack, error
                         , HANDLE_SERIAL: registro.HANDLE_SERIAL
                         , SERIAL_NUMBER: registro.SERIAL_NUMBER
                     }
-                    registrosDeTrazabilidad.push(registroModelo);
+                    registrosDeTrazabilidad.push(registromodelo);
                 }
                 callBack(registrosDeTrazabilidad);
             }, function (error, trans2) {
