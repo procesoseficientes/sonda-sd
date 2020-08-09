@@ -84,7 +84,7 @@ var default_image;
 //var SondaServerURL = "http://190.56.115.27:9596"; //IP Publica Servidor QA Mobility 
 var SondaServerURL = "";
 
-var SondaVersion = "4.4.0";
+var SondaVersion = "2020.8.9";
 var SondaServerOptions =
 {
     'reconnect': true,
