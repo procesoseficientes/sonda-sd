@@ -122,7 +122,7 @@ var gTaskOnRoutePlan = 1;
 var gIsOnNotificationPage = false;
 
 var currentBranch = "August1";
-var SondaVersion = "2020.8.5";
+var SondaVersion = "2020.9.18";
 
 var estaEnConfirmacionDeFacturacion = false;
 
@@ -2145,7 +2145,7 @@ function printinvoice_joininfo(invoiceId, pIsRePrinted, callBack, escopia) {
 
                         pos += 30;
                         headerFormat +=
-                          "CENTER 550 T 0 2 0 " + pos + " FACTURA \r\n";
+                          "CENTER 550 T 0 2 0 " + pos + " FACTURA CAMBIARIA \r\n";
 
                         pos += 30;
                         headerFormat +=
