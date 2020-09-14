@@ -89,10 +89,8 @@
 
     $("#skus_list_page").on("pageshow", () => {
       let criterioDeBusquedaSku = $("#uiTxtFilterListSkusPage");
-      criterioDeBusquedaSku.val("");
       criterioDeBusquedaSku.trigger("click");
       criterioDeBusquedaSku.focus();
-      criterioDeBusquedaSku = null;
       if (
         este.configuracionDecimales == undefined ||
         este.configuracionDecimales == null ||
