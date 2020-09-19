@@ -94,7 +94,7 @@ var default_image;
 var SondaServerURL = "";
 
 var currentBranch = "Agosto12020";
-var SondaVersion = "2020.9.13";
+var SondaVersion = "2020.9.19";
 var SondaServerOptions = {
   reconnect: true,
   "max reconnection attempts": 60000
