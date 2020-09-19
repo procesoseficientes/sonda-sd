@@ -4,6 +4,7 @@ Sonda Mobile para Pre-ventas y distribución de rutas
 ## Dependencias
 - Cordova 7.0.0
 - Node 12.14.1
+- Android Studio
 
 ## Uso
 1. Instalar Cordova, versión 7.0.0
