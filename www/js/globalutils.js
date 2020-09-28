@@ -76,6 +76,8 @@ var tipoDePagoProcesadoEnCobroDeFacturasVencidas;
 
 var SondaServerURL = ""; //DA
 
+var logOb;
+
 var SondaServerOptions = {
   reconnect: true,
   "max reconnection attempts": 60000
@@ -121,8 +123,8 @@ var gDetailSerial = "";
 var gTaskOnRoutePlan = 1;
 var gIsOnNotificationPage = false;
 
-var currentBranch = "August1";
-var SondaVersion = "2020.9.18";
+var currentBranch = "G-Force@Jakarta";
+var SondaVersion = "9.2.1";
 
 var estaEnConfirmacionDeFacturacion = false;
 
@@ -206,19 +208,14 @@ function DeviceIsOnline() {
     notify("DeviceIsOnline: " + e.message);
   }
 }
-function DeviceIsOffline() {  
-  if ('onLine' in navigator && !navigator.onLine) {
-    gIsOnline = EstaEnLinea.No;
-    $("#login_isonline").text("Offline");
+function DeviceIsOffline() {
+  $("#login_isonline").text("Offline");
 
-    $("#login_isonline").text("OffLine");
-    $("#lblNetworkLogin").text("OffLine");
-    $("#lblNetworkDeliveryMenu").text("OffLine");
-  } else {
-    gIsOnline = EstaEnLinea.Si
-    DeviceIsOnline()
-  }
-  
+  $("#login_isonline").text("OffLine");
+  $("#lblNetworkLogin").text("OffLine");
+  $("#lblNetworkDeliveryMenu").text("OffLine");
+
+  gIsOnline = EstaEnLinea.No;
 }
 function my_dialog(pTitle, pMessage, pAction) {
   if (pAction === "open") {
@@ -2145,7 +2142,7 @@ function printinvoice_joininfo(invoiceId, pIsRePrinted, callBack, escopia) {
 
                         pos += 30;
                         headerFormat +=
-                          "CENTER 550 T 0 2 0 " + pos + " FACTURA CAMBIARIA \r\n";
+                          "CENTER 550 T 0 2 0 " + pos + " FACTURA \r\n";
 
                         pos += 30;
                         headerFormat +=
@@ -6354,18 +6351,7 @@ function viewinvoice(pInvoiceID, pInvoiceCustName, pAmount, telephoneNumber) {
   }
 }
 
-var logOb;
-
 function onDeviceReady() {
-  const path = cordova.file.externalDataDirectory;
-  console.log(path)
-  window.resolveLocalFileSystemURL(path, (dir) => {
-    console.log("got main dir",dir);
-    dir.getFile("conf.json", {create:true}, (file) => {
-      console.log("got the file", file);
-      logOb = file;
-    });
-  });
   try {
     controlDeSecuenciaServicio = new ControlDeSecuenciaServicio();
 
@@ -6373,7 +6359,11 @@ function onDeviceReady() {
     validacionDeLicenciaControlador.delegarValidacionDeLicenciaControlador();
     validacionDeLicenciaControlador = null;
 
-    DeviceIsOffline()
+    $("#login_isonline").text("OffLine");
+    $("#lblNetworkLogin").text("OffLine");
+    $("#lblNetworkDeliveryMenu").text("OffLine");
+    $("#lblNetworkSkusPOS_1").text("OffLine");
+    $("#lblNetworkEstadistica").text("OffLine");
     $("#lblSondaVersion").text(SondaVersion);
 
     delegate_events();
@@ -6540,16 +6530,10 @@ function onDeviceReady() {
 
       ToastThis("Bienvenido " + gLastLogin);
 
-      debugger;
-      console.log(SocketControlador.socketIo)
       if (
         !SocketControlador.socketIo ||
         !SocketControlador.socketIo.connected
       ) {
-        console.log(
-          localStorage.getItem("UserID"),
-          localStorage.getItem("UserCode")
-        )
         var validacionDeLicencia = new ValidacionDeLicenciaControlador();
         validacionDeLicencia.validarLicencia(
           localStorage.getItem("UserID"),

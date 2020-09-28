@@ -910,7 +910,7 @@ function ObtenerRegistrosDeTrazabilidadDeConsignacionNoPosteados(
         function(trans2, results) {
           for (var i = 0; i < results.rows.length; i++) {
             var registro = results.rows.item(i);
-            var registromodelo = {
+            var registroModelo = {
               CONSIGNMENT_ID: registro.CONSIGNMENT_ID,
               DOC_SERIE_SOURCE: registro.DOC_SERIE_SOURCE,
               DOC_NUM_SOURCE: registro.DOC_NUM_SOURCE,
@@ -923,7 +923,7 @@ function ObtenerRegistrosDeTrazabilidadDeConsignacionNoPosteados(
               HANDLE_SERIAL: registro.HANDLE_SERIAL,
               SERIAL_NUMBER: registro.SERIAL_NUMBER
             };
-            registrosDeTrazabilidad.push(registromodelo);
+            registrosDeTrazabilidad.push(registroModelo);
           }
           callBack(registrosDeTrazabilidad);
         },

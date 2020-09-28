@@ -1616,7 +1616,7 @@ function ConfirmPostInvoice() {
                 function(tx, results) {
                   my_dialog("", "", "close");
                   if (results.rows.length === 0) {
-                    if (true) {
+                    if (gImageURI_1.length > 0) {
                       if (
                         parseInt(efectivo) === 0 &&
                         facturaCompletaEnConsignacion === true &&
@@ -2872,6 +2872,7 @@ function UpdateQuantityOfSkuSold(callback, errorCallBack) {
 }
 
 function ContinueToSkus() {
+  InteraccionConUsuarioServicio.bloquearPantalla();
   LimpiarDatosConsignacion();
 
   var sePuedeFacturar = true;
@@ -2978,6 +2979,7 @@ function ContinueToSkus() {
                     changeHash: false,
                     showLoadMsg: false
                   });
+                  InteraccionConUsuarioServicio.desbloquearPantalla();
                 });
               } else {
                 procesarTareaDeCliente(reglaServicio);
@@ -2991,6 +2993,7 @@ function ContinueToSkus() {
               notify(
                 "Ha ocurrido un error al procesar la tarea del cliente, por favor vuelva a intentar."
               );
+              InteraccionConUsuarioServicio.desbloquearPantalla();
             }
           );
         } else {
@@ -3005,6 +3008,7 @@ function ContinueToSkus() {
         notify(
           "Ha ocurrido un error al validar las reglas del inicio de tarea, por favor vuelva a intentar."
         );
+        InteraccionConUsuarioServicio.desbloquearPantalla();
       }
     );
   } else {
@@ -3013,6 +3017,7 @@ function ContinueToSkus() {
         pCurrentSAT_Resolution +
         ". \nComuníquese con su administrador de Sonda"
     );
+    InteraccionConUsuarioServicio.desbloquearPantalla();
   }
 }
 
@@ -3048,6 +3053,7 @@ function ShowSkusToPOS() {
             changeHash: true,
             showLoadMsg: false
           });
+          InteraccionConUsuarioServicio.desbloquearPantalla();
         },
         TareaEstado.Aceptada
       );

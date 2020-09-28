@@ -50,20 +50,17 @@ var ValidacionDeLicenciaControlador = (function () {
     };
     ValidacionDeLicenciaControlador.prototype.validarLicencia = function (usuario, contraseña, estaIniciandoSession) {
         var _this_1 = this;
-        console.log('validacion:', usuario, contraseña)
         this.validacionDeLicenciaServicio.validarLicencia(usuario, contraseña, device.uuid, function (data) {
             try {
-                console.log('establecerConexionConElServidor:', usuario, contraseña, device.uuid)
-                console.log(data)
                 _this_1.establecerConexionConElServidor(usuario, contraseña, data.CommunicationAddress, data.ValidationType, estaIniciandoSession);
             }
             catch (e) {
-                notify("Error al validar licencia: " + e.message);
                 _this_1.desbloquearPantalla();
+                notify("Error al validar licencia: " + e.message);
             }
         }, function (error) {
-            notify(error.mensaje);
             _this_1.desbloquearPantalla();
+            notify(error.mensaje);
         });
     };
     ValidacionDeLicenciaControlador.prototype.establecerConexionConElServidor = function (usuario, contrass, direccionDeComunicacion, tipoDeValidacionDeLicencia, estaIniciandoSession) {
@@ -72,7 +69,6 @@ var ValidacionDeLicenciaControlador = (function () {
             localStorage.setItem("UserID", usuario);
             localStorage.setItem("UserCode", contrass);
             SocketControlador.establecerConexionConServidor(direccionDeComunicacion);
-            console.log(SocketControlador.socketIo)
             var intent_1 = 0;
             var idInterval_1 = setInterval(function () {
                 if (intent_1 === 5) {
