@@ -55,6 +55,7 @@ var ListaSkuControlador = (function () {
         });
         $("#skus_list_page").on("pageshow", function () {
             var criterioDeBusquedaSku = $("#uiTxtFilterListSkusPage");
+            criterioDeBusquedaSku.trigger("click");
             criterioDeBusquedaSku.focus();
             if (este.configuracionDecimales == undefined ||
                 este.configuracionDecimales == null ||
@@ -77,15 +78,6 @@ var ListaSkuControlador = (function () {
                     notify(resultado.mensaje);
                 });
             }
-
-            setTimeout(() => {
-                var criterioDeBusquedaSku = $("#uiTxtFilterListSkusPage");
-                if (criterioDeBusquedaSku.val() != "") {
-                    var e = $.Event('keypress');
-                    e.keyCode = 13; // Intr
-                    criterioDeBusquedaSku.trigger(e)
-                }
-            }, 1500);
         });
         document.addEventListener("backbutton", function () {
             este.volverAPantallaAnterior();

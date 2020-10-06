@@ -237,7 +237,6 @@ var DocumentoVentaControlador = (function () {
                 this.finalizarTareaSinGestion(function () { });
             }
             else {
-                /*
                 if (this.cliente.cuentaCorriente.limiteDeCredito > 0) {
                     var totalDeVenta = this.obtenerTotalDeOrdenDeVenta(this.cliente.appliedDiscount, this.listaDeSkuOrdenDeVenta);
                     if (this.cliente.outStandingBalance < totalDeVenta) {
@@ -245,7 +244,7 @@ var DocumentoVentaControlador = (function () {
                             DarFormatoAlMonto(format_number(this.cliente.outStandingBalance, this.configuracionDecimales.defaultDisplayDecimals)));
                         return;
                     }
-                }*/
+                }
                 this.validarConfiguracionDeBonificacionPorCombos(function () {
                     var uiComentarioDeOrdenDeVenta = $("#UiComentarioDeOrdenDeVenta");
                     _this_1.cliente.salesComment = uiComentarioDeOrdenDeVenta.val();
