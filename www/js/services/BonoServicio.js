@@ -258,13 +258,18 @@ var BonoServicio = (function () {
                     product.qty
             }
 
-            bonificacionPorCombosEnListaDeSkus_1 = bonoPorCombos.filter((bono) => {
+            bonificacionPorCombosEnListaDeSkus_1.concat(bonoPorCombos.filter((bono) => {
                 return bono.skusPorCombo.filter(item => {
                     let sum =  sumOfFamilies['_' + item.codeSku]
+                    if (sumOfFamilies['_' + item.codeSku] >= item.qty) {
+                        for (let i = 0; i < (Math.floor(sumOfFamilies['_' + item.codeSku] / item.qty) - 1); i++) {
+                            bonificacionPorCombosEnListaDeSkus_1.push({...bono})
+                        }
+                    }
                     return sum != null ? sumOfFamilies['_' + item.codeSku] >= item.qty : false
                 }
                 ).length == bono.skusPorCombo.length
-            })
+            }))
 
             bonoPorCombos.map(function (bono) {
                 var cantidadTotalDeProductosVendidos = 0;
