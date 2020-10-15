@@ -249,13 +249,34 @@ var BonoServicio = (function () {
     BonoServicio.prototype.obtenerBonificacionesPorCombo = function (bonoPorCombos, listaDeSku, callback, callbackError) {
         try {
             var bonificacionPorCombosEnListaDeSkus_1 = [];
+            var sumOfFamilies = {}
+            for (let i = 0; i < listaDeSku.length; i++) {
+                const product = listaDeSku[i];
+                sumOfFamilies['_' + product.codeFamilySku] = 
+                    sumOfFamilies['_' + product.codeFamilySku] ?
+                    sumOfFamilies['_' + product.codeFamilySku] + product.qty :
+                    product.qty
+            }
+
+            bonificacionPorCombosEnListaDeSkus_1 = bonoPorCombos.filter((bono) => {
+                return bono.skusPorCombo.filter(item => {
+                    let sum =  sumOfFamilies['_' + item.codeSku]
+                    return sum != null ? sumOfFamilies['_' + item.codeSku] >= item.qty : false
+                }
+                ).length == bono.skusPorCombo.length
+            })
+
             bonoPorCombos.map(function (bono) {
                 var cantidadTotalDeProductosVendidos = 0;
                 var listaDeSkuEnCombo = [];
                 var cantidadQueConcuerdan = 0;
                 bono.skusPorCombo.map(function (skuDeCombo) {
                     listaDeSku.map(function (skuDeVenta) {
-                        if (skuDeCombo.codeSku === skuDeVenta.sku && skuDeCombo.codePackUnit === skuDeVenta.codePackUnit && skuDeVenta.qty > 0) {
+                        if (
+                            skuDeCombo.codeSku === skuDeVenta.sku && 
+                            skuDeCombo.codePackUnit === skuDeVenta.codePackUnit && 
+                            skuDeVenta.qty > 0
+                        ) {
                             cantidadTotalDeProductosVendidos += skuDeVenta.qty;
                             listaDeSkuEnCombo.push(skuDeVenta);
                         }

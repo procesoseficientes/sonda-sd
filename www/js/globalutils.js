@@ -93,8 +93,8 @@ var default_image;
 //var SondaServerURL = "http://190.56.115.27:9596"; //IP Publica Servidor QA Mobility
 var SondaServerURL = "";
 
-var currentBranch = "Agosto12020";
-var SondaVersion = "2020.9.19";
+var currentBranch = "cendalzaRoute";
+var SondaVersion = "2020.10.15";
 var SondaServerOptions = {
   reconnect: true,
   "max reconnection attempts": 60000
