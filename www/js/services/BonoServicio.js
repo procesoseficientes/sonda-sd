@@ -258,18 +258,21 @@ var BonoServicio = (function () {
                     product.qty
             }
 
-            bonificacionPorCombosEnListaDeSkus_1.concat(bonoPorCombos.filter((bono) => {
+            bonificacionPorCombosEnListaDeSkus_1 = bonoPorCombos.filter((bono) => {
                 return bono.skusPorCombo.filter(item => {
                     let sum =  sumOfFamilies['_' + item.codeSku]
-                    if (sumOfFamilies['_' + item.codeSku] >= item.qty) {
-                        for (let i = 0; i < (Math.floor(sumOfFamilies['_' + item.codeSku] / item.qty) - 1); i++) {
-                            bonificacionPorCombosEnListaDeSkus_1.push({...bono})
-                        }
+                    if (sum >= item.qty) {
+                        bono.skusDeBonoPorCombo = bono.skusDeBonoPorCombo.map(function (skuDeBono) {
+                            if (skuDeBono.isMultiple) {
+                                skuDeBono.qty = (skuDeBono.originalQty * Math.floor(sum / item.qty));
+                            }
+                            return skuDeBono
+                        });
                     }
-                    return sum != null ? sumOfFamilies['_' + item.codeSku] >= item.qty : false
+                    return sum != null ? sum >= item.qty : false
                 }
                 ).length == bono.skusPorCombo.length
-            }))
+            })
 
             bonoPorCombos.map(function (bono) {
                 var cantidadTotalDeProductosVendidos = 0;

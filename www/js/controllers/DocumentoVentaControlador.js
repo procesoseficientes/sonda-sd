@@ -427,6 +427,12 @@ var DocumentoVentaControlador = (function () {
         EstaGpsDesavilitado(function () {
             BloquearPantalla();
             _this_1.limpiarListaDeSku(function () {
+                let des = localStorage.getItem('des') ? JSON.parse(localStorage.getItem('des')) : []
+                let ordenes = localStorage.getItem('ordenes') ? JSON.parse(localStorage.getItem('ordenes')) : []
+                des.push(_this_1.descuentoPorMontoGeneral)
+                ordenes.push(_this_1.descuentoPorMontoGeneral)
+                localStorage.setItem('descuentos', JSON.stringify(des))
+                localStorage.setItem('ordenDeVenta', JSON.stringify(ordenes))
                 if (_this_1.descuentoPorMontoGeneral.apply) {
                     var promo = new Promo();
                     promo.promoId = _this_1.descuentoPorMontoGeneral.promoId;
