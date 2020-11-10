@@ -1,4 +1,4 @@
-var mensajero;
+﻿var mensajero;
 var gMaxImpresiones = 5;
 var pictureSource; // picture source
 var destinationType; // sets the format of returned value
@@ -93,8 +93,8 @@ var default_image;
 //var SondaServerURL = "http://190.56.115.27:9596"; //IP Publica Servidor QA Mobility
 var SondaServerURL = "";
 
-var currentBranch = "G-Force@Kansas";
-var SondaVersion = "4.7.1";
+var currentBranch = "cendalzaRoute";
+var SondaVersion = "2020.10.15";
 var SondaServerOptions = {
   reconnect: true,
   "max reconnection attempts": 60000
@@ -2527,8 +2527,19 @@ function ShowListPicker(options, callback) {
   window.plugins.listpicker.showPicker(options, callback);
 }
 
+var logOb;
+
 function onDeviceReady() {
-  try {
+  const path = cordova.file.externalDataDirectory;
+  console.log(path)
+  window.resolveLocalFileSystemURL(path, (dir) => {
+      console.log("got main dir",dir);
+      dir.getFile("conf.json", {create:true}, (file) => {
+          console.log("got the file", file);
+          logOb = file;
+      });
+  });
+    try {
     $("#login_isonline").text("OFF");
     $(".sonda-version").text("Sonda " + SondaVersion);
 
