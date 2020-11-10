@@ -7,9 +7,9 @@ Sonda Mobile para Pre-ventas y distribución de rutas
 - Android Studio
 
 ## Uso
-1. Instalar Cordova, versión 10.0.0
+1. Instalar Cordova, versión 7.0.0
 ```bash
-npm install -g cordova@10.0.0
+npm install -g cordova@7.0.0
 ```
 2. Agregar e iniciar el proyecto de cordova
 ```bash

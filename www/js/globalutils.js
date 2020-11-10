@@ -93,7 +93,7 @@ var default_image;
 //var SondaServerURL = "http://190.56.115.27:9596"; //IP Publica Servidor QA Mobility
 var SondaServerURL = "";
 
-var currentBranch = "G-Force@Kansas";
+var currentBranch = "cendalzaRoute";
 var SondaVersion = "2020.11.10";
 var SondaServerOptions = {
   reconnect: true,
