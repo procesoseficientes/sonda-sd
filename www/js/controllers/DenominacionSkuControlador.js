@@ -88,6 +88,7 @@ var DenominacionSkuControlador = (function () {
                     este.usuarioCambioCantidaDePaquete(function () {
                         este.validarBonificacionesIngresadas(function () {
                             este.validarIngresoDeDescuento(function (resultado) {
+                                console.log("valida descuento")
                                 notify(resultado.mensaje);
                             });
                         }, function (resultado) {
@@ -107,11 +108,23 @@ var DenominacionSkuControlador = (function () {
         });
         $("#UiTextoCantidadUnidadMedida").on("keypress", function (e) {
             if (e.keyCode === 13) {
-                e.preventDefault();
-                var UiBotonAceptarCantidadSku = $("#UiBotonAceptarCantidadSku");
-                UiBotonAceptarCantidadSku.focus();
-                UiBotonAceptarCantidadSku.trigger("touchstart");
-                UiBotonAceptarCantidadSku = null;
+                BloquearPantalla();
+                este.usuarioCambioCantidaDePaquete(function () {
+                    este.estaValidandoElDescuento = true;
+                    este.validarBonificacionesIngresadas(function () {
+                        este.validarIngresoDeDescuento(function (resultado) {
+                            notify(resultado.mensaje);
+                            DesBloquearPantalla();
+                            este.estaValidandoElDescuento = false;
+                        }, function () {
+                            este.estaValidandoElDescuento = false;
+                            este.usuarioDeseaAceptarElSku();
+                        });
+                    }, function (resultado) {
+                        notify(resultado.mensaje);
+                        DesBloquearPantalla();
+                    });
+                });
             }
         });
         $("#UiTxtPrecioNegociadoConCliente").on("focusout", function (e) {

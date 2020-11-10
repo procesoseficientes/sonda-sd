@@ -4,11 +4,12 @@
     <description>
         Sales and Operations Network Digital Assitant
     </description>
-    <author email="soporte@mobilityscm.com" href="http://www.mobilityscm.com/">
-        MobilitySCM
+    <author email="soporte@procesoseficientes.com" href="http://www.procesoseficientes.com/">
+        Procesos Eficientes
     </author>
     <content src="index.html" />
     <access origin="*" />
+    <icon src="res/icon.png" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
     <allow-intent href="tel:*" />
