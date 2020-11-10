@@ -94,7 +94,7 @@ var default_image;
 var SondaServerURL = "";
 
 var currentBranch = "G-Force@Kansas";
-var SondaVersion = "2020.11.9";
+var SondaVersion = "2020.11.10";
 var SondaServerOptions = {
   reconnect: true,
   "max reconnection attempts": 60000
