@@ -17,11 +17,7 @@ cordova platform add android@6.2.3
 ```
 A veces es necesario correr esto dos veces, puede tomar unos cuantos minutos.
 
-3. Compilar el código Typescript
-```bash
-tsc
-```
-4. Construir aplicación Android
+3. Construir aplicación Android
 ```bash
 cordova build android
 ```
