@@ -1,5 +1,6 @@
-# SondaPreSales
-Sonda Mobile para Pre-ventas y distribución de rutas
+# Sonda SD
+Sonda Mobile para venta directa y distribución de rutas.
+El codigo fuente esta basado en el APK de SaritaSD
 
 ## Dependencias
 - Cordova 7.0.0
