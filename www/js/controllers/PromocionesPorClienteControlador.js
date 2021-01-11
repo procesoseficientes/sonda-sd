@@ -396,7 +396,7 @@ var PromocionesPorClienteControlador = (function () {
                         listaBonificacion.map(function (bonificacion) {
                             listaAcordion_6.push("<tr class=\"filaCambioDeColor\">");
                             listaAcordion_6.push("<td class=\"filaPromo\">");
-                            listaAcordion_6.push(format_number(bonificacion.lowLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals) + "-" + (format_number(bonificacion.highLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals)) + "-" + bonificacion.codePackUnit + " " + bonificacion.codeSku);
+                            listaAcordion_6.push(format_number(bonificacion.lowLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals) + "-" + DarFormatoAlMonto(format_number(bonificacion.highLimitTemp, _this.configuracionDeDecimales.defaultDisplayDecimals)) + "-" + bonificacion.codePackUnit + " " + bonificacion.codeSku);
                             listaAcordion_6.push("</td>");
                             listaAcordion_6.push("<td class=\"filaPromo\">");
                             listaAcordion_6.push(format_number(bonificacion.bonusQtyTemp, _this.configuracionDeDecimales.defaultDisplayDecimals) + "-" + bonificacion.codePackUnitBonues + "-" + bonificacion.codeSkuBonus);
@@ -493,7 +493,7 @@ var PromocionesPorClienteControlador = (function () {
                     listaAcordion_8.push("<td class=\"filaPromo\" rowspan=\"" + bonificacion.skusPorCombo.length + "\">");
                     listaAcordion_8.push(((bonificacion.isBonusByLowPurchase === 1) ? "Compra " + format_number(bonificacion.lowQty, _this.configuracionDeDecimales.defaultDisplayDecimals) + "Min" : "") + "-" + ((bonificacion.isBonusByCombo === 1) ? "Completo" : ""));
                     listaAcordion_8.push("<td class=\"filaPromo\">");
-                    listaAcordion_8.push(format_number(bonificacion.skusPorCombo[0].qty, _this.configuracionDeDecimales.defaultDisplayDecimals) + " " + bonificacion.skusPorCombo[0].codePackUnit + " " + bonificacion.skusPorCombo[0].codeSku);
+                    listaAcordion_8.push(format_number(bonificacion.skusPorCombo.length ? bonificacion.skusPorCombo[0].qty : 0, _this.configuracionDeDecimales.defaultDisplayDecimals) + " " + (bonificacion.skusPorCombo.length ? bonificacion.skusPorCombo[0].codePackUnit : "N/A") + " " + (bonificacion.skusPorCombo.length ? bonificacion.skusPorCombo[0].codeSku : "N/A"));
                     listaAcordion_8.push("</td>");
                     listaAcordion_8.push("</td>");
                     listaAcordion_8.push("</tr>");

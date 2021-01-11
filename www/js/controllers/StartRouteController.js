@@ -9,7 +9,7 @@ function MostrarPaginaDeInicioDeRuta() {
         $.mobile.changePage("#dialog_startpos", {
             transition: "flow",
             reverse: true,
-            showLoadMsg: true
+            showLoadMsg: false
         });
 
     } catch (e) {
@@ -104,7 +104,7 @@ function UserWantsStartRoute() {
 
                     localStorage.setItem('SORT_BY', OpcionDeOrdenDelListadoDeSku.CodigoDeProducto.toString());
                     localStorage.setItem('SORT_OPTION', TipoDeOrdenDelListadoDeSku.Ascendente.toString());
-                    
+                    localStorage.setItem('MINIMUM_ORDER_AMOUNT', 0);
                     var data = {
                         'routeid': gCurrentRoute,
                         'default_warehouse': gDefaultWhs,
