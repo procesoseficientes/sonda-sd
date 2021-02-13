@@ -31,6 +31,7 @@ function DelegeteStartRouteController() {
 
 
 function UserWantsStartRoute() {
+    debugger;
     try {
 
         navigator.notification.confirm(
@@ -133,10 +134,13 @@ function ShowStarRoutePage(callback) {
 }
 
 function UserWantsSyncRoute() {
+    debugger;
+    console.log("UserWantsSyncRoute is working");
     ValidacionesDeSincronizacion();
 }
 
 function ValidacionesDeSincronizacion() {
+    debugger;
     var pRoute = $("#lblCurrentLoggedRoute").text();
 
     try {

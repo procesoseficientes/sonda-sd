@@ -6981,13 +6981,7 @@ function delegate_events() {
     SavePrinter();
   });
   $("#btnSyncAuthInvInfo").bind("touchstart", function() {
-    var data = {
-      routeid: gCurrentRoute,
-      default_warehouse: gDefaultWhs,
-      dbuser: gdbuser,
-      dbuserpass: gdbuserpass
-    };
-    SocketControlador.socketIo.emit("ValidateRoute", data);
+    GetRouteAuth("FACTURA"); /*GetRouteAuth('NOTA_CREDITO');*/
   });
   $("#btnOut").bind("touchstart", function() {
     navigator.app.exitApp();

@@ -81,26 +81,25 @@ function justForTesting() {
 }
 
 function getConf(callback) {
-    //if(!logOb) return;
-    setTimeout(()=> {
+    setTimeout(() => {
         logOb.file(function(file) {
             var reader = new FileReader();
     
             reader.onloadend = function(e) {
                 if (this.result == '') {
                     writeLog(`{"url": "http://52.188.206.178:8086"}`)
-                    this.result = `{"url": "http://52.188.2026.178:8086"}`
+                    callback({"url": "http://52.188.206.178:8086"});
+                }else {
+                    callback(JSON.parse(this.result));
                 }
-                callback(JSON.parse(this.result));
             };
-    
     
             reader.readAsText(file);
         }, (err) => {
             console.log("FileSystem Error");
             console.dir(err);
         });
-    },1000)
+    }, 1000);
 }
 
 function writeConfig() {
