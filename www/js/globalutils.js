@@ -124,7 +124,7 @@ var gTaskOnRoutePlan = 1;
 var gIsOnNotificationPage = false;
 
 var currentBranch = "G-Force@Jakarta";
-var SondaVersion = "9.2.1";
+var SondaVersion = "2021.02.15";
 
 var estaEnConfirmacionDeFacturacion = false;
 
