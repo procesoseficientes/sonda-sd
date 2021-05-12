@@ -1,12 +1,12 @@
-var SocketsGlobalesServicio = (function () {
+var SocketsGlobalesServicio = (function() {
     function SocketsGlobalesServicio() {
         this.unidadDeMedidaServicio = new UnidadDeMedidaServicio();
         this.estadisticaDeVentaServicio = new EstadisticaDeVentaServicio();
     }
-    SocketsGlobalesServicio.prototype.delegarSocketsGlobales = function (socketIo) {
+    SocketsGlobalesServicio.prototype.delegarSocketsGlobales = function(socketIo) {
         var _this_1 = this;
-        socketIo.on("broadcast_receive", function (data) {
-            navigator.geolocation.getCurrentPosition(function (position) {
+        socketIo.on("broadcast_receive", function(data) {
+            navigator.geolocation.getCurrentPosition(function(position) {
                 gCurrentGPS = position.coords.latitude + "," + position.coords.longitude;
                 socketIo.emit("broadcast_response", {
                     sockeit: socketIo.id,
@@ -15,7 +15,7 @@ var SocketsGlobalesServicio = (function () {
                     routeid: gCurrentRoute,
                     loginid: gLastLogin
                 });
-            }, function (error) {
+            }, function(error) {
                 socketIo.emit("broadcast_response", {
                     sockeit: socketIo.id,
                     gps: "0,0",
@@ -25,18 +25,18 @@ var SocketsGlobalesServicio = (function () {
                 });
             }, { timeout: 30000, enableHighAccuracy: true });
         });
-        socketIo.on("set_basic_invoice_info", function (data) {
+        socketIo.on("set_basic_invoice_info", function(data) {
             $("#lblRemoteInvoice_NIT").text(data.rows[0].CDF_NIT);
             $("#lblRemoteInvoice_Nombre").text(data.rows[0].CDF_NOMBRECLIENTE);
             $("#lblRemoteInvoice_Monto").text("Q " + format_number(data.rows[0].TOTAL_AMOUNT, 2));
             $("#lblRemoteInvoice_FechaHora").text(data.rows[0].INVOICED_DATETIME);
         });
-        socketIo.on("finish_route_completed", function (data) {
-            finalizarRuta(function () {
+        socketIo.on("finish_route_completed", function(data) {
+            finalizarRuta(function() {
                 initlocalstorage();
                 window.localStorage.removeItem("POS_STATUS");
                 var countCloseInterval = 0;
-                var closeInterval = setInterval(function () {
+                var closeInterval = setInterval(function() {
                     countCloseInterval++;
                     if (countCloseInterval == 3) {
                         my_dialog("", "", "close");
@@ -45,27 +45,27 @@ var SocketsGlobalesServicio = (function () {
                         navigator.app.exitApp();
                     }
                 }, 1000);
-            }, function (err) {
+            }, function(err) {
                 notify("No se pudo finalizar la Ruta debido al siguiente error: " +
                     err.message);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             });
         });
-        socketIo.on("finish_route_error", function (data) {
+        socketIo.on("finish_route_error", function(data) {
             notify("Error al finalizar ruta: " + data.error);
             InteraccionConUsuarioServicio.desbloquearPantalla();
         });
-        socketIo.on("UpdateStatusInvoice_Request_Complete", function (data) {
+        socketIo.on("UpdateStatusInvoice_Request_Complete", function(data) {
             ProcessVoidInvoice(data.invoiceid, data.reason, data.reason, data.paidconsignment, data.imgconsignment, 2);
         });
-        socketIo.on("UpdateStatusInvoice_Request_Fail", function (data) {
+        socketIo.on("UpdateStatusInvoice_Request_Fail", function(data) {
             notify(data.error);
             my_dialog("", "", "close");
         });
-        socketIo.on("invalid_credentials", function (data) {
+        socketIo.on("invalid_credentials", function(data) {
             notify("Usuario o Password invalido");
         });
-        socketIo.on("welcome_to_sonda", function (data) {
+        socketIo.on("welcome_to_sonda", function(data) {
             my_dialog("", "", "close");
             gCurrentRoute = data.routeid;
             gLastLogin = pUserID;
@@ -80,11 +80,11 @@ var SocketsGlobalesServicio = (function () {
                 GetVoidReasons();
             }
             $("#lblCurrentWarehouse").text(gDefaultWhs);
-            setTimeout(function () {
+            setTimeout(function() {
                 socketIo.emit("GetPosTaxParameters", data);
             }, 3000);
         });
-        socketIo.on("GetPosTaxParametersResponse", function (data) {
+        socketIo.on("GetPosTaxParametersResponse", function(data) {
             switch (data.option) {
                 case "GetPosTaxParametersFail":
                     notify("No se han podido obtener los parámetros de etiquetas para resolución de facturación, por favor, comuníquese con su administrador");
@@ -94,7 +94,7 @@ var SocketsGlobalesServicio = (function () {
                     break;
                 case "GetPosTaxParametersFound":
                     if (data.parameters) {
-                        data.parameters.map(function (parameter, i) {
+                        data.parameters.map(function(parameter, i) {
                             switch (parameter.PARAMETER_ID) {
                                 case "TAX_ID":
                                     localStorage.setItem("TAX_ID", parameter.VALUE);
@@ -122,38 +122,35 @@ var SocketsGlobalesServicio = (function () {
                     break;
             }
         });
-        socketIo.on("ValidateRoute_success", function (data) {
+        socketIo.on("ValidateRoute_success", function(data) {
             try {
                 GetRouteAuth("FACTURA");
-            }
-            catch (err) {
+            } catch (err) {
                 notify("ValidateRoute.catch:" + err.message);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             }
         });
-        socketIo.on("ValidateRoute_fail", function (data) {
+        socketIo.on("ValidateRoute_fail", function(data) {
             try {
                 if (!data.message) {
                     notify("No se puede iniciar ruta por: " + data.message);
                 }
                 InteraccionConUsuarioServicio.desbloquearPantalla();
-            }
-            catch (err) {
+            } catch (err) {
                 notify("ValidateRoute.catch:" + err.message);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             }
         });
-        socketIo.on("ValidateRoute_error", function (data) {
+        socketIo.on("ValidateRoute_error", function(data) {
             try {
                 notify("Error al intentar iniciar ruta: " + data.message);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
-            }
-            catch (err) {
+            } catch (err) {
                 notify("ValidateRoute.catch:" + err.message);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             }
         });
-        socketIo.on("GetInitialRouteSend", function (data) {
+        socketIo.on("GetInitialRouteSend", function(data) {
             try {
                 var cuentaCorrienteServicio = new CuentaCorrienteServicio();
                 switch (data.option) {
@@ -194,50 +191,50 @@ var SocketsGlobalesServicio = (function () {
                         socketIo.emit("get_sales_skus", data);
                         break;
                     case "add_to_pos_sku":
-                        SONDA_DB_Session.transaction(function (tx) {
+                        SONDA_DB_Session.transaction(function(tx) {
                             var pSql = "DELETE FROM SKUS WHERE SKU = '" + data.row.SKU + "'";
                             tx.executeSql(pSql);
                             pSql =
                                 "INSERT INTO SKUS(SKU, SKU_NAME, SKU_PRICE, SKU_LINK, REQUERIES_SERIE, IS_KIT, ON_HAND, ROUTE_ID, IS_PARENT, PARENT_SKU, EXPOSURE, PRIORITY, QTY_RELATED, LOADED_LAST_UPDATED, TAX_CODE, CODE_PACK_UNIT_STOCK, SALES_PACK_UNIT)";
                             pSql +=
                                 "VALUES('" +
-                                    data.row.SKU +
-                                    "','" +
-                                    data.row.SKU_NAME +
-                                    "'," +
-                                    format_number(data.row.SKU_PRICE, 2) +
-                                    ",'...',";
+                                data.row.SKU +
+                                "','" +
+                                data.row.SKU_NAME +
+                                "'," +
+                                format_number(data.row.SKU_PRICE, 2) +
+                                ",'...',";
                             pSql +=
                                 data.row.REQUERIES_SERIE +
-                                    "," +
-                                    data.row.IS_KIT +
-                                    "," +
-                                    data.row.ON_HAND +
-                                    ",'" +
-                                    data.row.ROUTE_ID +
-                                    "',";
+                                "," +
+                                data.row.IS_KIT +
+                                "," +
+                                data.row.ON_HAND +
+                                ",'" +
+                                data.row.ROUTE_ID +
+                                "',";
                             pSql +=
                                 data.row.IS_PARENT +
-                                    ",'" +
-                                    data.row.PARENT_SKU +
-                                    "'," +
-                                    data.row.EXPOSURE +
-                                    "," +
-                                    data.row.PRIORITY +
-                                    ",";
+                                ",'" +
+                                data.row.PARENT_SKU +
+                                "'," +
+                                data.row.EXPOSURE +
+                                "," +
+                                data.row.PRIORITY +
+                                ",";
                             pSql +=
                                 data.row.QTY_RELATED +
-                                    ",'" +
-                                    getDateTime() +
-                                    "', '" +
-                                    data.row.TAX_CODE +
-                                    "', " +
-                                    (data.row.CODE_PACK_UNIT_STOCK
-                                        ? "'" + data.row.CODE_PACK_UNIT_STOCK + "'"
-                                        : null) +
-                                    ", '" +
-                                    data.row.SALES_PACK_UNIT +
-                                    "')";
+                                ",'" +
+                                getDateTime() +
+                                "', '" +
+                                data.row.TAX_CODE +
+                                "', " +
+                                (data.row.CODE_PACK_UNIT_STOCK ?
+                                    "'" + data.row.CODE_PACK_UNIT_STOCK + "'" :
+                                    null) +
+                                ", '" +
+                                data.row.SALES_PACK_UNIT +
+                                "')";
                             console.log("Inserting SKU: " + pSql);
                             tx.executeSql(pSql);
                             pSql =
@@ -247,34 +244,34 @@ var SocketsGlobalesServicio = (function () {
                                 "INSERT INTO SKU_HISTORY(SKU, SKU_NAME, SKU_PRICE, SKU_LINK, REQUERIES_SERIE, IS_KIT, ON_HAND, ROUTE_ID, IS_PARENT, PARENT_SKU, EXPOSURE, PRIORITY, QTY_RELATED, LOADED_LAST_UPDATED,QTY_SOLD,QTY_CONSIGNED,QTY_COLLECTED)";
                             pSql +=
                                 "VALUES('" +
-                                    data.row.SKU +
-                                    "','" +
-                                    data.row.SKU_NAME +
-                                    "'," +
-                                    format_number(data.row.SKU_PRICE, 2) +
-                                    ",'...',";
+                                data.row.SKU +
+                                "','" +
+                                data.row.SKU_NAME +
+                                "'," +
+                                format_number(data.row.SKU_PRICE, 2) +
+                                ",'...',";
                             pSql +=
                                 data.row.REQUERIES_SERIE +
-                                    "," +
-                                    data.row.IS_KIT +
-                                    "," +
-                                    data.row.ON_HAND +
-                                    ",'" +
-                                    data.row.ROUTE_ID +
-                                    "',";
+                                "," +
+                                data.row.IS_KIT +
+                                "," +
+                                data.row.ON_HAND +
+                                ",'" +
+                                data.row.ROUTE_ID +
+                                "',";
                             pSql +=
                                 data.row.IS_PARENT +
-                                    ",'" +
-                                    data.row.PARENT_SKU +
-                                    "'," +
-                                    data.row.EXPOSURE +
-                                    "," +
-                                    data.row.PRIORITY +
-                                    ",";
+                                ",'" +
+                                data.row.PARENT_SKU +
+                                "'," +
+                                data.row.EXPOSURE +
+                                "," +
+                                data.row.PRIORITY +
+                                ",";
                             pSql +=
                                 data.row.QTY_RELATED + ",'" + getDateTime() + "',0,0,0)";
                             tx.executeSql(pSql);
-                        }, function (err) {
+                        }, function(err) {
                             my_dialog("", "", "close");
                             notify(err.message);
                         });
@@ -295,8 +292,7 @@ var SocketsGlobalesServicio = (function () {
                                     xonclick1 = "notify('No hay punto GPS');";
                                     vLI =
                                         '<li data-mini="true" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-forbidden">';
-                                }
-                                else {
+                                } else {
                                     xonclick1 =
                                         "TaskNavigateTo('" + data.row.EXPECTED_GPS + "',null)";
                                     vLI =
@@ -304,28 +300,28 @@ var SocketsGlobalesServicio = (function () {
                                 }
                                 xonclick2 =
                                     "InvoiceThisTask(" +
-                                        data.row.TASK_ID +
-                                        ",'" +
-                                        data.row.RELATED_CLIENT_CODE +
-                                        "','" +
-                                        data.row.RELATED_CLIENT_NAME.replace(/"|'/g, "") +
-                                        "','" +
-                                        data.row.NIT +
-                                        "','" +
-                                        data.row.TASK_TYPE +
-                                        "','" +
-                                        data.row.TASK_STATUS +
-                                        "')";
+                                    data.row.TASK_ID +
+                                    ",'" +
+                                    data.row.RELATED_CLIENT_CODE +
+                                    "','" +
+                                    data.row.RELATED_CLIENT_NAME.replace(/"|'/g, "") +
+                                    "','" +
+                                    data.row.NIT +
+                                    "','" +
+                                    data.row.TASK_TYPE +
+                                    "','" +
+                                    data.row.TASK_STATUS +
+                                    "')";
                                 vLI = vLI + '<a href="#" onclick="' + xonclick2 + '">';
                                 vLI = vLI + '<h2><span class="small-roboto">';
                                 vLI =
                                     vLI +
-                                        data.row.TASK_SEQ +
-                                        ')</span>&nbsp<span class="small-roboto">' +
-                                        data.row.RELATED_CLIENT_NAME +
-                                        "</span></h2><p>" +
-                                        data.row.TASK_ADDRESS +
-                                        "</p>";
+                                    data.row.TASK_SEQ +
+                                    ')</span>&nbsp<span class="small-roboto">' +
+                                    data.row.RELATED_CLIENT_NAME +
+                                    "</span></h2><p>" +
+                                    data.row.TASK_ADDRESS +
+                                    "</p>";
                                 vLI = vLI + '</a><a href="#" onclick="' + xonclick1 + '">';
                                 vLI = vLI + "</a></li>";
                                 $("#skus_listview_sales_route").append(vLI);
@@ -335,8 +331,7 @@ var SocketsGlobalesServicio = (function () {
                                     xonclick1 = "notify('No hay punto GPS');";
                                     vLI =
                                         '<li data-mini="true" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-forbidden">';
-                                }
-                                else {
+                                } else {
                                     xonclick1 =
                                         "TaskNavigateTo('" + data.row.EXPECTED_GPS + "',null)";
                                     vLI =
@@ -345,12 +340,12 @@ var SocketsGlobalesServicio = (function () {
                                 vLI = vLI + '<h2><span class="small-roboto">';
                                 vLI =
                                     vLI +
-                                        data.row.TASK_SEQ +
-                                        ')</span>&nbsp<span class="small-roboto">' +
-                                        data.row.RELATED_CLIENT_NAME +
-                                        "</span></h2><p>" +
-                                        data.row.TASK_ADDRESS +
-                                        "</p>";
+                                    data.row.TASK_SEQ +
+                                    ')</span>&nbsp<span class="small-roboto">' +
+                                    data.row.RELATED_CLIENT_NAME +
+                                    "</span></h2><p>" +
+                                    data.row.TASK_ADDRESS +
+                                    "</p>";
                                 vLI = vLI + '</a><a href="#" onclick="' + xonclick1 + '">';
                                 vLI = vLI + "</a></li>";
                                 $("#skus_listview_sales_route").append(vLI);
@@ -361,8 +356,7 @@ var SocketsGlobalesServicio = (function () {
                         GetPriceLists();
                         try {
                             $("#skus_listview_sales_route").listview("refresh");
-                        }
-                        catch (e) {
+                        } catch (e) {
                             $("#skus_listview_sales_route")
                                 .listview()
                                 .listview("refresh");
@@ -387,7 +381,7 @@ var SocketsGlobalesServicio = (function () {
                         break;
                     case "requested_get_rules":
                         var reglaServicio = new ReglaServicio();
-                        reglaServicio.limpiarTabla(function (e) {
+                        reglaServicio.limpiarTabla(function(e) {
                             notify(e.message);
                         });
                         reglaServicio = null;
@@ -397,7 +391,7 @@ var SocketsGlobalesServicio = (function () {
                         break;
                     case "add_to_rule":
                         var reglaServicio2 = new ReglaServicio();
-                        reglaServicio2.guardarReglas(data.row, function () { }, function (err) {
+                        reglaServicio2.guardarReglas(data.row, function() {}, function(err) {
                             notify(err.message);
                         });
                         reglaServicio2 = null;
@@ -418,9 +412,9 @@ var SocketsGlobalesServicio = (function () {
                         AperturaDeCajaServicio.AgregarSecuenciaDeDocumento(data.row);
                         if (data.row.DOC_TYPE === "ONLINE_INVOICE") {
                             var menuControlador_1 = new MenuControlador();
-                            menuControlador_1.cargarInformacionFel(localStorage.getItem("user_type"), function (display, implementaFel, secuenciaDocumento) {
+                            menuControlador_1.cargarInformacionFel(localStorage.getItem("user_type"), function(display, implementaFel, secuenciaDocumento) {
                                 menuControlador_1.seValidoCorrectamente(display, secuenciaDocumento);
-                            }, function (error) {
+                            }, function(error) {
                                 notify("No se pudo validar si usar\u00E1 FEL debido a: " + error.mensaje);
                             });
                         }
@@ -430,7 +424,7 @@ var SocketsGlobalesServicio = (function () {
                         localStorage.setItem("POS_DATE", getDateTime());
                         my_dialog("", "", "close");
                         ShowHideOptions();
-                        var tiempoEsperaCambioDePantalla = setTimeout(function () {
+                        var tiempoEsperaCambioDePantalla = setTimeout(function() {
                             $.mobile.changePage("#menu_page", {
                                 transition: "flow",
                                 reverse: true,
@@ -443,7 +437,7 @@ var SocketsGlobalesServicio = (function () {
                         my_dialog("Series", "obteniendo series...", "open");
                         break;
                     case "add_to_series":
-                        SONDA_DB_Session.transaction(function (tx) {
+                        SONDA_DB_Session.transaction(function(tx) {
                             var pSql = "";
                             pSql = "DELETE FROM SKU_SERIES WHERE SKU = '" + data.row.SKU + "' AND SERIE = '" + data.row.SKU_SERIE + "'";
                             console.log(pSql);
@@ -451,36 +445,36 @@ var SocketsGlobalesServicio = (function () {
                             pSql = "";
                             pSql =
                                 "INSERT INTO SKU_SERIES(" +
-                                    "SKU, " +
-                                    "IMEI, " +
-                                    "SERIE, " +
-                                    "PHONE, " +
-                                    "ICC, " +
-                                    "STATUS, " +
-                                    "LOADED_LAST_UPDATED)";
+                                "SKU, " +
+                                "IMEI, " +
+                                "SERIE, " +
+                                "PHONE, " +
+                                "ICC, " +
+                                "STATUS, " +
+                                "LOADED_LAST_UPDATED)";
                             pSql +=
                                 "VALUES('" +
-                                    data.row.SKU +
-                                    "'," +
-                                    "'" +
-                                    data.row.SKU_ICC +
-                                    "'," +
-                                    "'" +
-                                    data.row.SKU_SERIE +
-                                    "'," +
-                                    "'" +
-                                    data.row.SKU_PHONE +
-                                    "',";
+                                data.row.SKU +
+                                "'," +
+                                "'" +
+                                data.row.SKU_ICC +
+                                "'," +
+                                "'" +
+                                data.row.SKU_SERIE +
+                                "'," +
+                                "'" +
+                                data.row.SKU_PHONE +
+                                "',";
                             pSql +=
                                 "'" +
-                                    data.row.SKU_ICC +
-                                    "'," +
-                                    "0," +
-                                    "'" +
-                                    getDateTime() +
-                                    "')";
+                                data.row.SKU_ICC +
+                                "'," +
+                                "0," +
+                                "'" +
+                                getDateTime() +
+                                "')";
                             tx.executeSql(pSql);
-                        }, function (err) {
+                        }, function(err) {
                             my_dialog("", "", "close");
                             notify(err.message);
                         });
@@ -565,16 +559,15 @@ var SocketsGlobalesServicio = (function () {
                         facturacionElectronicaServicio.agregarFraseEscenario(data.row);
                         break;
                 }
-            }
-            catch (es) {
+            } catch (es) {
                 notify("GetInitialRouteSend.catch:" + es.message);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             }
         });
-        socketIo.on("post_invoice_completed", function (data) {
+        socketIo.on("post_invoice_completed", function(data) {
             my_dialog("", "", "close");
             var pInvoiceID = data.invoiceid;
-            SONDA_DB_Session.transaction(function (tx) {
+            SONDA_DB_Session.transaction(function(tx) {
                 var pSQL = "UPDATE INVOICE_HEADER SET IS_POSTED = 1 WHERE INVOICE_NUM = " +
                     pInvoiceID;
                 var gpicture = $("#btnTakePic1").attr("srcpic");
@@ -587,35 +580,33 @@ var SocketsGlobalesServicio = (function () {
             });
             ShowInvoiceConfirmation();
         });
-        socketIo.on("post_invoice_offline_received", function (data) {
+        socketIo.on("post_invoice_offline_received", function(data) {
             try {
                 ToastThis("Procesando offline...");
-            }
-            catch (e) {
+            } catch (e) {
                 notify("Procesando offline... ERROR, ");
             }
         });
-        socketIo.on("post_invoice_offline_failed", function (data) {
+        socketIo.on("post_invoice_offline_failed", function(data) {
             try {
                 notify("post_invoice_offline_failed:" + data.msg);
-            }
-            catch (e) {
+            } catch (e) {
                 notify("post_invoice_offline_failed ERROR, ");
             }
         });
-        socketIo.on("post_invoice_offline_completed", function (data) {
+        socketIo.on("post_invoice_offline_completed", function(data) {
             my_dialog("", "", "close");
             var pInvoiceID = data.invoiceid;
-            SONDA_DB_Session.transaction(function (tx) {
+            SONDA_DB_Session.transaction(function(tx) {
                 var pSQL = "UPDATE INVOICE_HEADER SET IS_POSTED = 1 WHERE INVOICE_NUM = " +
                     pInvoiceID;
                 tx.executeSql(pSQL);
                 pSQL = "SELECT * FROM INVOICE_HEADER WHERE INVOICE_NUM = " + pInvoiceID;
-                tx.executeSql(pSQL, [], function (tx2, results) {
+                tx.executeSql(pSQL, [], function(tx2, results) {
                     UploadPhoto(data.invoiceid, data.autid, data.autserie, results.rows.item(0).IMG1, 1);
                     UploadPhoto(data.invoiceid, data.autid, data.autserie, results.rows.item(0).IMG2, 2);
                     UploadPhoto(data.invoiceid, data.autid, data.autserie, results.rows.item(0).IMG3, 3);
-                }, function (tx2, err) {
+                }, function(tx2, err) {
                     my_dialog("", "", "close");
                     if (err.code != 0) {
                         alert("Error processing SQL: " + err.code);
@@ -625,12 +616,12 @@ var SocketsGlobalesServicio = (function () {
             });
             listallinvoices();
         });
-        socketIo.on("void_invoice_completed", function (data) {
+        socketIo.on("void_invoice_completed", function(data) {
             my_dialog("", "", "close");
             localStorage.setItem("POS_CURRENT_CREDIT_NOTE", (Number(pCurrentNoteID) - 1).toString());
             pCurrentNoteID = localStorage.getItem("POS_CURRENT_CREDIT_NOTE");
         });
-        socketIo.on("add_to_auth", function (data) {
+        socketIo.on("add_to_auth", function(data) {
             try {
                 var date_autho;
                 var date_autho_limit;
@@ -639,16 +630,16 @@ var SocketsGlobalesServicio = (function () {
                 if (UsuarioFacturaEnRuta(data.row)) {
                     date_autho =
                         data.row.AUTH_POST_DATETIME.substring(0, 4) +
-                            "/" +
-                            data.row.AUTH_POST_DATETIME.substring(5, 7) +
-                            "/" +
-                            data.row.AUTH_POST_DATETIME.substring(8, 10);
+                        "/" +
+                        data.row.AUTH_POST_DATETIME.substring(5, 7) +
+                        "/" +
+                        data.row.AUTH_POST_DATETIME.substring(8, 10);
                     date_autho_limit =
                         data.row.AUTH_LIMIT_DATETIME.substring(0, 4) +
-                            "/" +
-                            data.row.AUTH_LIMIT_DATETIME.substring(5, 7) +
-                            "/" +
-                            data.row.AUTH_LIMIT_DATETIME.substring(8, 10);
+                        "/" +
+                        data.row.AUTH_LIMIT_DATETIME.substring(5, 7) +
+                        "/" +
+                        data.row.AUTH_LIMIT_DATETIME.substring(8, 10);
                     if (data.doctype == "FACTURA") {
                         $("#lblCurrent_AuthID").text(data.row.AUTH_ID);
                         $("#lblCurrent_Serie").text(data.row.AUTH_SERIE);
@@ -666,8 +657,7 @@ var SocketsGlobalesServicio = (function () {
                             $("#lblBranchAddress2").text("");
                             $("#branchAddress2").css("display", "none");
                             localStorage.setItem("direccionFacturacion02", "");
-                        }
-                        else {
+                        } else {
                             $("#lblBranchAddress2").text(data.row.BRANCH_ADDRESS2);
                             $("#branchAddress2").css("display", "block");
                             localStorage.setItem("direccionFacturacion02", data.row.BRANCH_ADDRESS2);
@@ -676,8 +666,7 @@ var SocketsGlobalesServicio = (function () {
                             $("#lblBranchAddress3").text("");
                             $("#branchAddress3").css("display", "none");
                             localStorage.setItem("direccionFacturacion03", "");
-                        }
-                        else {
+                        } else {
                             $("#lblBranchAddress3").text(data.row.BRANCH_ADDRESS3);
                             $("#branchAddress3").css("display", "block");
                             localStorage.setItem("direccionFacturacion03", data.row.BRANCH_ADDRESS3);
@@ -686,8 +675,7 @@ var SocketsGlobalesServicio = (function () {
                             $("#lblBranchAddress4").text("");
                             $("#branchAddress4").css("display", "none");
                             localStorage.setItem("direccionFacturacion04", "");
-                        }
-                        else {
+                        } else {
                             $("#lblBranchAddress4").text(data.row.BRANCH_ADDRESS4);
                             $("#branchAddress4").css("display", "block");
                             localStorage.setItem("direccionFacturacion04", data.row.BRANCH_ADDRESS4);
@@ -696,8 +684,7 @@ var SocketsGlobalesServicio = (function () {
                             $("#lblbranchEmail").text("");
                             $("#branchEmail").css("display", "none");
                             localStorage.setItem("correoElectronicoEmpresa", "");
-                        }
-                        else {
+                        } else {
                             $("#lblbranchEmail").text(data.row.ENTERPRISE_EMAIL_ADDRESS);
                             $("#branchEmail").css("display", "block");
                             localStorage.setItem("correoElectronicoEmpresa", data.row.ENTERPRISE_EMAIL_ADDRESS);
@@ -706,8 +693,7 @@ var SocketsGlobalesServicio = (function () {
                             $("#lblbranchTelefono").text("");
                             $("#branchTelefono").css("display", "none");
                             localStorage.setItem("telefonoEmpresa", "");
-                        }
-                        else {
+                        } else {
                             $("#lblbranchTelefono").text(data.row.PHONE_NUMBER);
                             $("#branchTelefono").css("display", "block");
                             localStorage.setItem("telefonoEmpresa", data.row.PHONE_NUMBER);
@@ -718,8 +704,7 @@ var SocketsGlobalesServicio = (function () {
                         localStorage.setItem("FEL_DOCUMENT_TYPE", data.row.FEL_DOCUMENT_TYPE);
                         localStorage.setItem("FEL_STABLISHMENT_CODE", data.row.FEL_STABLISHMENT_CODE);
                     }
-                }
-                else {
+                } else {
                     $("#lblCompanyName").text(data.row.NAME_ENTERPRISE);
                     $("#lblCurrent_Nit").text(data.row.NIT_ENTERPRISE);
                     localStorage.setItem("NitEnterprise", data.row.NIT_ENTERPRISE);
@@ -727,8 +712,7 @@ var SocketsGlobalesServicio = (function () {
                         $("#lblbranchEmail").text("");
                         $("branchEmail").css("display", "none");
                         localStorage.setItem("correoElectronicoEmpresa", "");
-                    }
-                    else {
+                    } else {
                         $("#lblbranchEmail").text(data.row.ENTERPRISE_EMAIL_ADDRESS);
                         $("#branchEmail").css("display", "block");
                         localStorage.setItem("correoElectronicoEmpresa", data.row.ENTERPRISE_EMAIL_ADDRESS);
@@ -737,8 +721,7 @@ var SocketsGlobalesServicio = (function () {
                         $("#lblbranchTelefono").text("");
                         $("#branchTelefono").css("display", "none");
                         localStorage.setItem("telefonoEmpresa", "");
-                    }
-                    else {
+                    } else {
                         $("#lblbranchTelefono").text(data.row.PHONE_NUMBER);
                         $("#branchTelefono").css("display", "block");
                         localStorage.setItem("telefonoEmpresa", data.row.PHONE_NUMBER);
@@ -746,17 +729,16 @@ var SocketsGlobalesServicio = (function () {
                     localStorage.setItem("NAME_USER", data.row.NAME_USER);
                 }
                 $("#btnStartPOS_action").css("visibility", "visible");
-            }
-            catch (e) {
+            } catch (e) {
                 notify(e.message);
                 my_dialog("", "", "close");
             }
         });
-        socketIo.on("auth_not_found", function (data) {
+        socketIo.on("auth_not_found", function(data) {
             my_dialog("", "", "close");
             notify("ERROR, No hay autorizacion disponible para facturar.");
         });
-        socketIo.on("auth_found", function (data) {
+        socketIo.on("auth_found", function(data) {
             my_dialog("", "", "close");
             data = {
                 routeid: gCurrentRoute,
@@ -766,7 +748,7 @@ var SocketsGlobalesServicio = (function () {
             };
             socketIo.emit("GetDeliveryParameter", data);
         });
-        socketIo.on("getroute_inv_completed", function (data) {
+        socketIo.on("getroute_inv_completed", function(data) {
             my_dialog("", "", "close");
             if (data.pResult == "OK") {
                 var emitData = {
@@ -775,34 +757,33 @@ var SocketsGlobalesServicio = (function () {
                     dbuserpass: gdbuserpass
                 };
                 socketIo.emit("get_sales_skus", emitData);
-            }
-            else {
+            } else {
                 notify("delegate_socketIo_inv: " + data.pResult);
             }
         });
-        socketIo.on("requested_getalertlimit", function (data) {
-            SONDA_DB_Session.transaction(function (tx) {
+        socketIo.on("requested_getalertlimit", function(data) {
+            SONDA_DB_Session.transaction(function(tx) {
                 localStorage.setItem("ALERT_LIMIT", "0");
                 localStorage.setItem("ALERT_MESSAGE", "");
-            }, function (err) {
+            }, function(err) {
                 my_dialog("", "", "close");
                 notify(err.code.toString());
             });
         });
-        socketIo.on("add_to_getalertlimit", function (data) {
-            SONDA_DB_Session.transaction(function (tx) {
+        socketIo.on("add_to_getalertlimit", function(data) {
+            SONDA_DB_Session.transaction(function(tx) {
                 localStorage.setItem("ALERT_LIMIT", data.row.ALERT_PERC);
                 localStorage.setItem("ALERT_MESSAGE", data.row.ALERT_MESSAGE);
-            }, function (err) {
+            }, function(err) {
                 my_dialog("", "", "close");
                 notify(err.message);
             });
         });
-        socketIo.on("getalertlimit_completed", function (data) {
+        socketIo.on("getalertlimit_completed", function(data) {
             my_dialog("", "", "close");
         });
-        socketIo.on("add_to_bank_accounts", function (data) {
-            SONDA_DB_Session.transaction(function (tx) {
+        socketIo.on("add_to_bank_accounts", function(data) {
+            SONDA_DB_Session.transaction(function(tx) {
                 var pSql = "INSERT INTO BANK_ACCOUNTS(BANK, ACCOUNT_BASE, ACCOUNT_NAME, ACCOUNT_NUMBER) VALUES('" +
                     data.row.ACCOUNT_BANK +
                     "','" +
@@ -813,32 +794,32 @@ var SocketsGlobalesServicio = (function () {
                     data.row.ACCOUNT_NUMBER +
                     "')";
                 tx.executeSql(pSql);
-            }, function (err) {
+            }, function(err) {
                 my_dialog("", "", "close");
                 notify(err.message);
             });
         });
-        socketIo.on("requested_void_reasons", function (data) {
+        socketIo.on("requested_void_reasons", function(data) {
             gVoidReasons = [];
         });
-        socketIo.on("add_to_void_reasons", function (data) {
-            SONDA_DB_Session.transaction(function (tx) {
+        socketIo.on("add_to_void_reasons", function(data) {
+            SONDA_DB_Session.transaction(function(tx) {
                 var pSQL = "INSERT INTO VOID_REASONS(REASON_ID, REASON_DESCRIPTION) VALUES('" +
                     data.row.REASON_ID +
                     "','" +
                     data.row.REASON_DESCRIPTION +
                     "')";
                 tx.executeSql(pSQL);
-            }, function (err) {
+            }, function(err) {
                 my_dialog("", "", "close");
                 notify(err.message);
             });
         });
-        socketIo.on("void_reasons_completed", function (data) {
+        socketIo.on("void_reasons_completed", function(data) {
             my_dialog("", "", "close");
             GetAlertLimit(data.data);
         });
-        socketIo.on("SendResolution_Request", function (data) {
+        socketIo.on("SendResolution_Request", function(data) {
             switch (data.request) {
                 case "SendInvoice":
                     switch (data.option) {
@@ -847,8 +828,23 @@ var SocketsGlobalesServicio = (function () {
                             break;
                         case "fail":
                             ObtenerBroadcastPerdidos();
-                            notify("Error al intentar actualizar la resoluci\u00F3n. " + (data.error.message === undefined ? "" : data.error.message));
-                            break;
+                            var message = data.error.precedingErrors[0].message;
+                            var message2 = message.substring(0, 54);
+                            //var newCorrelative = message.substring(56, message.length);
+                            if (message2 == ' No se puede actualizar el corelativo a un valor menor') {
+                                InteraccionConUsuarioServicio.bloquearPantalla();
+                                navigator.notification.confirm("Tu numero de secuencia está desactualizado debido a que se realizaron ordenes de venta con esta misma ruta en otro dispositivo, el valor actual es: " + localStorage.getItem('POS_CURRENT_INVOICE_ID') + ', vuelve a iniciar ruta para actualizar', function(buttonIndex) {
+                                    if (buttonIndex === 1 || buttonIndex === 0) {
+                                        console.log('si')
+                                        OnConfirmFinishPOS(2);
+                                    }
+                                }, "Sonda\u00AE Ruta " + SondaVersion, ["ok"]);
+                                break;
+                            } else {
+                                notify("Error al intentar actualizar la resoluci\u00F3n. " + (data.error.message === undefined ? "" : data.error.message));
+                                break;
+                            }
+
                     }
                     break;
                 case "CloseBox":
@@ -864,18 +860,17 @@ var SocketsGlobalesServicio = (function () {
                     break;
             }
         });
-        socketIo.on("post_deposit_completed", function (data) {
+        socketIo.on("post_deposit_completed", function(data) {
             my_dialog("", "", "close");
             if (!isNaN(data.pResult)) {
                 if (!isNaN(data.pResult)) {
-                    SONDA_DB_Session.transaction(function (tx) {
+                    SONDA_DB_Session.transaction(function(tx) {
                         var pSQL = "UPDATE DEPOSITS SET IS_POSTED = 1 WHERE TRANS_ID = " +
                             data.transid;
                         tx.executeSql(pSQL);
                     });
                 }
-            }
-            else {
+            } else {
                 notify("Error al crear el deposito en el servidor debido a: " + data.pResult);
                 InteraccionConUsuarioServicio.desbloquearPantalla();
             }
@@ -885,16 +880,16 @@ var SocketsGlobalesServicio = (function () {
                 showLoadMsg: false
             });
         });
-        socketIo.on("post_deposit_offline_completed", function (data) {
+        socketIo.on("post_deposit_offline_completed", function(data) {
             var pTransID = data.transid;
             var pResult = data.pResult;
-            SONDA_DB_Session.transaction(function (tx) {
+            SONDA_DB_Session.transaction(function(tx) {
                 var pSQL = "UPDATE DEPOSITS SET IS_POSTED = 1 WHERE TRANS_ID = " + pTransID;
                 tx.executeSql(pSQL);
                 pSQL = "SELECT * FROM DEPOSITS WHERE TRANS_ID = " + pTransID;
-                tx.executeSql(pSQL, [], function (tx, results) {
+                tx.executeSql(pSQL, [], function(tx, results) {
                     UploadPhotoDeposit(pResult, results.rows.item(0).IMG1);
-                }, function (trans, err) {
+                }, function(trans, err) {
                     my_dialog("", "", "close");
                     if (err.code !== 0) {
                         alert("Error processing SQL: " + err.code);
@@ -903,7 +898,7 @@ var SocketsGlobalesServicio = (function () {
             });
             listalldeposits();
         });
-        socketIo.on("SendReturnSku_Request", function (data) {
+        socketIo.on("SendReturnSku_Request", function(data) {
             switch (data.option) {
                 case "SendRouteReturn_Error":
                     my_dialog("", "", "close");
@@ -917,7 +912,7 @@ var SocketsGlobalesServicio = (function () {
                     break;
             }
         });
-        socketIo.on("ValidateRouteReturn_Request", function (data) {
+        socketIo.on("ValidateRouteReturn_Request", function(data) {
             switch (data.option) {
                 case "ValidateRouteReturn_Error":
                     my_dialog("", "", "close");
@@ -939,9 +934,8 @@ var SocketsGlobalesServicio = (function () {
                     LimpiarInventario();
                     break;
             }
-        });
-        {
-            socketIo.on("InsertScoutingFromSondaPosResponse", function (data) {
+        }); {
+            socketIo.on("InsertScoutingFromSondaPosResponse", function(data) {
                 switch (data.option) {
                     case "fail":
                         InteraccionConUsuarioServicio.desbloquearPantalla();
@@ -949,9 +943,9 @@ var SocketsGlobalesServicio = (function () {
                         break;
                     case "success":
                         var clienteServicio = new ClienteServicio();
-                        clienteServicio.marcarClienteComoSincronizado(data.clients, function () {
+                        clienteServicio.marcarClienteComoSincronizado(data.clients, function() {
                             EnviarValidacionDeClientes();
-                        }, function (resultado) {
+                        }, function(resultado) {
                             InteraccionConUsuarioServicio.desbloquearPantalla();
                             notify("Error al actualizar la sincronización de clientes debido a: " +
                                 resultado.mensaje);
@@ -959,14 +953,14 @@ var SocketsGlobalesServicio = (function () {
                         break;
                 }
             });
-            socketIo.on("ConsignmentReceiveComplete", function (data) {
+            socketIo.on("ConsignmentReceiveComplete", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify("Error al crear la consignaci\u00F3n en el servidor: " + data.error);
                         break;
                     case "success":
-                        SONDA_DB_Session.transaction(function (tx) {
-                            data.Consignments.map(function (consignment) {
+                        SONDA_DB_Session.transaction(function(tx) {
+                            data.Consignments.map(function(consignment) {
                                 if (consignment.IS_POSTED === SiNo.Si) {
                                     var sql = "UPDATE CONSIGNMENT_HEADER";
                                     sql += " SET IS_POSTED = 2";
@@ -975,30 +969,30 @@ var SocketsGlobalesServicio = (function () {
                                     sql += " ,DUE_DATE = '" + consignment.DUE_DATE + "' ";
                                     sql +=
                                         " WHERE DOC_SERIE = '" +
-                                            consignment.DOC_SERIE +
-                                            "' AND DOC_NUM = " +
-                                            consignment.DOC_NUM;
+                                        consignment.DOC_SERIE +
+                                        "' AND DOC_NUM = " +
+                                        consignment.DOC_NUM;
                                     tx.executeSql(sql);
                                     sql = "";
                                     sql =
                                         "UPDATE INVOICE_HEADER SET CONSIGNMENT_ID = " +
-                                            consignment.CONSIGNMENT_ID;
+                                        consignment.CONSIGNMENT_ID;
                                     sql +=
                                         " WHERE INVOICE_NUM = (SELECT INVOICE_NUM FROM CONSIGNMENT_HEADER WHERE DOC_SERIE = '" +
-                                            consignment.DOC_SERIE +
-                                            "' AND DOC_NUM = " +
-                                            consignment.DOC_NUM +
-                                            ")";
+                                        consignment.DOC_SERIE +
+                                        "' AND DOC_NUM = " +
+                                        consignment.DOC_NUM +
+                                        ")";
                                     tx.executeSql(sql);
                                 }
                             });
-                        }, function (err) {
+                        }, function(err) {
                             ToastThis(err.message);
                         });
                         break;
                 }
             });
-            socketIo.on("SendConsignmentPaidResponse", function (data) {
+            socketIo.on("SendConsignmentPaidResponse", function(data) {
                 switch (data.option) {
                     case "completed":
                         ActualizarConsignaciones(data.consignaciones);
@@ -1008,7 +1002,7 @@ var SocketsGlobalesServicio = (function () {
                         break;
                 }
             });
-            socketIo.on("SendDevolutionInventoryDocumentsResponse", function (data) {
+            socketIo.on("SendDevolutionInventoryDocumentsResponse", function(data) {
                 switch (data.option) {
                     case "fail":
                         ToastThis(data.error);
@@ -1017,103 +1011,102 @@ var SocketsGlobalesServicio = (function () {
                         var id = data.ID;
                         var documento = data.documento;
                         var existiaDocumentoEnServidor = data.documentoYaExistiaEnServidor == 1 ? true : false;
-                        RecogerProductoEnConsignacionServicio.ActualizarEstadoDePosteoDeDocumentoDeDevolucionDeInventario(documento, id, function (documento2) {
+                        RecogerProductoEnConsignacionServicio.ActualizarEstadoDePosteoDeDocumentoDeDevolucionDeInventario(documento, id, function(documento2) {
                             try {
                                 var sql = "";
                                 if (!existiaDocumentoEnServidor) {
-                                    SONDA_DB_Session.transaction(function (tx) {
+                                    SONDA_DB_Session.transaction(function(tx) {
                                         for (var i = 0; i < documento2.DEVOLUTION_DETAIL.length; i++) {
                                             var sku = documento2.DEVOLUTION_DETAIL[i];
                                             if (parseInt(sku.IS_GOOD_STATE) === 1) {
                                                 sql =
                                                     "UPDATE SKUS SET ON_HAND = ON_HAND + (" +
-                                                        parseInt(sku.QTY_SKU) +
-                                                        ") WHERE SKU = '" +
-                                                        sku.CODE_SKU +
-                                                        "'";
+                                                    parseInt(sku.QTY_SKU) +
+                                                    ") WHERE SKU = '" +
+                                                    sku.CODE_SKU +
+                                                    "'";
                                                 tx.executeSql(sql);
                                                 if (sku.HANDLE_SERIAL === 1) {
                                                     sql =
                                                         "INSERT INTO SKU_SERIES(" +
-                                                            "SKU," +
-                                                            "SERIE," +
-                                                            "STATUS," +
-                                                            "LOADED_LAST_UPDATED)" +
-                                                            "VALUES('" +
-                                                            sku.CODE_SKU +
-                                                            "', '" +
-                                                            sku.SERIAL_NUMBER +
-                                                            "',0,'" +
-                                                            getDateTime().toString() +
-                                                            "')";
+                                                        "SKU," +
+                                                        "SERIE," +
+                                                        "STATUS," +
+                                                        "LOADED_LAST_UPDATED)" +
+                                                        "VALUES('" +
+                                                        sku.CODE_SKU +
+                                                        "', '" +
+                                                        sku.SERIAL_NUMBER +
+                                                        "',0,'" +
+                                                        getDateTime().toString() +
+                                                        "')";
                                                     tx.executeSql(sql);
                                                 }
                                             }
                                         }
-                                    }, function (err) {
+                                    }, function(err) {
                                         if (err.code !== 0) {
                                             notify("No se pudieron agregar los SKU(s) Recogidos de Consignación al Inventario Móvil debido a:" +
                                                 err.message);
                                         }
                                     });
                                 }
-                            }
-                            catch (e) {
+                            } catch (e) {
                                 notify(e.message);
                             }
                         });
                         break;
                 }
             });
-            socketIo.on("InsertTraceabilityConsignmentsResponse", function (data) {
+            socketIo.on("InsertTraceabilityConsignmentsResponse", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify(data.error);
                         break;
                     case "success":
                         var registro = data.documento;
-                        PagoConsignacionesServicio.ActualizarEstadoDePosteoDeTrazabilidadDeConsignaciones(registro, function (error) {
+                        PagoConsignacionesServicio.ActualizarEstadoDePosteoDeTrazabilidadDeConsignaciones(registro, function(error) {
                             notify(error);
                         });
                         registro = null;
                         break;
                 }
             });
-            socketIo.on("SendTaskResponse", function (data) {
+            socketIo.on("SendTaskResponse", function(data) {
                 _enviandoTareas = false;
                 switch (data.option) {
                     case "fail":
                         notify(data.error);
                         break;
                     case "success":
-                        MarcarTareaComoSincronizada(data.tareas, function (error) {
+                        MarcarTareaComoSincronizada(data.tareas, function(error) {
                             notify(error);
                         });
                         break;
                 }
             });
-            socketIo.on("SendConsignmentVoidResponse", function (data) {
+            socketIo.on("SendConsignmentVoidResponse", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify(data.error);
                         break;
                     case "success":
-                        MarcarConsignacionAnuladaComoSincronizada(data.consignacion, function (error) {
+                        MarcarConsignacionAnuladaComoSincronizada(data.consignacion, function(error) {
                             notify(error);
                         });
                         break;
                 }
             });
-            socketIo.on("SendBusinessRivalPoll_Request", function (data) {
+            socketIo.on("SendBusinessRivalPoll_Request", function(data) {
                 switch (data.option) {
                     case "receive":
-                        EncuestaServicio.MarcarEncuestaDeCompraDeCompetenciaComoEnviada(data.data, 1, function () { }, function (err) {
+                        EncuestaServicio.MarcarEncuestaDeCompraDeCompetenciaComoEnviada(data.data, 1, function() {}, function(err) {
                             notify("2-Error al enviar encuesta de compra de competencia: " +
                                 err.message);
                         });
                         break;
                     case "success":
-                        EncuestaServicio.MarcarEncuestaDeCompraDeCompetenciaComoEnviada(data.data, 2, function () { }, function (err) {
+                        EncuestaServicio.MarcarEncuestaDeCompraDeCompetenciaComoEnviada(data.data, 2, function() {}, function(err) {
                             notify("3-Error al enviar encuesta de compra de competencia: " +
                                 err.message);
                         });
@@ -1124,48 +1117,56 @@ var SocketsGlobalesServicio = (function () {
                         break;
                 }
             });
-            socketIo.on("ValidateInvoices_Request" + TipoDeValidacionDeFactura.EnRuta, function (data) {
+            socketIo.on("ValidateInvoices_Request" + TipoDeValidacionDeFactura.EnRuta, function(data) {
                 switch (data.option) {
                     case OpcionRespuesta.Exito:
                         break;
                     case OpcionRespuesta.Error:
-                        CambiarEstadoParaReenviarFacturas(data.reenviarFacturas, function () {
+                        CambiarEstadoParaReenviarFacturas(data.reenviarFacturas, function() {
                             _enviandoValidacionDeFacturas = false;
-                            setTimeout(EnviarValidacionDeFactura(function () { }, function (err) { }), 100);
-                        }, function (err) { });
+                            setTimeout(EnviarValidacionDeFactura(function() {}, function(err) {}), 100);
+                        }, function(err) {});
                         break;
                 }
             });
-            socketIo.on("PostInvoiceReceive", function (data) {
-                ActualizarEnvioDeFactura(data, function (dataN1) { }, function (err) {
+            socketIo.on("PostInvoiceReceive", function(data) {
+                ActualizarEnvioDeFactura(data, function(dataN1) {}, function(err) {
                     ToastThis(err.message);
                 });
             });
-            socketIo.on("PostInvoiceReceiveCompleted", function (data) {
-                FinalizarEnvioFactura(data, function (dataN1) { }, function (err) {
+            socketIo.on("PostInvoiceReceiveCompleted", function(data) {
+                FinalizarEnvioFactura(data, function(dataN1) {}, function(err) {
                     ToastThis(err.message);
                 });
             });
-            socketIo.on("PostInvoiceFail", function (data) {
-                notify("Error al crear la factura en el servidor: " + data.message.message);
+            socketIo.on("PostInvoiceFail", function(data) {
+                var message = data.message.message;
+                var message2 = message.substring(0, 23);
+
+                if (message2 == 'Violation of UNIQUE KEY') {
+                    //notify("Hay un problema con el correlativo de tu factura y no se pudo enviar al servidor, el ID de tu factura es: " + data.InvoiceId);
+                } else {
+                    notify("Error al crear la factura en el servidor: " + data.message.message);
+                }
+                //notify("Error al crear la factura en el servidor: " + data.message.message);
             });
-            socketIo.on("ValidateScoutingsPOS_Request" + TipoDeValidacionDeCliente.EnRuta, function (data) {
+            socketIo.on("ValidateScoutingsPOS_Request" + TipoDeValidacionDeCliente.EnRuta, function(data) {
                 switch (data.option) {
                     case OpcionRespuesta.Exito:
                         break;
                     case OpcionRespuesta.Error:
                         var clienteServicio = new ClienteServicio();
-                        clienteServicio.cambiarEstadoAClientesParaReenviar(data.reenviarScoutings, function () {
+                        clienteServicio.cambiarEstadoAClientesParaReenviar(data.reenviarScoutings, function() {
                             _enviandoValidacionDeClientes = false;
                             EnviarData();
-                        }, function (resultado) {
+                        }, function(resultado) {
                             notify("Error al intentar enviar nuevamente los clientes debido a: " +
                                 resultado.mensaje);
                         });
                         break;
                 }
             });
-            socketIo.on("InsertDeliveryNotesFromSondaSd_Response", function (data) {
+            socketIo.on("InsertDeliveryNotesFromSondaSd_Response", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify(data.message);
@@ -1176,7 +1177,7 @@ var SocketsGlobalesServicio = (function () {
                         break;
                 }
             });
-            socketIo.on("InsertCanceledDeliveryFromSondaSd_Response", function (data) {
+            socketIo.on("InsertCanceledDeliveryFromSondaSd_Response", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify(data.message);
@@ -1187,7 +1188,7 @@ var SocketsGlobalesServicio = (function () {
                         break;
                 }
             });
-            socketIo.on("InsertPickingDemandByTaskFromSondaSd_Response", function (data) {
+            socketIo.on("InsertPickingDemandByTaskFromSondaSd_Response", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify(data.message);
@@ -1198,7 +1199,7 @@ var SocketsGlobalesServicio = (function () {
                         break;
                 }
             });
-            socketIo.on("InsertDeliveryNoteCanceledFromSondaSd_Response", function (data) {
+            socketIo.on("InsertDeliveryNoteCanceledFromSondaSd_Response", function(data) {
                 switch (data.option) {
                     case "fail":
                         notify(data.message);
@@ -1210,7 +1211,7 @@ var SocketsGlobalesServicio = (function () {
                 }
             });
         }
-        socketIo.on("AddOverdueInvoicePaymentResponse", function (data) {
+        socketIo.on("AddOverdueInvoicePaymentResponse", function(data) {
             switch (data.option) {
                 case "success":
                     var pagoServicio = new PagoServicio();
@@ -1225,6 +1226,7 @@ var SocketsGlobalesServicio = (function () {
     };
     return SocketsGlobalesServicio;
 }());
+
 function UsuarioFacturaEnRuta(data) {
     return data.INVOICE_IN_ROUTE == SiNo.Si;
 }

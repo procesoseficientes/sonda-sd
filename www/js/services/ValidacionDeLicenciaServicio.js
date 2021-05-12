@@ -1,20 +1,18 @@
-var ValidacionDeLicenciaServicio = (function () {
-    function ValidacionDeLicenciaServicio() {
-    }
-    ValidacionDeLicenciaServicio.prototype.validarLicencia = function (user, pass, deviceId, callback, errorCallback) {
+var ValidacionDeLicenciaServicio = (function() {
+    function ValidacionDeLicenciaServicio() {}
+    ValidacionDeLicenciaServicio.prototype.validarLicencia = function(user, pass, deviceId, callback, errorCallback) {
         console.log('ValidacionDeLicenciaServicio.validarLicencia')
         try {
             getConf((data) => {
                 console.log(data)
-                callback({CommunicationAddress: data.url, ValidationType: "InRoute"});
+                callback({ CommunicationAddress: data.url, ValidationType: "InRoute" });
             })
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e)
             errorCallback({ codigo: -1, resultado: ResultadoOperacionTipo.Error, mensaje: e.message });
         }
     };
-    ValidacionDeLicenciaServicio.prototype.obtenerMensajeDeError = function (error) {
+    ValidacionDeLicenciaServicio.prototype.obtenerMensajeDeError = function(error) {
         var errorEncontrado = "Error desconocido";
         switch (error) {
             case "The user name or password is incorrect":
@@ -45,32 +43,32 @@ var ValidacionDeLicenciaServicio = (function () {
 }());
 
 function writeLog(str) {
-	if(!logOb) return;
-	var log = str;
-	log = str + '                           ';
-	logOb.createWriter(function(fileWriter) {
+    if (!logOb) return;
+    var log = str;
+    log = str + '                           ';
+    logOb.createWriter(function(fileWriter) {
 
-		//fileWriter.seek(fileWriter.length);
+        //fileWriter.seek(fileWriter.length);
 
-		var blob = new Blob([log], {type:'text/plain'});
-		fileWriter.write(blob);
-		console.log("ok, in theory i worked");
-	}, (err) => {
+        var blob = new Blob([log], { type: 'text/plain' });
+        fileWriter.write(blob);
+        console.log("ok, in theory i worked");
+    }, (err) => {
         console.log("FileSystem Error");
-	    console.dir(err);
+        console.dir(err);
     });
 }
 
 function justForTesting() {
     //if(!logOb) return;
-    setTimeout(()=> {
+    setTimeout(() => {
         logOb.file(function(file) {
             var reader = new FileReader();
-    
+
             reader.onloadend = function(e) {
                 console.log(this.result);
             };
-    
+
             reader.readAsText(file);
         }, (err) => {
             console.log("FileSystem Error");
@@ -84,16 +82,16 @@ function getConf(callback) {
     setTimeout(() => {
         logOb.file(function(file) {
             var reader = new FileReader();
-    
+
             reader.onloadend = function(e) {
                 if (this.result == '') {
-                    writeLog(`{"url": "http://52.188.206.178:8086"}`)
-                    callback({"url": "http://52.188.206.178:8086"});
-                }else {
+                    writeLog(`{"url": "http://52.188.206.178:8085/"}`)
+                    callback({ "url": "http://52.188.206.178:8085/" });
+                } else {
                     callback(JSON.parse(this.result));
                 }
             };
-    
+
             reader.readAsText(file);
         }, (err) => {
             console.log("FileSystem Error");
@@ -103,7 +101,7 @@ function getConf(callback) {
 }
 
 function writeConfig() {
-    if(!logOb) return;
+    if (!logOb) return;
     let url = prompt('direcion servidor')
     if (url != null) {
         writeLog(`{"url": "${url}"}`)
