@@ -22,8 +22,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="viewport"
-        content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-hdpi" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-hdpi" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
     <script src="css/styles/jquery-1.10.2.min.js" type="text/javascript"></script>
@@ -236,21 +235,21 @@
         body {
             font-family: 'Roboto';
         }
-
+        
         body .btn {
             margin: 0.6em 10% 0.8em !important;
             overflow: visible;
             text-overflow: clip;
             white-space: normal;
         }
-
+        
         body .button {
             margin: 0.6em 10% 0.8em !important;
             overflow: visible;
             text-overflow: clip;
             white-space: normal;
         }
-
+        
         body .ui-btn-c {
             margin: 0.3em 1% 0.4em !important;
             overflow: visible;
@@ -258,103 +257,105 @@
             white-space: normal;
             border-color: black;
         }
-
+        
         body .ui-body-c {
             border-color: black !important;
             background-color: #808080;
         }
-
+        
         .ui-page {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
-
+        
         .notificacionNueva {
             background-color: #00bfff;
         }
-
+        
         .notificacionAntigua {
             background-color: #fff0f5;
         }
-
         /* carrousel clases */
+        
         * {
             box-sizing: border-box;
         }
-
+        
         .slider {
             width: 50%;
             margin: 30px auto;
         }
-
+        
         .slick-slide {
             margin: 0px 20px;
         }
-
+        
         .slick-slide img {
             width: 100%;
         }
-
+        
         .slick-prev:before,
         .slick-next:before {
             color: black;
         }
-
-
+        
         .slick-slide {
             transition: all ease-in-out .3s;
             opacity: .2;
         }
-
+        
         .slick-active {
             opacity: .5;
         }
-
+        
         .slick-current {
             opacity: 1;
         }
-
         /* custom estadistica page */
-
         
-
-        .product-list-table{
+        .product-list-table {
             overflow: scroll;
             /* height: 360px; */
             /* height: 50%; */
         }
-
-        .table-estadistica{
+        
+        .table-estadistica {
             width: 100%;
             margin: 3px 0 3px 0;
             position: relative;
         }
-
-        .table-estadistica, .table-estadistica th, .table-estadistica tr, .table-estadistica td {
+        
+        .table-estadistica,
+        .table-estadistica th,
+        .table-estadistica tr,
+        .table-estadistica td {
             border-collapse: collapse;
         }
-
+        
         .table-estadistica thead {
             background-color: #f5f5f5;
             text-shadow: none;
             font-weight: bold;
         }
-
-        .table-estadistica th, .table-estadistica td, .table-estadistica tr, .table-estadistica {
+        
+        .table-estadistica th,
+        .table-estadistica td,
+        .table-estadistica tr,
+        .table-estadistica {
             padding: 0;
         }
-
-        .ui-checkbox{
+        
+        .ui-checkbox {
             margin-top: 0;
             margin-bottom: 1px;
         }
-
+        
         .table-estadistica tr>label {
             background-color: #f9f9f9;
             margin-top: 0;
         }
-
-        .option-buttons{
+        
+        .option-buttons {
             position: absolute;
             bottom: 0;
             left: 0;
@@ -362,8 +363,8 @@
             width: 100%;
             padding: 3px 5px;
         }
-
-        .option-buttons .btnLeft{
+        
+        .option-buttons .btnLeft {
             width: 55%;
             float: left;
             border-top-right-radius: 0;
@@ -371,36 +372,37 @@
             padding: 8px 2px;
             text-align: center;
         }
-
-        .option-buttons .btnRight{
+        
+        .option-buttons .btnRight {
             width: 45%;
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             padding: 8px 2px;
             text-align: center;
         }
-
-        .table-row-disabled{
+        
+        .table-row-disabled {
             color: #aaa;
         }
-        .ui-checkbox .ui-state-disabled{
+        
+        .ui-checkbox .ui-state-disabled {
             opacity: 1;
         }
-
-        .valTableEstatistic{
+        
+        .valTableEstatistic {
             margin: 0;
         }
-
+        
         .text-center {
             text-align: center;
         }
-
+        
         .resume-tag {
             font-weight: bold !important;
             text-align: left;
         }
-
-        #btnRequestElectronicSignature{
+        
+        #btnRequestElectronicSignature {
             border-radius: 5px;
         }
     </style>
@@ -409,22 +411,18 @@
 <body>
     <div data-role="page" id="login_page" data-add-back-btn="true" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkLogin" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkLogin" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelLogin" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelLogin" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="title ui-btn ui-nodisc-icon ui-icon-info ui-btn-icon-left sondaversion"
-                style="background-color: #181C18">
+            <div onclick="writeConfig()" class="title ui-btn ui-nodisc-icon ui-icon-info ui-btn-icon-left sondaversion" style="background-color: #181C18">
 
             </div>
         </div>
         <div data-role="panel" id="login_panel" data-display="overlay" data-theme="b">
             <ul data-role="listview" data-inset="false" data-divider-theme="a">
                 <li>
-                    <a href="#" onclick="navigator.app.exitApp();"
-                        class="ui-nodisc-icon ui-icon-power ui-btn ui-btn-icon-left">
+                    <a href="#" onclick="navigator.app.exitApp();" class="ui-nodisc-icon ui-icon-power ui-btn ui-btn-icon-left">
                         <span class="menupanel">Salir</span>
                     </a>
                 </li>
@@ -444,7 +442,8 @@
                     <span id="lblRemoteStatus" class="medium">DataStatus</span>
                 </li>
             </ul>
-        </div><!-- /panel -->
+        </div>
+        <!-- /panel -->
 
         <div data-role="content">
             <table>
@@ -464,23 +463,18 @@
                 </tr>
             </table>
             <br>
-            <a href="#" id="btnLogme" class="ui-corner-all ui-btn ui-btn-c ui-icon-check ui-icon-left title"
-                style="background-color: silver; text-align: center">
+            <a href="#" id="btnLogme" class="ui-corner-all ui-btn ui-btn-c ui-icon-check ui-icon-left title" style="background-color: silver; text-align: center">
                 Ingresar
             </a>
         </div>
     </div>
     <div data-role="page" id="printer_page" data-close-btn="right">
         <div data-role="header" data-theme="b">
-            <a href="#" id="btnTryPrinter"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-info ui-btn-icon-top ui-shadow ui-corners-all"
-                style="background-color: #0094ff">
+            <a href="#" id="btnTryPrinter" class="small-roboto ui-btn ui-nodisc-icon ui-icon-info ui-btn-icon-top ui-shadow ui-corners-all" style="background-color: #0094ff">
                 Test Printer
             </a>
             <h1 class="title">Impresoras</h1>
-            <a href="#" id="btnSavePrinter"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-check ui-btn-icon-top ui-shadow ui-corner-all"
-                style="background-color: #0094ff; visibility: visible">
+            <a href="#" id="btnSavePrinter" class="small-roboto ui-btn ui-nodisc-icon ui-icon-check ui-btn-icon-top ui-shadow ui-corner-all" style="background-color: #0094ff; visibility: visible">
                 Save Printer
             </a>
         </div>
@@ -501,13 +495,9 @@
     </div>
     <div data-role="page" id="dialog_startpos" data-close-btn="right">
         <div data-role="header" data-theme="b">
-            <a href="#" id="btnSyncAuthInvInfo"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-arrow-d ui-btn-icon-top ui-shadow ui-corner-all medium"
-                style="background-color: #0094ff">Sincro</a>
+            <a href="#" id="btnSyncAuthInvInfo" class="small-roboto ui-btn ui-nodisc-icon ui-icon-arrow-d ui-btn-icon-top ui-shadow ui-corner-all medium" style="background-color: #0094ff">Sincro</a>
             <h1> <span class="small-roboto" id="lblCurrentLoggedRoute"></span></h1>
-            <a href="#" id="btnStartPOS_action"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-check ui-btn-icon-top ui-shadow ui-corner-all medium"
-                style="background-color: #0094ff; visibility: hidden">Iniciar</a>
+            <a href="#" id="btnStartPOS_action" class="small-roboto ui-btn ui-nodisc-icon ui-icon-check ui-btn-icon-top ui-shadow ui-corner-all medium" style="background-color: #0094ff; visibility: hidden">Iniciar</a>
         </div>
         <div data-role="content">
             <div id="autfactu">
@@ -586,22 +576,17 @@
     </div>
     <div data-role="page" id="menu_page" data-add-back-btn="true" data-theme="c">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkDeliveryMenu" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkDeliveryMenu" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelMenu" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelMenu" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteMenu" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteMenu" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="UiBtnNotifications" class="small-roboto ui-btn ui-nodisc-icon ui-icon-mail ui-btn-icon-left"
-                style="background-color: #181C18">
+            <div id="UiBtnNotifications" class="small-roboto ui-btn ui-nodisc-icon ui-icon-mail ui-btn-icon-left" style="background-color: #181C18">
             </div>
         </div>
 
-        <div data-role="panel" id="mainmenu_panel" data-display="overlay" data-theme="b" style="height: 100%"
-            data-dismissible="true">
+        <div data-role="panel" id="mainmenu_panel" data-display="overlay" data-theme="b" style="height: 100%" data-dismissible="true">
             <ul data-role="listview" data-inset="false" data-divider-theme="a">
                 <!--<li>
                     <a href="#" id="btnStartPOS" class="ui-nodisc-icon ui-icon-check ui-btn ui-btn-icon-left">
@@ -621,63 +606,53 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="btnRefreshRemoteSkus" class="ui-nodisc-icon ui-icon-grid ui-btn ui-btn-icon-left"
-                        style="display: none">
+                    <a href="#" id="btnRefreshRemoteSkus" class="ui-nodisc-icon ui-icon-grid ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Consulta Inventarios</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="btnPOS" class="ui-nodisc-icon ui-icon-shop ui-btn ui-btn-icon-left"
-                        style="display: none">
+                    <a href="#" id="btnPOS" class="ui-nodisc-icon ui-icon-shop ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Facturar</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="btnInvoiceList" class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left"
-                        style="display: none">
+                    <a href="#" id="btnInvoiceList" class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Listado de facturación</span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="#" id="UiBtnViewConsignmentList"
-                        class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
+                    <a href="#" id="UiBtnViewConsignmentList" class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Listado de Consignaciones</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnViewDevolutiontList"
-                        class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
+                    <a href="#" id="UiBtnViewDevolutiontList" class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Listado de Devoluciones</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnViewTaskOutsideOfRoutePlan"
-                        class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
+                    <a href="#" id="UiBtnViewTaskOutsideOfRoutePlan" class="ui-nodisc-icon ui-icon-info ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Facturación Fuera de Ruta</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnShowScoutingPage" class="ui-nodisc-icon ui-icon-user ui-btn ui-btn-icon-left"
-                        style="display: none">
+                    <a href="#" id="UiBtnShowScoutingPage" class="ui-nodisc-icon ui-icon-user ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Scouting</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnShowScanManifestPage"
-                        class="ui-nodisc-icon ui-icon-camera ui-btn ui-btn-icon-left" style="display: none">
+                    <a href="#" id="UiBtnShowScanManifestPage" class="ui-nodisc-icon ui-icon-camera ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Escanear Manifiesto</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnShowDeliveryReportPage"
-                        class="ui-nodisc-icon ui-icon-bullets ui-btn ui-btn-icon-left" style="display: none">
+                    <a href="#" id="UiBtnShowDeliveryReportPage" class="ui-nodisc-icon ui-icon-bullets ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Listado De Entregas</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnShowPaymentsList"
-                        class="ui-nodisc-icon ui-icon-bullets ui-btn ui-btn-icon-left" style="display: none">
+                    <a href="#" id="UiBtnShowPaymentsList" class="ui-nodisc-icon ui-icon-bullets ui-btn ui-btn-icon-left" style="display: none">
                         <span class="menupanel">Listado De Recibos</span>
                     </a>
                 </li>
@@ -687,17 +662,16 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" onclick="navigator.app.exitApp();"
-                        class="ui-nodisc-icon ui-icon-power ui-btn ui-btn-icon-left">
+                    <a href="#" onclick="navigator.app.exitApp();" class="ui-nodisc-icon ui-icon-power ui-btn ui-btn-icon-left">
                         <span class="">Salir</span>
                     </a>
                 </li>
 
             </ul>
-        </div><!-- /panel opciones -->
+        </div>
+        <!-- /panel opciones -->
         <div data-role="content">
-            <div id="UiDivAutorizacionFacturacion" data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow"
-                data-collapsed="true" data-collapsed-icon="shop" data-expanded-icon="carat-u" style="display: none">
+            <div id="UiDivAutorizacionFacturacion" data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="true" data-collapsed-icon="shop" data-expanded-icon="carat-u" style="display: none">
                 <h4><span class="title">Autorización Facturación</span></h4>
                 <ul data-role="listview" data-inset="false" data-theme="c">
                     <li>
@@ -727,8 +701,7 @@
 
                 </ul>
             </div>
-            <div id="UiDivAutorizacionFacturacionEnLinea" data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow"
-                data-collapsed="true" data-collapsed-icon="shop" data-expanded-icon="carat-u" style="display: none">
+            <div id="UiDivAutorizacionFacturacionEnLinea" data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="true" data-collapsed-icon="shop" data-expanded-icon="carat-u" style="display: none">
                 <h4><span class="title">Sec. Docs. Contingencia</span></h4>
                 <ul data-role="listview" data-inset="false" data-theme="c">
                     <li>
@@ -748,8 +721,7 @@
 
                 </ul>
             </div>
-            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false"
-                data-collapsed-icon="star" data-expanded-icon="star">
+            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false" data-collapsed-icon="star" data-expanded-icon="star">
                 <h4><span style="color: #0094ff;" class="title">Resumen de caja</span></h4>
                 <ul data-role="listview" data-inset="false" id="myMenuList" data-divider-theme="b" data-count-theme="c">
                     <li id="UiLiResumenDeCajaFacturas" style="display: none">
@@ -758,8 +730,7 @@
                                 <tr>
                                     <td>
                                         (<span class="title" id="lblTotalInvoices">0</span>)<span class="medium">
-                                            Factura(s)</span>
-                                        =
+                                            Factura(s)</span> =
                                     </td>
                                     <td style="text-align: right">
                                         <span class="title" id="lblSold" style="text-align: right">0.00</span>
@@ -777,8 +748,7 @@
                                 <tr>
                                     <td>
                                         (<span class="title" id="lblTotalDeposits">0</span>)<span class="medium">
-                                            Deposito(s)</span>
-                                        =
+                                            Deposito(s)</span> =
                                     </td>
                                     <td style="text-align: right">
                                         <span class="title" id="lblTotalDeposited" style="text-align: right">0.00</span>
@@ -787,13 +757,11 @@
                             </table>
                             <!--verificar funcionalidad-->
                         </a>
-                        <a href="#" id="btnCreateNewDeposit"
-                            class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-plus"></a>
+                        <a href="#" id="btnCreateNewDeposit" class="ui-alt-icon ui-nodisc-icon ui-shadow ui-icon-plus"></a>
                     </li>
                 </ul>
             </div>
-            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon" data-collapsed="true"
-                data-collapsed-icon="bullets" data-expanded-icon="carat-u" id="UiGoalsContainer" style="display: none;">
+            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon" data-collapsed="true" data-collapsed-icon="bullets" data-expanded-icon="carat-u" id="UiGoalsContainer" style="display: none;">
                 <h4>
                     <span class="title">Metas</span>
                 </h4>
@@ -803,8 +771,7 @@
                             <p id="teamName" style="text-align: center; font-size: 1.5em;">Sin Equipo</p>
                             <p id="goalName" style="text-align: center; font-size: 1em;">Sin Meta</p>
                         </div>
-                        <div
-                            style="display: flex; flex-direction: column; float: right; width: 20%; padding-top: 0.7em;">
+                        <div style="display: flex; flex-direction: column; float: right; width: 20%; padding-top: 0.7em;">
                             <img src="img/trophy.png" alt="" style="height: 2.5em; width: 2.5em;" />
                             <p id="ranking" style="padding-left: 0.4em; font-size: 1em;"></p>
                         </div>
@@ -835,16 +802,14 @@
                     </li>
                 </ul>
             </div>
-            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon" data-collapsed="false"
-                data-collapsed-icon="bullets" data-expanded-icon="carat-u">
+            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon" data-collapsed="false" data-collapsed-icon="bullets" data-expanded-icon="carat-u">
                 <h4>
                     <span class="title" id="lblClientsToVisit">Plan de ruta(0)</span>
                 </h4>
 
                 <ul data-role="listview" data-inset="false" data-filter="false">
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b" style="text-align: center;"
-                            id="UiBtnActualizarPlanDeRuta">Actualizar Plan De Ruta</a>
+                        <a href="#" class="ui-btn ui-btn-b" style="text-align: center;" id="UiBtnActualizarPlanDeRuta">Actualizar Plan De Ruta</a>
                     </li>
                 </ul>
 
@@ -872,38 +837,32 @@
                     <table>
                         <tr>
                             <td style="width: 90%">
-                                <input id="uiTxtFiltroClientes" name="uiTxtFiltroClientes" data-type="search"
-                                    placeholder="Filtrar...">
+                                <input id="uiTxtFiltroClientes" name="uiTxtFiltroClientes" data-type="search" placeholder="Filtrar...">
                             </td>
                             <td style="width: 10%">
-                                <a href="#" id="UiBtnScanRgaCode"
-                                    class="ui-btn ui-btn-corner-all ui-mini ui-nodisc-icon ui-icon-camera ui-btn-icon-notext"></a>
+                                <a href="#" id="UiBtnScanRgaCode" class="ui-btn ui-btn-corner-all ui-mini ui-nodisc-icon ui-icon-camera ui-btn-icon-notext"></a>
                             </td>
                         </tr>
                     </table>
                 </form>
-                <ul data-role="listview" data-mini="true" data-inset="true" data-split-icon="location"
-                    data-filter-theme="a" data-divider-theme="b" data-theme="c" data-filter="true"
-                    data-input="#uiTxtFiltroClientes" id="skus_listview_sales_route"></ul>
+                <ul data-role="listview" data-mini="true" data-inset="true" data-split-icon="location" data-filter-theme="a" data-divider-theme="b" data-theme="c" data-filter="true" data-input="#uiTxtFiltroClientes" id="skus_listview_sales_route"></ul>
             </div>
-        </div><!-- /panel resumen de rutas -->
+        </div>
+        <!-- /panel resumen de rutas -->
         <img id="imgCargandoInicioDeRuta" src="img/loading.gif" style="display: none;" />
     </div>
     <div data-role="page" id="pos_client_page" data-theme="c">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkCust" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkCust" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelCust" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelCust" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteCust" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteCust" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
         </div>
         <div data-role="panel" id="client_list_panel" data-display="overlay" data-theme="c">
-            <ul data-role="listview" id="client_listview_panel" data-filter="true" data-inset="false"
-                data-divider-theme="a"></ul>
-        </div><!-- /panel -->
+            <ul data-role="listview" id="client_listview_panel" data-filter="true" data-inset="false" data-divider-theme="a"></ul>
+        </div>
+        <!-- /panel -->
         <div data-role="content">
             <ul data-role="listview" data-inset="true" data-divider-theme="b" data-count-theme="c">
                 <li data-role="list-divider">
@@ -917,12 +876,10 @@
                     <table>
                         <tr>
                             <td>
-                                <input name="txtNIT" id="txtNIT" value="" taskid="0"
-                                    class="ui-alt-icon ui-nodisc-icon middle" data-clear-btn="true">
+                                <input name="txtNIT" id="txtNIT" value="" taskid="0" class="ui-alt-icon ui-nodisc-icon middle" data-clear-btn="true">
                             </td>
                             <td>
-                                <button id="btnSetCF"
-                                    class="ui-alt-icon ui-nodisc-icon ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-check ui-btn-icon-notext"></button>
+                                <button id="btnSetCF" class="ui-alt-icon ui-nodisc-icon ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-check ui-btn-icon-notext"></button>
                             </td>
                         </tr>
                     </table>
@@ -930,86 +887,65 @@
                     <textarea class="middle" cols="40" rows="8" name="txtNombre" id="txtNombre"></textarea>
                 </li>
                 <li id="UiClientHasConsignment" style="display: none">
-                    <a href="#" id="UiBtnSummConsignment" class="ui-btn ui-btn-corner-all ui-alt-icon ui-nodisc-icon"
-                        style="text-align: center">
+                    <a href="#" id="UiBtnSummConsignment" class="ui-btn ui-btn-corner-all ui-alt-icon ui-nodisc-icon" style="text-align: center">
                         <label style="text-align: center">
                             <b>Consignado: <span id="UiLblTotalConsignment">0.00</span> </b>
                         </label>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="btnContinue_Client" class="title ui-alt-icon ui-nodisc-icon"
-                        style="text-align: center">Continuar</a>
+                    <a href="#" id="btnContinue_Client" class="title ui-alt-icon ui-nodisc-icon" style="text-align: center">Continuar</a>
                 </li>
             </ul>
         </div>
     </div>
     <div data-role="page" id="pos_skus_page" data-theme="c">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteSkusPOS"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
         </div>
         <div data-role="content">
 
             <ul data-role="listview" data-inset="false" data-theme="c">
-                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464"
-                    id="panelTotalSKU">
+                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464" id="panelTotalSKU">
                     <span style="color: #4cff00" class="title" id="UiLblCurrencyTotalSku"></span>
-                    <span id="lblTotalSKU" style="color: #4cff00; text-align: right; font-size: xx-large"
-                        class="title">0.00</span>
+                    <span id="lblTotalSKU" style="color: #4cff00; text-align: right; font-size: xx-large" class="title">0.00</span>
                 </li>
             </ul>
             <p></p>
-            <ul data-role="listview" id="pos_skus_page_listview" data-inset="false" data-divider-theme="b"
-                data-split-icon="plus" data-split-theme="a" data-count-theme="b"></ul>
+            <ul data-role="listview" id="pos_skus_page_listview" data-inset="false" data-divider-theme="b" data-split-icon="plus" data-split-theme="a" data-count-theme="b"></ul>
         </div>
 
     </div>
     <div data-role="page" id="summary_page" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkDeliverySumm" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkDeliverySumm" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevel" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevel" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteSumm" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteSumm" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
         </div>
 
         <div data-role="content">
 
             <ul data-role="listview" data-inset="false" data-theme="c">
 
-                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464"
-                    id="UiLiSubTotalFactura">
+                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464" id="UiLiSubTotalFactura">
                     <span style="color: #4cff00" class="title" id="UiLblCurrencySubTotalFactura"></span>
-                    <span id="UiLblSubTotalFactura"
-                        style="width: 100%; color: #4cff00; text-align: right; font-size: xx-large"
-                        class="title">0.00</span>
+                    <span id="UiLblSubTotalFactura" style="width: 100%; color: #4cff00; text-align: right; font-size: xx-large" class="title">0.00</span>
                 </li>
 
-                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464"
-                    id="UiLiImpuestoFactura">
+                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464" id="UiLiImpuestoFactura">
                     <span style="color: #4cff00" class="title" id="UiLblCurrencyImpuestoFactura"></span>
-                    <span id="UiLblImpuestoFactura"
-                        style="width: 100%; color: #4cff00; text-align: right; font-size: xx-large"
-                        class="title">0.00</span>
+                    <span id="UiLblImpuestoFactura" style="width: 100%; color: #4cff00; text-align: right; font-size: xx-large" class="title">0.00</span>
                 </li>
 
-                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464"
-                    id="panelTotalSKUSumm">
+                <li class="ui-field-contain" data-theme="b" style="text-align: right; background-color: #646464" id="panelTotalSKUSumm">
                     <span style="color: #4cff00" class="title" id="UiLblCurrencyTotalSummSku"></span>
-                    <span id="lblTotalSKU_summ"
-                        style="width: 100%; color: #4cff00; text-align: right; font-size: xx-large"
-                        class="title">0.00</span>
+                    <span id="lblTotalSKU_summ" style="width: 100%; color: #4cff00; text-align: right; font-size: xx-large" class="title">0.00</span>
                 </li>
             </ul>
             <p></p>
@@ -1030,11 +966,9 @@
                         </tr>
                         <tr>
                             <td style="width: 50%" id="UiColTxtCashAmount">
-                                <input type="number" name="txtCash_summ" id="txtCash_summ" value="" class="title"
-                                    data-clear-btn="true">
+                                <input type="number" name="txtCash_summ" id="txtCash_summ" value="" class="title" data-clear-btn="true">
                             </td>
-                            <td style="width: 50%; text-align: right; padding-left: 1em;"
-                                id="UiColLblCreditAmountTotal">
+                            <td style="width: 50%; text-align: right; padding-left: 1em;" id="UiColLblCreditAmountTotal">
                                 <span class="title" id="UiLblCreditAmount">Q. 000.00</span>
                             </td>
                         </tr>
@@ -1047,9 +981,7 @@
                                 <span class="title">Consignación:</span>
                             </td>
                             <td style="width: 60%; text-align: center;">
-                                <a href="#" id="UiBtnAgregarConsignacion"
-                                    style="border-color: black; text-align: center;"
-                                    class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-nodisc-icon">
+                                <a href="#" id="UiBtnAgregarConsignacion" style="border-color: black; text-align: center;" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-nodisc-icon">
                                     <span style="color: black;" id="UiLblDetalleTotalEnConsignacion"> 0.00</span>
                                 </a>
                             </td>
@@ -1069,8 +1001,7 @@
                 </li>
                 <li>
                     <span class="title" style="text-align: right">Comentario:</span>
-                    <input type="text" name="UiInvoiceComment" id="UiInvoiceComment" data-clear-btn="true"
-                        maxlength="250" />
+                    <input type="text" name="UiInvoiceComment" id="UiInvoiceComment" data-clear-btn="true" maxlength="250" />
                 </li>
             </ul>
 
@@ -1079,29 +1010,26 @@
             <div>
                 <div class="ui-grid-b">
                     <div class="ui-block-a">
-                        <a href="#" id="btnTakePic1" srcpic=""
-                            class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
+                        <a href="#" id="btnTakePic1" srcpic="" class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
                             Imagen Frontal
                         </a>
                     </div>
                     <div class="ui-block-b">
-                        <a href="#" id="btnTakePic2" srcpic=""
-                            class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
+                        <a href="#" id="btnTakePic2" srcpic="" class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
                             Imagen Trasera
                         </a>
                     </div>
                     <div class="ui-block-c">
-                        <a href="#" id="btnTakePic3" srcpic=""
-                            class="ui-btn ui-btn-c ui-icon-comment ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
+                        <a href="#" id="btnTakePic3" srcpic="" class="ui-btn ui-btn-c ui-icon-comment ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
                             Imagen Adicional
                         </a>
                     </div>
-                </div><!-- /grid-b -->
+                </div>
+                <!-- /grid-b -->
             </div>
         </div>
         <div data-role="popup" id="popupPic" data-overlay-theme="a" data-theme="d" data-corners="false">
-            <a href="#" data-rel="back" data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext"
-                class="ui-btn-right">
+            <a href="#" data-rel="back" data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext" class="ui-btn-right">
                 Cerrar
             </a>
             <img id="popphoto" src="#" style="width: 450px; height: 512px;" alt="img">
@@ -1111,22 +1039,17 @@
         <div data-role="navbar" data-theme="b" data-position="fixed">
             <ul>
                 <li>
-                    <a href="#" id="UiBtnCancelarSeleccionDeSeries"
-                        class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
+                    <a href="#" id="UiBtnCancelarSeleccionDeSeries" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
                         Atrás
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnLimpiarSeleccionDeSeries"
-                        class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-delete ui-nodisc-icon"
-                        style="text-align: center">
+                    <a href="#" id="UiBtnLimpiarSeleccionDeSeries" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-delete ui-nodisc-icon" style="text-align: center">
                         Limpiar
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="UiBtnAceptarSeleccionDeSeries"
-                        class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon"
-                        style="text-align: center">
+                    <a href="#" id="UiBtnAceptarSeleccionDeSeries" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon" style="text-align: center">
                         Aceptar
                     </a>
                 </li>
@@ -1138,8 +1061,7 @@
                     <span id="UiLblSkuSerie"></span>
                 </li>
                 <li>
-                    Seleccionadas: <span id="UiLblSeriesQty"
-                        style="float: right; color: aliceblue; background-color: #0094ff; border-radius: 5px;"></span>
+                    Seleccionadas: <span id="UiLblSeriesQty" style="float: right; color: aliceblue; background-color: #0094ff; border-radius: 5px;"></span>
                 </li>
                 <li>
                     <form>
@@ -1151,8 +1073,7 @@
                 </li>
             </ul>
             <br>
-            <ul data-role="listview" id="series_listview_panel" data-filter="true" data-count-theme="b"
-                data-inset="true" data-filter-placeholder="Buscar serie..."></ul>
+            <ul data-role="listview" id="series_listview_panel" data-filter="true" data-count-theme="b" data-inset="true" data-filter-placeholder="Buscar serie..."></ul>
         </div>
     </div>
     <div data-role="page" id="skucant_page" data-theme="c">
@@ -1169,8 +1090,7 @@
                     <input type="number" name="txtSKUCant" id="txtSKUCant" value="" data-clear-btn="true">
                 </li>
                 <li>
-                    <button id="btnSetSKU_QTY"
-                        class="ui-btn ui-btn-a ui-btn-icon-right ui-icon-check ui-nodisc-icon ui-alt-icon ui-corner-all">Grabar</button>
+                    <button id="btnSetSKU_QTY" class="ui-btn ui-btn-a ui-btn-icon-right ui-icon-check ui-nodisc-icon ui-alt-icon ui-corner-all">Grabar</button>
                 </li>
             </ul>
         </div>
@@ -1198,35 +1118,29 @@
             <ul data-role="listview" data-inset="true" data-theme="b">
                 <li class="ui-field-contain" data-theme="a" id="requestElectronicSignature">
                     <h1 style="text-align: center">
-                        <a class="ui-btn" href="#" data-icon="edit" data-iconpos="top" name="btnRequestElectronicSignature"
-                        style="color: white;" id="btnRequestElectronicSignature">Solicitar Firma Electrónica</a>
+                        <a class="ui-btn" href="#" data-icon="edit" data-iconpos="top" name="btnRequestElectronicSignature" style="color: white;" id="btnRequestElectronicSignature">Solicitar Firma Electrónica</a>
                     </h1>
                 </li>
                 <li class="ui-field-contain" data-theme="a">
                     <fieldset class="ui-grid-a" id="UiContenedorControlesFacturacionConfirmada">
                         <div class="ui-block-a">
-                            <input data-icon="check" data-iconpos="top" type="button" name="btnConfirmedInvoice"
-                                id="btnConfirmedInvoice" value="OK" style="text-align: center">
+                            <input data-icon="check" data-iconpos="top" type="button" name="btnConfirmedInvoice" id="btnConfirmedInvoice" value="OK" style="text-align: center">
                         </div>
                         <div class="ui-block-b" style="display: block;" id="UiMainPrintButton">
-                            <input data-icon="action" data-iconpos="top" type="button" name="btnPrintIT" id="btnPrintIT"
-                                value="Print" style="text-align: center">
+                            <input data-icon="action" data-iconpos="top" type="button" name="btnPrintIT" id="btnPrintIT" value="Print" style="text-align: center">
 
                         </div>
                         <div class="ui-block-b" id="UiBtnTomarEncuesta" style="display: none">
-                            <input data-icon="search" data-iconpos="top" type="button" name="btnInquest" id="btnInquest"
-                                value="Survey" style="text-align: center">
+                            <input data-icon="search" data-iconpos="top" type="button" name="btnInquest" id="btnInquest" value="Survey" style="text-align: center">
                         </div>
                     </fieldset>
                     <fieldset class="ui-grid-a" style="display:none;" id="UiInvoicePrintingOptions">
                         <h3>Imprimir Factura:</h3>
                         <div class="ui-block-a">
-                            <input data-icon="check" data-iconpos="top" type="button" name="BtnPrintMainInvoice"
-                                id="BtnPrintMainInvoice" value="Original" style="text-align: center">
+                            <input data-icon="check" data-iconpos="top" type="button" name="BtnPrintMainInvoice" id="BtnPrintMainInvoice" value="Original" style="text-align: center">
                         </div>
                         <div class="ui-block-b">
-                            <input data-icon="check" data-iconpos="top" type="button" name="BtnPrintInvoiceCopy"
-                                id="BtnPrintInvoiceCopy" value="Copia" style="text-align: center">
+                            <input data-icon="check" data-iconpos="top" type="button" name="BtnPrintInvoiceCopy" id="BtnPrintInvoiceCopy" value="Copia" style="text-align: center">
                         </div>
                     </fieldset>
                 </li>
@@ -1235,38 +1149,29 @@
     </div>
     <div data-role="page" id="inv_page" data-theme="c">
         <div data-role="content">
-            <ul data-role="listview" id="inv_listview" data-filter="true" data-inset="false" data-divider-theme="a"
-                data-count-theme="b"></ul>
+            <ul data-role="listview" id="inv_listview" data-filter="true" data-inset="false" data-divider-theme="a" data-count-theme="b"></ul>
         </div>
     </div>
     <div data-role="page" id="invoice_list_page" data-theme="c">
         <div data-role="content">
 
-            <ul data-role="listview" id="invoiceslist_listview" data-filter="true"
-                data-filter-placeholder="Buscar facturas" data-inset="false" data-split-icon="bars"
-                data-count-theme="b"></ul>
+            <ul data-role="listview" id="invoiceslist_listview" data-filter="true" data-filter-placeholder="Buscar facturas" data-inset="false" data-split-icon="bars" data-count-theme="b"></ul>
         </div>
         <div data-role="popup" data-theme="a" id="invoice_actions_dialog" data-dismissible="false">
             <div data-role="content">
                 <div class="ui-grid-a" style="white-space: normal;">
                     <div class="ui-block-a" style="white-space: normal;">
-                        <div id="btnRePrintInvoice" style="overflow: visible; text-overflow: clip; white-space: normal;"
-                            class="ui-btn-icon-top ui-nodisc-icon ui-alt-icon ui-icon-action medium ui-corner-all ui-shadow ui-btn ui-btn-a"
-                            style="text-align: center; vertical-align: middle">
+                        <div id="btnRePrintInvoice" style="overflow: visible; text-overflow: clip; white-space: normal;" class="ui-btn-icon-top ui-nodisc-icon ui-alt-icon ui-icon-action medium ui-corner-all ui-shadow ui-btn ui-btn-a" style="text-align: center; vertical-align: middle">
                             RePrint
                         </div>
                     </div>
                     <div class="ui-block-b">
-                        <div id="btnVoidInvoice"
-                            class="ui-btn-icon-top ui-nodisc-icon ui-alt-icon ui-icon-forbidden medium ui-corner-all ui-shadow ui-btn ui-btn-a"
-                            style="text-align: center; vertical-align: middle">
+                        <div id="btnVoidInvoice" class="ui-btn-icon-top ui-nodisc-icon ui-alt-icon ui-icon-forbidden medium ui-corner-all ui-shadow ui-btn ui-btn-a" style="text-align: center; vertical-align: middle">
                             Anular
                         </div>
                     </div>
                     <div class="ui-block-a">
-                        <div id="btnGetImagesInvoice"
-                            class="ui-btn-icon-top  ui-alt-icon ui-nodisc-icon ui-icon-bars medium ui-corner-all ui-shadow ui-btn ui-btn-a"
-                            style="text-align: center; vertical-align: middle">
+                        <div id="btnGetImagesInvoice" class="ui-btn-icon-top  ui-alt-icon ui-nodisc-icon ui-icon-bars medium ui-corner-all ui-shadow ui-btn ui-btn-a" style="text-align: center; vertical-align: middle">
                             Detalle
                         </div>
                     </div>
@@ -1299,13 +1204,9 @@
     </div>
     <div data-role="page" id="deposit_page">
         <div data-role="header" data-theme="b">
-            <a href="#" id="btnGetBankAccounts"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-bars ui-btn-icon-top ui-shadow ui-corner-all medium"
-                style="background-color: #0094ff;">Cuentas</a>
+            <a href="#" id="btnGetBankAccounts" class="small-roboto ui-btn ui-nodisc-icon ui-icon-bars ui-btn-icon-top ui-shadow ui-corner-all medium" style="background-color: #0094ff;">Cuentas</a>
             <h1 class="title">Depositar</h1>
-            <a href="#" id="btnMakeDepositBank"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-check ui-btn-icon-top ui-shadow ui-corner-all medium"
-                style="background-color: #0094ff; visibility: hidden">Procesar</a>
+            <a href="#" id="btnMakeDepositBank" class="small-roboto ui-btn ui-nodisc-icon ui-icon-check ui-btn-icon-top ui-shadow ui-corner-all medium" style="background-color: #0094ff; visibility: hidden">Procesar</a>
         </div>
         <div data-role="content">
             <p></p>
@@ -1337,8 +1238,7 @@
                 </table>
                 <p>
                     <center>
-                        <a href="#" id="btnTakePicDepositBank" srcpic="" style="width: 20%"
-                            class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
+                        <a href="#" id="btnTakePicDepositBank" srcpic="" style="width: 20%" class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon">
                             Imagen Boleta
                         </a>
                     </center>
@@ -1350,15 +1250,12 @@
     </div>
     <div data-role="page" id="skus_list_page">
         <div data-role="content">
-            <ul data-role="listview" id="skus_listview_panel" data-filter-placeholder="Filtrar SKU..."
-                data-filter="true" data-count-theme="b" data-inset="false" data-divider-theme="b"></ul>
+            <ul data-role="listview" id="skus_listview_panel" data-filter-placeholder="Filtrar SKU..." data-filter="true" data-count-theme="b" data-inset="false" data-divider-theme="b"></ul>
         </div>
     </div>
     <div data-role="page" id="deposit_list_page" data-theme="c">
         <div data-role="content">
-            <ul data-role="listview" id="depositslist_listview" data-filter="true"
-                data-filter-placeholder="Buscar depositos" data-inset="false" data-divider-theme="b"
-                data-split-icon="bars" data-split-theme="b" data-count-theme="b"></ul>
+            <ul data-role="listview" id="depositslist_listview" data-filter="true" data-filter-placeholder="Buscar depositos" data-inset="false" data-divider-theme="b" data-split-icon="bars" data-split-theme="b" data-count-theme="b"></ul>
         </div>
     </div>
     <div data-role="page" id="void_invoice_page">
@@ -1376,8 +1273,7 @@
                         </form>
                     </li>
                     <li>
-                        <input id="btnProcessVoidInvoice" type="button" data-theme="b" value="Anular" data-icon="check"
-                            style="text-align: center" class="ui-btn ui-btn-b ui-shadow ui-nodisc-icon">
+                        <input id="btnProcessVoidInvoice" type="button" data-theme="b" value="Anular" data-icon="check" style="text-align: center" class="ui-btn ui-btn-b ui-shadow ui-nodisc-icon">
                     </li>
                 </ul>
             </div>
@@ -1389,15 +1285,11 @@
     </div>
     <div data-role="page" id="remote_invoice_page">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkSkusPOS_1" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkSkusPOS_1" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelSkusPOS_1" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelSkusPOS_1" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteSkusPOS_1"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteSkusPOS_1" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
         </div>
         <div data-role="content">
             <ul data-role="listview" data-inset="true" data-theme="c">
@@ -1425,8 +1317,7 @@
                 </li>
             </ul>
             <br>
-            <a href="#" id="btnPrintRemoteInvoice" class="ui-corner-all ui-btn ui-btn-c ui-icon-check title"
-                style="background-color: silver; text-align: center">
+            <a href="#" id="btnPrintRemoteInvoice" class="ui-corner-all ui-btn ui-btn-c ui-icon-check title" style="background-color: silver; text-align: center">
                 Imprimir
             </a>
 
@@ -1434,30 +1325,20 @@
     </div>
     <div data-role="page" id="pageDevolucion">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkDevolucion" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkDevolucion" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelDevolucion" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelDevolucion" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteDevolucion"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteDevolucion" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
         </div>
         <div data-role="content">
             <ul data-role="listview" data-inset="true" data-theme="c">
                 <li class="ui-li-divider title" data-theme="b">Sku Para Devolución</li>
             </ul>
             <div data-role="controlgroup" data-type="horizontal" align="center" data-theme="b">
-                <a id="UiBotonDevolucionEnviar" data-role="button"
-                    class="small-roboto ui-btn ui-btn-icon-top ui-icon ui-icon-action"
-                    tyle="text-align: center">Devolver</a>
-                <a id="UiBotonDevolucionValidar" data-role="button"
-                    class="small-roboto ui-btn ui-btn-icon-top ui-icon ui-icon-check"
-                    tyle="text-align: center">Validar</a>
-                <a id="UiBotonDevolucionImprimir" data-role="button"
-                    class="small-roboto ui-btn ui-btn-icon-top ui-icon ui-icon-gear"
-                    tyle="text-align: center">Imprimir</a>
+                <a id="UiBotonDevolucionEnviar" data-role="button" class="small-roboto ui-btn ui-btn-icon-top ui-icon ui-icon-action" tyle="text-align: center">Devolver</a>
+                <a id="UiBotonDevolucionValidar" data-role="button" class="small-roboto ui-btn ui-btn-icon-top ui-icon ui-icon-check" tyle="text-align: center">Validar</a>
+                <a id="UiBotonDevolucionImprimir" data-role="button" class="small-roboto ui-btn ui-btn-icon-top ui-icon ui-icon-gear" tyle="text-align: center">Imprimir</a>
             </div>
             <ul data-role="listview" data-inset="true" data-theme="c" id="UiListaDevolucionSku">
                 <li>
@@ -1475,25 +1356,19 @@
 
     <div data-role="page" id="PageConsignment">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div data-role="navbar" data-position="fixed" data-theme="b">
                 <ul>
                     <li>
-                        <button id="UiBtnDivListaSkusEnOrdenDeVenta"
-                            class="ui-btn ui-btn-icon-top ui-icon-bullets ui-nodisc-icon"
-                            style="text-align: center">Detalle</button>
+                        <button id="UiBtnDivListaSkusEnOrdenDeVenta" class="ui-btn ui-btn-icon-top ui-icon-bullets ui-nodisc-icon" style="text-align: center">Detalle</button>
                     </li>
                     <li>
-                        <button id="UiDivGrabarConsignacion"
-                            class="ui-btn ui-btn-icon-top ui-icon-recycle ui-nodisc-icon" style="text-align: center">
+                        <button id="UiDivGrabarConsignacion" class="ui-btn ui-btn-icon-top ui-icon-recycle ui-nodisc-icon" style="text-align: center">
                             Finalizar </button>
                     </li>
                 </ul>
@@ -1503,27 +1378,23 @@
         <div data-role="content">
             <div style="display: block" id="UiDivSkus">
 
-                <div data-role="collapsible" data-collapsed="false" data-expanded-icon="carat-u"
-                    data-collapsed-icon="carat-d">
+                <div data-role="collapsible" data-collapsed="false" data-expanded-icon="carat-u" data-collapsed-icon="carat-d">
 
                     <h4 class="ui-field-contain">
                         Total en Venta: <span id="UiLblTotalEnVenta" class="ui-li-count"></span>
                     </h4>
 
-                    <ul id="UiListaSkusOrdenDeVenta" data-role="listview" data-inset="false" data-theme="a"
-                        data-filter="true" data-filter-placeholder="Buscar SKU..."></ul>
+                    <ul id="UiListaSkusOrdenDeVenta" data-role="listview" data-inset="false" data-theme="a" data-filter="true" data-filter-placeholder="Buscar SKU..."></ul>
 
                 </div>
 
-                <div data-role="collapsible" data-collapsed="false" data-expanded-icon="carat-u"
-                    data-collapsed-icon="carat-d">
+                <div data-role="collapsible" data-collapsed="false" data-expanded-icon="carat-u" data-collapsed-icon="carat-d">
 
                     <h4 class="ui-field-contain">
                         Total En Consignación: <span id="UiLblTotalEnConsignacion" class="ui-li-count">50.000</span>
                     </h4>
 
-                    <ul id="UiListaSkusEnConsignacion" data-role="listview" data-inset="false" data-theme="a"
-                        data-filter="true" data-filter-placeholder="Buscar SKU..."></ul>
+                    <ul id="UiListaSkusEnConsignacion" data-role="listview" data-inset="false" data-theme="a" data-filter="true" data-filter-placeholder="Buscar SKU..."></ul>
 
                 </div>
             </div>
@@ -1561,12 +1432,10 @@
                     <li class="ui-body ui-body-b">
                         <fieldset class="ui-grid-a">
                             <div class="ui-block-a">
-                                <a href="#" id="UiBtnGrabarConsignacion"
-                                    class="ui-btn ui-btn-b ui-btn-corner-all ui-btn-icon-right ui-icon-check">Aceptar</a>
+                                <a href="#" id="UiBtnGrabarConsignacion" class="ui-btn ui-btn-b ui-btn-corner-all ui-btn-icon-right ui-icon-check">Aceptar</a>
                             </div>
                             <div class="ui-block-b">
-                                <a href="#" id="UiBtnCancelarConsignacion"
-                                    class="ui-btn ui-btn-b ui-btn-corner-all ui-btn-icon-right ui-icon-delete">Cancelar</a>
+                                <a href="#" id="UiBtnCancelarConsignacion" class="ui-btn ui-btn-b ui-btn-corner-all ui-btn-icon-right ui-icon-delete">Cancelar</a>
                             </div>
                         </fieldset>
                     </li>
@@ -1581,12 +1450,10 @@
             <div data-role="navbar" data-position="fixed" data-theme="b">
                 <ul>
                     <li>
-                        <button id="UiBtnAgregarCantidad" class="ui-btn ui-btn-icon-top ui-icon-check ui-nodisc-icon"
-                            style="text-align: center">Aceptar</button>
+                        <button id="UiBtnAgregarCantidad" class="ui-btn ui-btn-icon-top ui-icon-check ui-nodisc-icon" style="text-align: center">Aceptar</button>
                     </li>
                     <li>
-                        <button id="UiBtnCancelarIngresoCantidad"
-                            class="ui-btn ui-btn-icon-top ui-icon-recycle ui-nodisc-icon" style="text-align: center">
+                        <button id="UiBtnCancelarIngresoCantidad" class="ui-btn ui-btn-icon-top ui-icon-recycle ui-nodisc-icon" style="text-align: center">
                             Cancelar </button>
                     </li>
                 </ul>
@@ -1605,8 +1472,7 @@
                 </li>
                 <li>
                     <label for="UiTxtCantidad">Cantidad:</label>
-                    <input type="number" value="" placeholder="Ingrese Cantidad De SKU" id="UiTxtCantidad"
-                        data-clear-btn="true" />
+                    <input type="number" value="" placeholder="Ingrese Cantidad De SKU" id="UiTxtCantidad" data-clear-btn="true" />
                 </li>
             </ul>
         </div>
@@ -1627,12 +1493,10 @@
                 <li class="ui-field-contain" data-theme="a">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <input data-icon="check" type="button" id="UiBtnAceptarConfirmacionDeEnvioDeConsignacion"
-                                value="OK" style="text-align: center">
+                            <input data-icon="check" type="button" id="UiBtnAceptarConfirmacionDeEnvioDeConsignacion" value="OK" style="text-align: center">
                         </div>
                         <div class="ui-block-b">
-                            <input data-icon="action" type="button" id="UiBtnImprimirConsignacion" value="Print"
-                                style="text-align: center">
+                            <input data-icon="action" type="button" id="UiBtnImprimirConsignacion" value="Print" style="text-align: center">
                         </div>
                     </fieldset>
                 </li>
@@ -1642,63 +1506,49 @@
 
     <div data-role="page" id="PageConsignmentList">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div data-role="navbar" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnVolverAMenu">Volver</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center;" id="UiBtnVolverAMenu">Volver</a>
                     </li>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-refresh ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnRecargarListaDeConsignaciones">Refrescar</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-refresh ui-nodisc-icon" style="text-align: center;" id="UiBtnRecargarListaDeConsignaciones">Refrescar</a>
                     </li>
                 </ul>
             </div>
         </div>
         <div data-role="content">
-            <ul data-role="listview" data-inset="false" data-filter="true"
-                data-filter-placeholder="Buscar Consignación..." data-dividertheme="b" data-count-theme="b"
-                id="UiListaDeConsignaciones"></ul>
+            <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar Consignación..." data-dividertheme="b" data-count-theme="b" id="UiListaDeConsignaciones"></ul>
         </div>
     </div>
 
     <div data-role="page" id="UiVentanaDetalleConsignacion">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div data-role="navbar" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnVolver">Volver</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center;" id="UiBtnVolver">Volver</a>
                     </li>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnImprimirDetalleDeconsignacion">Imprimir</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon" style="text-align: center;" id="UiBtnImprimirDetalleDeconsignacion">Imprimir</a>
                     </li>
                 </ul>
             </div>
         </div>
         <div data-role="content">
-            <ul data-role="listview" data-inset="false" data-filter="true"
-                data-filter-placeholder="Buscar Consignación..." data-dividertheme="b" data-count-theme="b"
-                id="UiDetalleConsignacion"></ul>
+            <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar Consignación..." data-dividertheme="b" data-count-theme="b" id="UiDetalleConsignacion"></ul>
             <hr />
             <div class="ui-field-contain">
                 Total En Consignación: <span id="UiLblDetalleConsignacionTotal" class="ui-li-count"></span>
@@ -1708,14 +1558,11 @@
 
     <div data-role="page" id="UiPageConsignmentPayment">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
@@ -1750,13 +1597,10 @@
         </div>
         <div data-role="content">
             <div id="DivUiListaConsignacionesAPagar">
-                <ul data-role="listview" data-inset="false" data-filter="true"
-                    data-filter-placeholder="Buscar Consignación..." data-dividertheme="b" data-count-theme="b"
-                    id="UiListaConsignacionesAPagar"></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar Consignación..." data-dividertheme="b" data-count-theme="b" id="UiListaConsignacionesAPagar"></ul>
             </div>
             <div id="DivUiListaDetalleDeConsignacionAPagar" style="display: none">
-                <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar SKU..."
-                    data-dividertheme="b" data-count-theme="b" id="UiListaDetalleDeConsignacionAPagar"></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar SKU..." data-dividertheme="b" data-count-theme="b" id="UiListaDetalleDeConsignacionAPagar"></ul>
             </div>
         </div>
     </div>
@@ -1772,35 +1616,29 @@
                     Cantidad disponible: <span id="lblQtySkuConsignment" class="ui-li-count"></span>
                 </li>
                 <li id="UiTxtQtyConsignedForProcess">
-                    <input type="number" name="txtSkuQty" id="txtSkuQty" value="" data-clear-btn="true"
-                        placeholder="Ingrese Cantidad...">
+                    <input type="number" name="txtSkuQty" id="txtSkuQty" value="" data-clear-btn="true" placeholder="Ingrese Cantidad...">
                 </li>
                 <li id="UiSeiresListForSku" style="display: none">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <a href="#" id="UiBotonSeleccionarTodoReconsignar"
-                                class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-plus">Seleccionar todo</a>
+                            <a href="#" id="UiBotonSeleccionarTodoReconsignar" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-plus">Seleccionar todo</a>
                         </div>
                         <div class="ui-block-b">
-                            <a href="#" id="UiBotonLimpiarSeleccionReconsignar"
-                                class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-minus">Limpiar</a>
+                            <a href="#" id="UiBotonLimpiarSeleccionReconsignar" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-minus">Limpiar</a>
                         </div>
                     </fieldset>
 
                     <span>Seleccionadas: <span id="UiQtySelectedSeries" style="float: right"></span></span>
                     <p></p>
-                    <ul data-role="listview" data-filter="true" data-filter-placeholder="Buscar Serie..."
-                        data-inset="true" data-count-theme="b" id="UiListaSeriesParaSku"></ul>
+                    <ul data-role="listview" data-filter="true" data-filter-placeholder="Buscar Serie..." data-inset="true" data-count-theme="b" id="UiListaSeriesParaSku"></ul>
                 </li>
                 <li class="ui-body ui-body-b">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <a href="#" id="UiBtnAceptarSkuQty"
-                                class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-check">Aceptar</a>
+                            <a href="#" id="UiBtnAceptarSkuQty" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-check">Aceptar</a>
                         </div>
                         <div class="ui-block-b">
-                            <a href="#" id="UiBtnCancelarSkuQty"
-                                class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-delete">Cancelar</a>
+                            <a href="#" id="UiBtnCancelarSkuQty" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-delete">Cancelar</a>
                         </div>
                     </fieldset>
                 </li>
@@ -1832,41 +1670,33 @@
                 <li id="UiSeriesListForSkuToReCollect" style="display: none">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <a href="#" id="UiBotonSeleccionarTodoParaRecoger"
-                                class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-plus">Seleccionar todo</a>
+                            <a href="#" id="UiBotonSeleccionarTodoParaRecoger" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-plus">Seleccionar todo</a>
                         </div>
                         <div class="ui-block-b">
-                            <a href="#" id="UiBotonLimpiarSeleccionParaRecoger"
-                                class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-minus">Limpiar</a>
+                            <a href="#" id="UiBotonLimpiarSeleccionParaRecoger" class="ui-btn ui-btn-corner-all ui-btn-icon-right ui-icon-minus">Limpiar</a>
                         </div>
                     </fieldset>
 
                     <span>Seleccionadas: <span id="UiQtySelectedSeriesForRecollect" style="float: right"></span></span>
                     <p></p>
-                    <ul data-role="listview" data-filter="true" data-filter-placeholder="Buscar Serie..."
-                        data-inset="true" data-count-theme="b" id="UiListaSeriesParaSkuARecoger"></ul>
+                    <ul data-role="listview" data-filter="true" data-filter-placeholder="Buscar Serie..." data-inset="true" data-count-theme="b" id="UiListaSeriesParaSkuARecoger"></ul>
                 </li>
                 <li id="UiRowStatusSku" style="display: none">
                     <div>
                         <div class="ui-grid-a">
-                            <a href="#" id="btnTakePicCollect" srcpic=""
-                                class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon"
-                                style="text-align:center">
+                            <a href="#" id="btnTakePicCollect" srcpic="" class="ui-btn ui-btn-c ui-icon-user ui-corner-all ui-shadow ui-btn-icon-top ui-alt-icon ui-nodisc-icon" style="text-align:center">
                                 Tomar Foto
                             </a>
                         </div>
                         <section class="ui-grid-b" contenteditable="false">
                             <div class="ui-block-a">
-                                <input type="number" name="picture1Collect" id="picture1Collect" value=""
-                                    data-clear-btn="false">
+                                <input type="number" name="picture1Collect" id="picture1Collect" value="" data-clear-btn="false">
                             </div>
                             <div class="ui-block-b">
-                                <input type="number" name="picture2Collect" id="picture2Collect" value=""
-                                    data-clear-btn="false">
+                                <input type="number" name="picture2Collect" id="picture2Collect" value="" data-clear-btn="false">
                             </div>
                             <div class="ui-block-b">
-                                <input type="number" name="picture3Collect" id="picture3Collect" value=""
-                                    data-clear-btn="false">
+                                <input type="number" name="picture3Collect" id="picture3Collect" value="" data-clear-btn="false">
                             </div>
                         </section>
                     </div>
@@ -1874,12 +1704,10 @@
                 <li class="ui-body ui-body-b">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <a href="#" id="UiBtnAceptarSkuQtyCollect"
-                                class="ui-btn ui-btn-b ui-btn-corner-all ui-btn-icon-right ui-icon-check">Aceptar</a>
+                            <a href="#" id="UiBtnAceptarSkuQtyCollect" class="ui-btn ui-btn-b ui-btn-corner-all ui-btn-icon-right ui-icon-check">Aceptar</a>
                         </div>
                         <div class="ui-block-b">
-                            <a href="#" id="UiBtnCancelarSkuQtyCollect"
-                                class="ui-btn ui-btn- ui-btn-corner-all ui-btn-icon-right ui-icon-delete">Cancelar</a>
+                            <a href="#" id="UiBtnCancelarSkuQtyCollect" class="ui-btn ui-btn- ui-btn-corner-all ui-btn-icon-right ui-icon-delete">Cancelar</a>
                         </div>
                     </fieldset>
                 </li>
@@ -1901,12 +1729,10 @@
                 <li class="ui-field-contain" data-theme="a">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <input data-icon="check" type="button" id="UiBtnAceptarDevolucion" value="OK"
-                                style="text-align: center">
+                            <input data-icon="check" type="button" id="UiBtnAceptarDevolucion" value="OK" style="text-align: center">
                         </div>
                         <div class="ui-block-b">
-                            <input data-icon="action" type="button" id="UiBtnImprimirDocumentoDeDevolucion"
-                                value="Print" style="text-align: center">
+                            <input data-icon="action" type="button" id="UiBtnImprimirDocumentoDeDevolucion" value="Print" style="text-align: center">
                         </div>
                     </fieldset>
                 </li>
@@ -1928,8 +1754,7 @@
                 <li class="ui-field-contain" data-theme="a">
                     <fieldset class="ui-grid-a">
                         <div class="ui-block-a">
-                            <input data-icon="check" type="button" id="UiBtnAceptarFinalizacionDeProcedimientoDePago"
-                                value="OK" style="text-align: center">
+                            <input data-icon="check" type="button" id="UiBtnAceptarFinalizacionDeProcedimientoDePago" value="OK" style="text-align: center">
                         </div>
                     </fieldset>
                 </li>
@@ -1938,28 +1763,21 @@
     </div>
     <div data-role="page" id="UiDevolutionDocumentsPage">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div id="navBarHeader" data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" id="UiBtnVolverDevolution"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnVolverDevolution" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
                             Volver
                         </a>
                     </li>
                     <li>
-                        <a href="#" id="UiBtnRefreshDevolution"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-refresh ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnRefreshDevolution" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-refresh ui-nodisc-icon" style="text-align: center">
                             Recargar
                         </a>
                     </li>
@@ -1968,16 +1786,12 @@
             <div id="navBarDetail" data-role="navbar" data-theme="b" data-position="fixed" style="display: none">
                 <ul>
                     <li>
-                        <a href="#" id="UiBtnVolverDevolutionDetail"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnVolverDevolutionDetail" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
                             Volver
                         </a>
                     </li>
                     <li>
-                        <a href="#" id="UiBtnPrintDevolutionComplete"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnPrintDevolutionComplete" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon" style="text-align: center">
                             Imprimir
                         </a>
                     </li>
@@ -1986,45 +1800,33 @@
         </div>
         <div data-role="content">
             <div id="DivUiListaDocumentosDevolucion">
-                <ul data-role="listview" data-inset="false" data-filter="true"
-                    data-filter-placeholder="Buscar Documento..." data-dividertheme="b" data-count-theme="b"
-                    id="UiListaDocumentosDevolucion"></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar Documento..." data-dividertheme="b" data-count-theme="b" id="UiListaDocumentosDevolucion"></ul>
             </div>
             <div id="DivUiListaDetalleDeDocumentoDeDevolucion" style="display: none">
-                <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar SKU..."
-                    data-dividertheme="b" data-count-theme="b" id="ListaDetalleDeDocumentoDeDevolucion"></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar SKU..." data-dividertheme="b" data-count-theme="b" id="ListaDetalleDeDocumentoDeDevolucion"></ul>
             </div>
         </div>
     </div>
 
     <div data-role="page" id="UiLiquidationReportPage" data-close-btn="right" data-add-back-btn="true" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass" style="background-color: transparent; border-style: none"></div>
             <div data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" id="UiBtnCancelCloseRoute"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnCancelCloseRoute" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
                             Cancelar
                         </a>
                     </li>
                     <li>
-                        <a href="#" id="UiBtnPrintLiquidationReport"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-bullets ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnPrintLiquidationReport" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-bullets ui-nodisc-icon" style="text-align: center">
                             Imprimir
                         </a>
                     </li>
                     <li>
-                        <a href="#" id="UiBtnCloseRoute"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnCloseRoute" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon" style="text-align: center">
                             Finalizar Ruta
                         </a>
                     </li>
@@ -2035,16 +1837,12 @@
             <div data-role="navbar">
                 <ul id="UiBtnDeliveryReport" style="display: none">
                     <li>
-                        <a href="#" data-theme="b"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-alert ui-btn-active ui-state-persist"
-                            id="UiBtnTabLiquidacionDeRuta">
+                        <a href="#" data-theme="b" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-alert ui-btn-active ui-state-persist" id="UiBtnTabLiquidacionDeRuta">
                             Liquidación de ruta
                         </a>
                     </li>
                     <li>
-                        <a href="#" data-theme="b"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-check"
-                            id="UiBtnTabEntregas">
+                        <a href="#" data-theme="b" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-check" id="UiBtnTabEntregas">
                             Reporte de entregas
                         </a>
                     </li>
@@ -2080,8 +1878,7 @@
                     </li>
                 </ul>
                 <p></p>
-                <ul data-role="listview" data-inset="false" data-filter="false" data-filter-placeholder="Buscar SKU..."
-                    data-dividertheme="b" data-count-theme="b" id="UiDetalleReporteDeLiquidacion"></ul>
+                <ul data-role="listview" data-inset="false" data-filter="false" data-filter-placeholder="Buscar SKU..." data-dividertheme="b" data-count-theme="b" id="UiDetalleReporteDeLiquidacion"></ul>
             </div>
             <div id="UiTabReporteDeEntregas" class="ui-body-d ui-content" style="display: none">
                 <ul data-role="listview" data-inset="false" data-theme="c">
@@ -2102,18 +1899,14 @@
                     </li>
                 </ul>
                 <br />
-                <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false"
-                    id="UiContenedorDeEntregasProcesadas">
+                <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false" id="UiContenedorDeEntregasProcesadas">
                     <h4>Entregas Procesadas</h4>
-                    <ul data-role="listview" data-inset="false" data-filter="false" data-dividertheme="b"
-                        data-count-theme="b" id="UiDetalleReporteDeEntrega"></ul>
+                    <ul data-role="listview" data-inset="false" data-filter="false" data-dividertheme="b" data-count-theme="b" id="UiDetalleReporteDeEntrega"></ul>
                 </div>
 
-                <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false"
-                    id="UiContenedorDeEntregasNoProcesadas">
+                <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false" id="UiContenedorDeEntregasNoProcesadas">
                     <h4>Entregas No Procesadas</h4>
-                    <ul data-role="listview" data-inset="false" data-filter="false" data-dividertheme="b"
-                        data-count-theme="b" id="UiDetalleReporteDeFacturasNoEntregadas"></ul>
+                    <ul data-role="listview" data-inset="false" data-filter="false" data-dividertheme="b" data-count-theme="b" id="UiDetalleReporteDeFacturasNoEntregadas"></ul>
                 </div>
 
             </div>
@@ -2125,16 +1918,12 @@
             <div data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" id="UiBotonCancelarEncuestaDeCompraDeCompetencia"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBotonCancelarEncuestaDeCompraDeCompetencia" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
                             Cancelar
                         </a>
                     </li>
                     <li>
-                        <a href="#" id="UiBotonFinalizarEncuestaDeCompraDeCompetencia"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBotonFinalizarEncuestaDeCompraDeCompetencia" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon" style="text-align: center">
                             Finalizar Encuesta
                         </a>
                     </li>
@@ -2184,25 +1973,18 @@
     </div>
     <div data-role="page" id="UiDetailTransferPage" data-close-btn="right" data-add-back-btn="true" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass" style="background-color: transparent; border-style: none"></div>
             <div data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" id="UiBtnSalirDeDetalleDeTransferencia"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnSalirDeDetalleDeTransferencia" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">
                             Volver
                         </a>
                     </li>
                     <li>
-                        <a href="#" id="UiBtnAceptarTransferencia"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon"
-                            style="text-align: center">
+                        <a href="#" id="UiBtnAceptarTransferencia" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-action ui-nodisc-icon" style="text-align: center">
                             Aceptar
                         </a>
                     </li>
@@ -2234,26 +2016,20 @@
         </div>
     </div>
 
-    <div data-role="page" id="UiNewTaskOutsideOfRoutePlanPage" data-close-btn="right" data-add-back-btn="true"
-        data-theme="a">
+    <div data-role="page" id="UiNewTaskOutsideOfRoutePlanPage" data-close-btn="right" data-add-back-btn="true" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass" style="background-color: transparent; border-style: none"></div>
             <div data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
                     <li class="small-roboto">
-                        <a href="" id="UiBtnVolverAMenuNuevaTarea" style="text-align: center"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-back" data-mini="true">
+                        <a href="" id="UiBtnVolverAMenuNuevaTarea" style="text-align: center" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-back" data-mini="true">
                             Cancelar
                         </a>
                     </li>
                     <li class="small-roboto">
-                        <a href="" id="uiBtnLimpiarFiltroClientesNuevaTarea" style="text-align: center"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-refresh" data-mini="true">
+                        <a href="" id="uiBtnLimpiarFiltroClientesNuevaTarea" style="text-align: center" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-refresh" data-mini="true">
                             Limpiar
                         </a>
                     </li>
@@ -2265,21 +2041,17 @@
                 <table style="width: 100%">
                     <tr>
                         <td style="width: 95%">
-                            <input id="uiTxtFiltroClientesNuevaTarea" name="uiTxtFiltroClientes" data-type="search"
-                                placeholder="Buscar cliente...">
+                            <input id="uiTxtFiltroClientesNuevaTarea" name="uiTxtFiltroClientes" data-type="search" placeholder="Buscar cliente...">
                         </td>
                         <td style="width: 5%">
-                            <a href="#" id="UiBotonCamaraClientesNuevaTarea" data-role="button" data-icon="camera"
-                                data-iconpos="notext" data-theme="a" data-inline="true">Camara</a>
+                            <a href="#" id="UiBotonCamaraClientesNuevaTarea" data-role="button" data-icon="camera" data-iconpos="notext" data-theme="a" data-inline="true">Camara</a>
                         </td>
                     </tr>
                 </table>
             </form>
             <div id="UiContenedorListaDeClientesNuevaTarea" style="display: none">
-                <ul data-role="listview" id="uiListaClientesNuevaTarea" data-inset="true" data-filter="false"
-                    data-filter-placeholder="Buscar cliente..." data-mini="true"></ul>
-                <p id="UiNotificacionClientesNuevaTarea" style="display: none">No se han encontrado coincidencias para
-                    el criterio proporcionado, por favor verifique y vuelva a intentar.</p>
+                <ul data-role="listview" id="uiListaClientesNuevaTarea" data-inset="true" data-filter="false" data-filter-placeholder="Buscar cliente..." data-mini="true"></ul>
+                <p id="UiNotificacionClientesNuevaTarea" style="display: none">No se han encontrado coincidencias para el criterio proporcionado, por favor verifique y vuelva a intentar.</p>
             </div>
 
         </div>
@@ -2287,22 +2059,16 @@
 
     <div data-role="page" id="UiScoutingPage" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left "
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left " style="background-color: transparent; border-style: none"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-btn-icon-left"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-btn-icon-left" style="background-color: transparent; border-style: none"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left" style="background-color: transparent; border-style: none"></div>
             <div data-role="navbar">
                 <ul>
-                    <li><a href="#" class="ui-btn ui-icon-delete ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnBackFromScoutingPage" style="text-align: center;">Atrás</a></li>
-                    <li><a href="#" class="ui-btn ui-icon-info ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnTituloDeScouting" style="text-align: center;">Scouting</a></li>
-                    <li><a href="#" class="ui-btn ui-icon-check ui-btn-icon-top ui-nodisc-icon" id="UiBtnSaveScouting"
-                            style="text-align: center;">Guardar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-delete ui-btn-icon-top ui-nodisc-icon" id="UiBtnBackFromScoutingPage" style="text-align: center;">Atrás</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-info ui-btn-icon-top ui-nodisc-icon" id="UiBtnTituloDeScouting" style="text-align: center;">Scouting</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-check ui-btn-icon-top ui-nodisc-icon" id="UiBtnSaveScouting" style="text-align: center;">Guardar</a></li>
                 </ul>
             </div>
         </div>
@@ -2310,8 +2076,7 @@
             <ul data-role="listview" data-inset="true" data-theme="c">
                 <li>
                     <label>Nombre:</label>
-                    <input type="text" placeholder="Nombre del cliente" data-clear-btn="true" id="UiTxtNameScouting"
-                        maxlength="250">
+                    <input type="text" placeholder="Nombre del cliente" data-clear-btn="true" id="UiTxtNameScouting" maxlength="250">
                 </li>
 
                 <li>
@@ -2321,25 +2086,20 @@
 
                 <li>
                     <label>Dirección:</label>
-                    <textarea placeholder="Dirección del cliente" style="width: 100%; height:25%"
-                        id="UiTxtDirectionScouting" maxlength="100"></textarea>
+                    <textarea placeholder="Dirección del cliente" style="width: 100%; height:25%" id="UiTxtDirectionScouting" maxlength="100"></textarea>
                 </li>
 
                 <li>
                     <div data-role="collapsible" data-iconpos="right" style="width:100%">
                         <h3>Más Información</h3>
                         <label>Contacto:</label>
-                        <input type="text" placeholder="Nombre" style="width: 100%" id="UiTxtNameContactScouting"
-                            maxlength="250">
-                        <input type="text" placeholder="Teléfono" style="width:100%" id="UiTxtTelephoneContactScouting"
-                            maxlength="50">
+                        <input type="text" placeholder="Nombre" style="width: 100%" id="UiTxtNameContactScouting" maxlength="250">
+                        <input type="text" placeholder="Teléfono" style="width:100%" id="UiTxtTelephoneContactScouting" maxlength="50">
 
                         <p></p>
                         <label>Facturación:</label>
-                        <input type="text" placeholder="Nombre De Facturación" style="width: 100%"
-                            id="UiTxtTaxInviceName" data-clear-btn="true" maxlength="50">
-                        <input type="text" placeholder="Dirección De Facturación" style="width:100%"
-                            id="UiTxtTaxAddress" data-clear-btn="true" maxlength="100">
+                        <input type="text" placeholder="Nombre De Facturación" style="width: 100%" id="UiTxtTaxInviceName" data-clear-btn="true" maxlength="50">
+                        <input type="text" placeholder="Dirección De Facturación" style="width:100%" id="UiTxtTaxAddress" data-clear-btn="true" maxlength="100">
 
                         <p></p>
                         <label>Fotografías:</label>
@@ -2348,18 +2108,15 @@
                                 <table style="width: 100%;">
                                     <tr style="width: 100%;">
                                         <td colspan="2" style="width: 100%;">
-                                            <img src="#" alt="Alternate Text" id="UiImg1Scouting" height="80%"
-                                                width="80%" />
+                                            <img src="#" alt="Alternate Text" id="UiImg1Scouting" height="80%" width="80%" />
                                         </td>
                                     </tr>
                                     <tr style="width: 100%;">
                                         <td style="width: 50%;">
-                                            <a href="#" class="ui-btn ui-btn-b ui-icon-camera ui-btn-icon-top"
-                                                id="UiBtnTakePicture1Scouting"></a>
+                                            <a href="#" class="ui-btn ui-btn-b ui-icon-camera ui-btn-icon-top" id="UiBtnTakePicture1Scouting"></a>
                                         </td>
                                         <td style="width: 50%;">
-                                            <a href="#" class="ui-btn ui-btn-b ui-icon-delete ui-btn-icon-top"
-                                                id="UiBtnClearPicture1Scouting"></a>
+                                            <a href="#" class="ui-btn ui-btn-b ui-icon-delete ui-btn-icon-top" id="UiBtnClearPicture1Scouting"></a>
                                         </td>
                                     </tr>
                                 </table>
@@ -2368,18 +2125,15 @@
                                 <table style="width: 100%;">
                                     <tr>
                                         <td colspan="2" style="width: 100%;">
-                                            <img src="#" alt="Alternate Text" id="UiImg2Scouting" height="80%"
-                                                width="80%" />
+                                            <img src="#" alt="Alternate Text" id="UiImg2Scouting" height="80%" width="80%" />
                                         </td>
                                     </tr>
                                     <tr style="width: 100%;">
                                         <td style="width: 50%;">
-                                            <a href="#" class="ui-btn ui-btn-b ui-icon-camera ui-btn-icon-top"
-                                                id="UiBtnTakePicture2Scouting"></a>
+                                            <a href="#" class="ui-btn ui-btn-b ui-icon-camera ui-btn-icon-top" id="UiBtnTakePicture2Scouting"></a>
                                         </td>
                                         <td style="width: 50%;">
-                                            <a href="#" class="ui-btn ui-btn-b ui-icon-delete ui-btn-icon-top"
-                                                id="UiBtnClearPicture2Scouting"></a>
+                                            <a href="#" class="ui-btn ui-btn-b ui-icon-delete ui-btn-icon-top" id="UiBtnClearPicture2Scouting"></a>
                                         </td>
                                     </tr>
                                 </table>
@@ -2388,18 +2142,15 @@
                                 <table style="width: 100%;">
                                     <tr>
                                         <td colspan="2" style="width: 100%;">
-                                            <img src="#" alt="Alternate Text" id="UiImg3Scouting" height="80%"
-                                                width="80%" />
+                                            <img src="#" alt="Alternate Text" id="UiImg3Scouting" height="80%" width="80%" />
                                         </td>
                                     </tr>
                                     <tr style="width: 100%;">
                                         <td style="width: 50%;">
-                                            <a href="#" class="ui-btn ui-btn-b ui-icon-camera ui-btn-icon-top"
-                                                id="UiBtnTakePicture3Scouting"></a>
+                                            <a href="#" class="ui-btn ui-btn-b ui-icon-camera ui-btn-icon-top" id="UiBtnTakePicture3Scouting"></a>
                                         </td>
                                         <td style="width: 50%;">
-                                            <a href="#" class="ui-btn ui-btn-b ui-icon-delete ui-btn-icon-top"
-                                                id="UiBtnClearPicture3Scouting"></a>
+                                            <a href="#" class="ui-btn ui-btn-b ui-icon-delete ui-btn-icon-top" id="UiBtnClearPicture3Scouting"></a>
                                         </td>
                                     </tr>
                                 </table>
@@ -2407,11 +2158,9 @@
                         </ul>
                     </div>
 
-                    <div data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d"
-                        data-expanded-icon="carat-u">
+                    <div data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
                         <h3>Etiquetas</h3>
-                        <ul data-role="listview" data-inset="false" data-filter="true"
-                            data-filter-placeholder="Buscar etiqueta..." id="UiListTagsForScouting">
+                        <ul data-role="listview" data-inset="false" data-filter="true" data-filter-placeholder="Buscar etiqueta..." id="UiListTagsForScouting">
                             <!--<li>
                                 <label for="UiDataCheck">#FFFFFF</label>
                                 <input type="checkbox" id="UiDataCheck">
@@ -2426,20 +2175,15 @@
 
     <div data-role="page" id="UiPagetoAssociatePhoneNumerWithInvoice" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left "
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left " style="background-color: transparent; border-style: none"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-btn-icon-left"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-btn-icon-left" style="background-color: transparent; border-style: none"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left" style="background-color: transparent; border-style: none"></div>
             <div data-role="navbar">
                 <ul>
-                    <li><a href="#" class="ui-btn ui-icon-delete ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnBackFromAssociateTelephoneNumber" style="text-align: center;">Cancelar</a></li>
-                    <li><a href="#" class="ui-btn ui-icon-check ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnAssociateTelephoneNumber" style="text-align: center;">Guardar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-delete ui-btn-icon-top ui-nodisc-icon" id="UiBtnBackFromAssociateTelephoneNumber" style="text-align: center;">Cancelar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-check ui-btn-icon-top ui-nodisc-icon" id="UiBtnAssociateTelephoneNumber" style="text-align: center;">Guardar</a></li>
                 </ul>
             </div>
         </div>
@@ -2455,23 +2199,17 @@
 
     <div data-role="page" id="UiPageScanManifest" data-close-btn="right" data-add-back-btn="true" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left "
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left " style="background-color: transparent; border-style: none"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-btn-icon-left"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-btn-icon-left" style="background-color: transparent; border-style: none"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left" style="background-color: transparent; border-style: none"></div>
 
             <div data-role="navbar">
                 <ul>
-                    <li><a href="#" class="ui-btn ui-icon-delete ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnBackFromScanManifest" style="text-align: center;">Cancelar</a></li>
-                    <li><a href="#" class="ui-btn ui-icon-recycle ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnCleanScanManifest" style="text-align: center;">Limpiar</a></li>
-                    <li><a href="#" class="ui-btn ui-icon-navigation ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnStartDeliveryRouteFromScanManifest" style="text-align: center;">Iniciar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-delete ui-btn-icon-top ui-nodisc-icon" id="UiBtnBackFromScanManifest" style="text-align: center;">Cancelar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-recycle ui-btn-icon-top ui-nodisc-icon" id="UiBtnCleanScanManifest" style="text-align: center;">Limpiar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-navigation ui-btn-icon-top ui-nodisc-icon" id="UiBtnStartDeliveryRouteFromScanManifest" style="text-align: center;">Iniciar</a></li>
                 </ul>
             </div>
             <ul data-role="listview" data-inset="true" data-divider-theme="a">
@@ -2486,12 +2224,10 @@
             <p></p>
             <div class="ui-grid-a">
                 <div class="ui-block-a">
-                    <input name="UiTxtManifestHeaderId" id="UiTxtManifestHeaderId" value="" data-corners="true"
-                        placeholder="Manifiesto">
+                    <input name="UiTxtManifestHeaderId" id="UiTxtManifestHeaderId" value="" data-corners="true" placeholder="Manifiesto">
                 </div>
                 <div class="ui-block-b">
-                    <a href="#" id="UiBtnScanManifest" data-mini="true"
-                        class="ui-corner-all ui-btn ui-btn-icon-right ui-icon-camera ui-nodisc-icon ui-alt-icon">
+                    <a href="#" id="UiBtnScanManifest" data-mini="true" class="ui-corner-all ui-btn ui-btn-icon-right ui-icon-camera ui-nodisc-icon ui-alt-icon">
                         Escáner
                     </a>
                 </div>
@@ -2517,9 +2253,7 @@
                     <span class="ui-li-count" id="lblManifestRuta">...</span>
                 </li>
                 <li>
-                    <a class="ui-btn ui-btn-icon-right ui-icon-action ui-btn-b" href="#"
-                        style="text-align: center; -moz-align-content: center; -o-align-content: center; -webkit-align-content: center; align-content: center;"
-                        id="UiBtnProcessManifest">
+                    <a class="ui-btn ui-btn-icon-right ui-icon-action ui-btn-b" href="#" style="text-align: center; -moz-align-content: center; -o-align-content: center; -webkit-align-content: center; align-content: center;" id="UiBtnProcessManifest">
                         Procesar Manifiesto
                     </a>
                 </li>
@@ -2531,10 +2265,8 @@
         <div data-role="header" data-theme="b">
             <div data-role="navbar">
                 <ul>
-                    <li><a href="#" class="ui-btn ui-icon-phone ui-btn-icon-top ui-nodisc-icon" id="UiBtnCallClient"
-                            style="text-align: center;">Llamar</a></li>
-                    <li><a href="#" class="ui-btn ui-icon-navigation ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnStartDeliveryRouteFromDeliveryPage" style="text-align: center;">Navegar</a>
+                    <li><a href="#" class="ui-btn ui-icon-phone ui-btn-icon-top ui-nodisc-icon" id="UiBtnCallClient" style="text-align: center;">Llamar</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-navigation ui-btn-icon-top ui-nodisc-icon" id="UiBtnStartDeliveryRouteFromDeliveryPage" style="text-align: center;">Navegar</a>
                     </li>
                 </ul>
             </div>
@@ -2552,9 +2284,7 @@
             <p></p>
             <ul data-role="listview" data-inset="false" id="myMenuList" data-divider-theme="b" data-count-theme="c">
                 <li class="ui-grid-a">
-                    <a href="#" id="UiBtnInvoiceDeliveryPage" data-mini="true"
-                        class="ui-btn ui-btn-icon-right ui-icon-action ui-nodisc-icon ui-alt-icon"
-                        style="text-align:center">
+                    <a href="#" id="UiBtnInvoiceDeliveryPage" data-mini="true" class="ui-btn ui-btn-icon-right ui-icon-action ui-nodisc-icon ui-alt-icon" style="text-align:center">
                         Facturar
                     </a>
                 </li>
@@ -2592,32 +2322,24 @@
             <div data-role="navbar">
                 <ul id="UiNavUlDetalleDeEntrega">
                     <li style="width:50%" id="UiLiTabEntregaDocumentos">
-                        <a href="#UiTabEntregaDocumentos" data-theme="b" id="UiBtnMostrarTabEntregaDocumentos"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-alert ui-btn-active ui-state-persist"
-                            data-ajax="false">
+                        <a href="#UiTabEntregaDocumentos" data-theme="b" id="UiBtnMostrarTabEntregaDocumentos" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-alert ui-btn-active ui-state-persist" data-ajax="false">
                             Documentos
                         </a>
                     </li>
                     <li style="width:50%" id="UiLiTabEntregaConsolidado">
-                        <a href="#UiTabEntregaConsolidado" data-theme="b" id="UiBtnMostrarTabEntregaConsolidado"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-check"
-                            data-ajax="false">
+                        <a href="#UiTabEntregaConsolidado" data-theme="b" id="UiBtnMostrarTabEntregaConsolidado" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-check" data-ajax="false">
                             Consolidado
                         </a>
                     </li>
                     <li style="width: 0%" id="UiLiTabCanastas">
-                        <a href="#UiTabCanastas" data-theme="b" id="UiBtnMostrarTabCanastas"
-                            class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-check"
-                            data-ajax="false">
+                        <a href="#UiTabCanastas" data-theme="b" id="UiBtnMostrarTabCanastas" class="small-roboto ui-btn ui-btn-icon-top ui-nodisc-icon menupanel ui-icon-check" data-ajax="false">
                             Ver Cajas
                         </a>
                     </li>
                 </ul>
             </div>
             <div id="UiTabEntregaDocumentos" class="ui-body-d ui-content" data-theme="a">
-                <div data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-inset="false"
-                    data-role="collapsible-set" data-theme="a" data-content-theme="a"
-                    class="ui-alt-icon ui-nodisc-icon">
+                <div data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-inset="false" data-role="collapsible-set" data-theme="a" data-content-theme="a" class="ui-alt-icon ui-nodisc-icon">
                     <ul data-role="listview" id="UiListDeleberyDoc" data-inset="true" data-theme="a">
                         <li class="ui-field-contain" data-theme="a" style="text-align: left">
                             <table>
@@ -2626,12 +2348,10 @@
                                         <a id="UiBotonDocumento" data-role="button">Documento 0111</a>
                                     </td>
                                     <td style="width: 5%">
-                                        <a href="#" id="UiBotonCancelar"
-                                            class="ui-btn ui-btn-corner-all ui-mini ui-nodisc-icon ui-icon-minus ui-btn-icon-notext"></a>
+                                        <a href="#" id="UiBotonCancelar" class="ui-btn ui-btn-corner-all ui-mini ui-nodisc-icon ui-icon-minus ui-btn-icon-notext"></a>
                                     </td>
                                     <td style="width: 5%">
-                                        <a href="#" id="UiBotonEntregaParcial"
-                                            class="ui-btn ui-btn-corner-all ui-mini ui-nodisc-icon ui-icon-delete ui-btn-icon-notext"></a>
+                                        <a href="#" id="UiBotonEntregaParcial" class="ui-btn ui-btn-corner-all ui-mini ui-nodisc-icon ui-icon-delete ui-btn-icon-notext"></a>
                                     </td>
                                 </tr>
                             </table>
@@ -2641,11 +2361,8 @@
             </div>
             <div id="UiTabEntregaConsolidado" class="ui-body-d ui-content">
 
-                <div data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-inset="false"
-                    data-role="collapsible-set" data-theme="a" data-content-theme="a"
-                    class="ui-alt-icon ui-nodisc-icon">
-                    <a href="#" id="UiBtnConsolidateDelivery" data-mini="true"
-                        class="ui-corner-all ui-btn ui-btn-icon-right ui-icon-info ui-nodisc-icon ui-alt-icon">
+                <div data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-inset="false" data-role="collapsible-set" data-theme="a" data-content-theme="a" class="ui-alt-icon ui-nodisc-icon">
+                    <a href="#" id="UiBtnConsolidateDelivery" data-mini="true" class="ui-corner-all ui-btn ui-btn-icon-right ui-icon-info ui-nodisc-icon ui-alt-icon">
                         Entregar consolidado
                     </a>
                     <ul data-role="listview" id="UiListConsolidateDelebery" data-inset="true" data-theme="a">
@@ -2660,9 +2377,7 @@
             </div>
             <div id="UiTabCanastas" class="ui-body-d ui-content">
 
-                <div data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-inset="false"
-                    data-role="collapsible-set" data-theme="a" data-content-theme="a"
-                    class="ui-alt-icon ui-nodisc-icon">
+                <div data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-inset="false" data-role="collapsible-set" data-theme="a" data-content-theme="a" class="ui-alt-icon ui-nodisc-icon">
                     <ul data-role="listview" id="UiListaCanastas" data-inset="true" data-theme="a">
                         <li class="ui-field-contain" data-theme="b" style="text-align: left">
                             <span class='medium'>Sku de Prueba</span><br />
@@ -2699,64 +2414,47 @@
 
     <div data-role="page" id="UiDeliveryReportPage" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass"
-                style="background-color: transparent; border-style: none"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass"
-                style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left networkclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-bolt ui-btn-icon-left fa batteryclass" style="background-color: transparent; border-style: none"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-user ui-btn-icon-left loggedclass" style="background-color: transparent; border-style: none"></div>
             <div data-role="navbar" data-theme="b" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" id="UiBtnBackFromDeliveryReport"
-                            class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center">Atrás</a>
+                        <a href="#" id="UiBtnBackFromDeliveryReport" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center">Atrás</a>
                     </li>
                 </ul>
             </div>
         </div>
         <div data-role="content">
-            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false"
-                id="UiContenedorEntregasProcesadas" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="false" id="UiContenedorEntregasProcesadas" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
                 <h4> Entregas Procesadas (<span id="UiLblCantidadEntregasProcesadas">0</span>) </h4>
-                <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b"
-                    data-count-theme="b" id="UiDetalleEntregasProcesadas" data-filter-placeholder="Buscar..."></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b" data-count-theme="b" id="UiDetalleEntregasProcesadas" data-filter-placeholder="Buscar..."></ul>
             </div>
-            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="true"
-                id="UiContenedorEntregasPendientes" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="true" id="UiContenedorEntregasPendientes" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
                 <h4>Entregas Pendientes (<span id="UiLblCantidadEntregasPendientes">0</span>) </h4>
-                <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b"
-                    data-count-theme="b" id="UiDetalleEntregasPendientes" data-filter-placeholder="Buscar..."></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b" data-count-theme="b" id="UiDetalleEntregasPendientes" data-filter-placeholder="Buscar..."></ul>
             </div>
-            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="true"
-                id="UiContenedorEntregasNoProecesadas" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+            <div data-role="collapsible" class="ui-alt-icon ui-nodisc-icon ui-shadow" data-collapsed="true" id="UiContenedorEntregasNoProecesadas" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
                 <h4>Entregas Canceladas (<span id="UiLblCantidadEntregasNoProcesadas">0</span>) </h4>
-                <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b"
-                    data-count-theme="b" id="UiDetalleEntregasNoProcesadas" data-filter-placeholder="Buscar..."></ul>
+                <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b" data-count-theme="b" id="UiDetalleEntregasNoProcesadas" data-filter-placeholder="Buscar..."></ul>
             </div>
         </div>
     </div>
 
     <div data-role="page" id="UiOverdueInvoicePaymentPage" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteSkusPOS"
-                class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div data-role="navbar">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-icon-back ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnGoBackFromOverdueInvoicePaymentPage" style="text-align: center;">Atrás</a>
+                        <a href="#" class="ui-btn ui-icon-back ui-btn-icon-top ui-nodisc-icon" id="UiBtnGoBackFromOverdueInvoicePaymentPage" style="text-align: center;">Atrás</a>
                     </li>
-                    <li><a href="#" class="ui-btn ui-icon-bullets ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnShowPaymentTypeDetailPage" style="text-align: center;">Detalle de Pagos</a></li>
+                    <li><a href="#" class="ui-btn ui-icon-bullets ui-btn-icon-top ui-nodisc-icon" id="UiBtnShowPaymentTypeDetailPage" style="text-align: center;">Detalle de Pagos</a></li>
                 </ul>
             </div>
 
@@ -2770,14 +2468,12 @@
                         <label style="text-align: left; font-weight: bold;" id="UiLblPayedAmount">Q000.00</label>
                     </td>
                     <td style="width: 50%">
-                        <label style="color: #4cff00; text-align: right; font-size: xx-large; margin-left: 0.3em;"
-                            id="UiLblPercentageOfOverdueInvoicesPayment">0%</label>
+                        <label style="color: #4cff00; text-align: right; font-size: xx-large; margin-left: 0.3em;" id="UiLblPercentageOfOverdueInvoicesPayment">0%</label>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="2" style="width: 100%">
-                        <input type="text" maxlength="250" id="UiTxtPaidComment" name="UiTxtPaidComment" value=""
-                            placeholder="Comentario" data-clear-btn="true" />
+                        <input type="text" maxlength="250" id="UiTxtPaidComment" name="UiTxtPaidComment" value="" placeholder="Comentario" data-clear-btn="true" />
                     </td>
                 </tr>
                 <tr>
@@ -2790,8 +2486,7 @@
             </table>
             <hr />
             <br />
-            <ul data-role="listview" id="UlDetailOverdueInvoices" data-inset="false" data-divider-theme="b"
-                data-count-theme="b"></ul>
+            <ul data-role="listview" id="UlDetailOverdueInvoices" data-inset="false" data-divider-theme="b" data-count-theme="b"></ul>
         </div>
         <div data-role="footer" data-position="fixed" data-theme="b">
             <span style="text-align:left; font-weight: bold;float: left">
@@ -2833,12 +2528,10 @@
 
                     <fieldset class="ui-grid-a" id="UiContainerOfPaidProcessed">
                         <div class="ui-block-a">
-                            <input data-icon="check" data-iconpos="top" type="button" name="UiBtnPaymentConfirmed"
-                                id="UiBtnPaymentConfirmed" value="Aceptar" style="text-align: center">
+                            <input data-icon="check" data-iconpos="top" type="button" name="UiBtnPaymentConfirmed" id="UiBtnPaymentConfirmed" value="Aceptar" style="text-align: center">
                         </div>
                         <div class="ui-block-b">
-                            <input data-icon="action" data-iconpos="top" type="button" name="UiBtnPrintPaidProcessed"
-                                id="UiBtnPrintPaidProcessed" value="Imprimir" style="text-align: center">
+                            <input data-icon="action" data-iconpos="top" type="button" name="UiBtnPrintPaidProcessed" id="UiBtnPrintPaidProcessed" value="Imprimir" style="text-align: center">
 
                         </div>
                     </fieldset>
@@ -2852,12 +2545,10 @@
             <div data-role="navbar">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-icon-back ui-btn-icon-top ui-nodisc-icon"
-                            id="UiBtnGoBackFromOverdueInvoicePaymentDetailPage" style="text-align: center;">Regresar</a>
+                        <a href="#" class="ui-btn ui-icon-back ui-btn-icon-top ui-nodisc-icon" id="UiBtnGoBackFromOverdueInvoicePaymentDetailPage" style="text-align: center;">Regresar</a>
                     </li>
                     <li>
-                        <a href="#" class="ui-btn ui-icon-check ui-btn-icon-top ui-nodisc-icon" id="UiBtnApplyPayment"
-                            style="text-align: center;">Aplicar Pago</a>
+                        <a href="#" class="ui-btn ui-icon-check ui-btn-icon-top ui-nodisc-icon" id="UiBtnApplyPayment" style="text-align: center;">Aplicar Pago</a>
                     </li>
                 </ul>
             </div>
@@ -2874,18 +2565,15 @@
 
                 <div id="CashContainer" style="display: block;">
                     <label for="TxtCashAmount">Monto:</label>
-                    <input type="number" name="TxtCashAmount" id="TxtCashAmount" value=""
-                        placeholder="Monto en efectivo..." data-clear-btn="true" />
+                    <input type="number" name="TxtCashAmount" id="TxtCashAmount" value="" placeholder="Monto en efectivo..." data-clear-btn="true" />
                 </div>
 
                 <div id="BankCheckOrDepositContainer" style="display:none;">
                     <label for="TxtBankCheckOrDepositNumber">Documento No.:</label>
-                    <input type="text" name="TxtBankCheckOrDepositNumber" id="TxtBankCheckOrDepositNumber" value=""
-                        placeholder="Número de documento..." data-clear-btn="true" maxlength="250" />
+                    <input type="text" name="TxtBankCheckOrDepositNumber" id="TxtBankCheckOrDepositNumber" value="" placeholder="Número de documento..." data-clear-btn="true" maxlength="250" />
 
                     <label for="TxtBankCheckOrDepositAmount">Monto:</label>
-                    <input type="number" name="TxtBankCheckOrDepositAmount" id="TxtBankCheckOrDepositAmount" value=""
-                        placeholder="Monto del documento..." data-clear-btn="true" />
+                    <input type="number" name="TxtBankCheckOrDepositAmount" id="TxtBankCheckOrDepositAmount" value="" placeholder="Monto del documento..." data-clear-btn="true" />
 
                     <label>Cuenta Bancaria:</label>
                     <select id="CmbBankAccount" data-mini="false"></select>
@@ -2893,12 +2581,10 @@
                     <fieldset class="ui-grid-a">
                         <legend>Imágenes:</legend>
                         <div class="ui-block-a">
-                            <input data-icon="camera" data-iconpos="left" type="button" name="UiBtnTakeFrontImage"
-                                id="UiBtnTakeFrontImage" value="Frontal" style="text-align: center">
+                            <input data-icon="camera" data-iconpos="left" type="button" name="UiBtnTakeFrontImage" id="UiBtnTakeFrontImage" value="Frontal" style="text-align: center">
                         </div>
                         <div class="ui-block-b">
-                            <input data-icon="camera" data-iconpos="left" type="button" name="UiBtnTakeBackImage"
-                                id="UiBtnTakeBackImage" value="Posterior" style="text-align: center">
+                            <input data-icon="camera" data-iconpos="left" type="button" name="UiBtnTakeBackImage" id="UiBtnTakeBackImage" value="Posterior" style="text-align: center">
                         </div>
                     </fieldset>
                 </div>
@@ -2906,25 +2592,19 @@
             </div>
             <hr>
             <div data-role="collapsible-set" data-mini="true">
-                <div data-role="collapsible" data-theme="b" data-content-theme="a" data-mini="true"
-                    data-collapsed="false" id="InfoCashContainer">
+                <div data-role="collapsible" data-theme="b" data-content-theme="a" data-mini="true" data-collapsed="false" id="InfoCashContainer">
                     <h3>Efectivo <span id="UiLblCashPayedAmount" style="float: right;">Q000.00</span> </h3>
-                    <ul data-role="listview" id="UiCashDetail" data-split-icon="delete" data-divider-theme="b"
-                        data-theme="a" data-split-theme="b"></ul>
+                    <ul data-role="listview" id="UiCashDetail" data-split-icon="delete" data-divider-theme="b" data-theme="a" data-split-theme="b"></ul>
                 </div>
 
-                <div data-role="collapsible" data-theme="b" data-content-theme="a" data-mini="true"
-                    data-collapsed="true" id="InfoDepositsContainer">
+                <div data-role="collapsible" data-theme="b" data-content-theme="a" data-mini="true" data-collapsed="true" id="InfoDepositsContainer">
                     <h3>Depositos <span id="UiLblDepositsPayedAmount" style="float: right;">Q000.00</span> </h3>
-                    <ul data-role="listview" id="UiDepositsDetail" data-split-icon="delete" data-count-theme="b"
-                        data-divider-theme="b" data-theme="a" data-split-theme="b"></ul>
+                    <ul data-role="listview" id="UiDepositsDetail" data-split-icon="delete" data-count-theme="b" data-divider-theme="b" data-theme="a" data-split-theme="b"></ul>
                 </div>
 
-                <div data-role="collapsible" data-theme="b" data-content-theme="a" data-mini="true"
-                    data-collapsed="true" id="InfoBankChecksContainer">
+                <div data-role="collapsible" data-theme="b" data-content-theme="a" data-mini="true" data-collapsed="true" id="InfoBankChecksContainer">
                     <h3>Cheques <span id="UiLblBankChecksPayedAmount" style="float: right;">Q000.00</span> </h3>
-                    <ul data-role="listview" id="UiBanckCheksDetail" data-split-icon="delete" data-count-theme="b"
-                        data-divider-theme="b" data-theme="a" data-split-theme="b"></ul>
+                    <ul data-role="listview" id="UiBanckCheksDetail" data-split-icon="delete" data-count-theme="b" data-divider-theme="b" data-theme="a" data-split-theme="b"></ul>
                 </div>
             </div>
         </div>
@@ -2938,24 +2618,19 @@
 
     <div data-role="page" id="UiPaymentListPage">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
 
             <div data-role="navbar" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnBackFromPaymentListPage">Regresar</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center;" id="UiBtnBackFromPaymentListPage">Regresar</a>
                     </li>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-refresh ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnRefreshPaymentsList">Refrescar</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-refresh ui-nodisc-icon" style="text-align: center;" id="UiBtnRefreshPaymentsList">Refrescar</a>
                     </li>
                 </ul>
                 <label style="text-align: center; font-weight: bold; margin-top:0.5em">Recibos Generados</label>
@@ -2966,14 +2641,12 @@
                 <table>
                     <tr>
                         <td style="width: 100%">
-                            <input id="UiTxtPaymentFilter" name="UiTxtPaymentFilter" data-type="search"
-                                placeholder="Buscar Recibo...">
+                            <input id="UiTxtPaymentFilter" name="UiTxtPaymentFilter" data-type="search" placeholder="Buscar Recibo...">
                         </td>
                     </tr>
                 </table>
             </form>
-            <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b" data-count-theme="b"
-                data-input="#UiTxtPaymentFilter" id="UiPaymentsList"></ul>
+            <ul data-role="listview" data-inset="false" data-filter="true" data-dividertheme="b" data-count-theme="b" data-input="#UiTxtPaymentFilter" id="UiPaymentsList"></ul>
         </div>
         <div data-role="footer" data-position="fixed" data-theme="b">
             <span style="text-align: center; font-weight: bold; float: right;">
@@ -2985,17 +2658,13 @@
 
     <div data-role="page" id="UiPaymentDetailPage">
         <div data-role="header" data-theme="b">
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
-            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
+            <div class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
             <div data-role="navbar" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnBackFromPaymentDetailPage">Regresar</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-back ui-nodisc-icon" style="text-align: center;" id="UiBtnBackFromPaymentDetailPage">Regresar</a>
                     </li>
                 </ul>
                 <label style="text-align: center; font-weight: bold; margin-top:0.5em">Facturas Canceladas</label>
@@ -3003,8 +2672,7 @@
             </div>
         </div>
         <div data-role="content">
-            <ul data-role="listview" data-inset="false" data-filter="false" data-dividertheme="b" data-count-theme="b"
-                id="UiListOfInvoicesPaid"></ul>
+            <ul data-role="listview" data-inset="false" data-filter="false" data-dividertheme="b" data-count-theme="b" id="UiListOfInvoicesPaid"></ul>
         </div>
         <div data-role="footer" data-position="fixed" data-theme="b">
             <span style="text-align: center; font-weight: bold; float: right;" id="UiLblPaymentAmountInfo"></span>
@@ -3016,21 +2684,16 @@
             <div is="navbar" data-role="navbar">
                 <ul>
                     <li is="navbtn">
-                        <a is="button" href="#" id="UiBtnBackFromDeliveryImagePage"
-                            class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-back"
-                            style="text-align: center;">Cancelar</a>
+                        <a is="button" href="#" id="UiBtnBackFromDeliveryImagePage" class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-back" style="text-align: center;">Cancelar</a>
                     </li>
                     <li is="navbtn">
-                        <a is="button" href="#" id="UiBtnUserAcceptDeliveryImages"
-                            class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-check"
-                            style="text-align: center;">Aceptar</a>
+                        <a is="button" href="#" id="UiBtnUserAcceptDeliveryImages" class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-check" style="text-align: center;">Aceptar</a>
                     </li>
                 </ul>
             </div>
         </div>
         <div is="content" role="main" class="ui-content">
-            <a id="UiBtnTakeDeliveryImage" is="button" href="#"
-                class="ui-btn ui-btn-icon-right ui-icon-camera ui-shadow">Capturar Imágen</a>
+            <a id="UiBtnTakeDeliveryImage" is="button" href="#" class="ui-btn ui-btn-icon-right ui-icon-camera ui-shadow">Capturar Imágen</a>
             <p></p>
             <label>Imagenes:</label>
             <hr>
@@ -3043,19 +2706,13 @@
             <div is="navbar" data-role="navbar">
                 <ul>
                     <li is="navbtn">
-                        <a is="button" href="#" id="UiBtnBackFromSignaturePage"
-                            class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-back"
-                            style="text-align: center;">Cancelar</a>
+                        <a is="button" href="#" id="UiBtnBackFromSignaturePage" class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-back" style="text-align: center;">Cancelar</a>
                     </li>
                     <li is="navbtn">
-                        <a is="button" href="#" id="UiBtnClearSignaturePage"
-                            class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-refresh"
-                            style="text-align: center;">Limpiar</a>
+                        <a is="button" href="#" id="UiBtnClearSignaturePage" class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-refresh" style="text-align: center;">Limpiar</a>
                     </li>
                     <li is="navbtn">
-                        <a is="button" href="#" id="UiBtnUserAcceptSignature"
-                            class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-check"
-                            style="text-align: center;">Aceptar</a>
+                        <a is="button" href="#" id="UiBtnUserAcceptSignature" class="ui-btn ui-btn-icon-top ui-nodisc-icon ui-icon-check" style="text-align: center;">Aceptar</a>
                     </li>
                 </ul>
             </div>
@@ -3072,31 +2729,25 @@
 
     <div data-role="page" id="UiSaleStatisticPage" data-theme="a">
         <div data-role="header" data-theme="b">
-            <div id="lblNetworkEstadistica" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblNetworkEstadistica" class="small-roboto ui-btn ui-nodisc-icon ui-icon-cloud ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblBattLevelEstadistica" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left"
-                style="background-color: #181C18"></div>
+            <div id="lblBattLevelEstadistica" class="small-roboto ui-btn ui-nodisc-icon ui-icon-eye ui-btn-icon-left" style="background-color: #181C18"></div>
 
-            <div id="lblCurrentLoggedRouteSkusPOS"
-            class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left"
-            style="background-color: #181C18"></div>
+            <div id="lblCurrentLoggedRouteSkusPOS" class="small-roboto ui-btn ui-nodisc-icon ui-icon-gear ui-btn-icon-left" style="background-color: #181C18"></div>
             <div data-role="navbar" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-plus ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnCrearVenta">Crear Venta Sugerida</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-plus ui-nodisc-icon" style="text-align: center;" id="UiBtnCrearVenta">Crear Venta Sugerida</a>
                     </li>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-carat-r ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnContinuarVenta">Continuar Venta</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-carat-r ui-nodisc-icon" style="text-align: center;" id="UiBtnContinuarVenta">Continuar Venta</a>
                     </li>
                 </ul>
                 <label style="text-align: center; width: 100%; margin: 0;">ESTADISTICA DE VENTA</label>
                 <label style="text-align: center; width: 100%; margin: 0 0 5px 0;"><small id="lblDiaSemana">Mi&eacute;rcoles</small></label>
             </div>
         </div>
-        
+
         <div data-role="content">
             <div class="product-list-table">
                 <table id="TableEstadistica" class="table-estadistica">
@@ -3112,21 +2763,19 @@
                     </tbody>
                 </table>
             </div>
-            
+
         </div>
     </div>
-    
+
     <div data-role="page" id="UiTaskResumePage" data-theme="a">
         <div data-role="header" data-theme="b">
             <div data-role="navbar" data-position="fixed">
                 <ul>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-carat-l ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnGoBackFromTaskResume">Atrás</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-carat-l ui-nodisc-icon" style="text-align: center;" id="UiBtnGoBackFromTaskResume">Atrás</a>
                     </li>
                     <li>
-                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-plus ui-nodisc-icon"
-                            style="text-align: center;" id="UiBtnCreateNewTask">Nueva Tarea</a>
+                        <a href="#" class="ui-btn ui-btn-b ui-btn-icon-top ui-icon-plus ui-nodisc-icon" style="text-align: center;" id="UiBtnCreateNewTask">Nueva Tarea</a>
                     </li>
                 </ul>
                 <label class="text-center"> Resumen Tarea </label>
@@ -3137,52 +2786,52 @@
             <table>
                 <tr style="width: 100%;">
                     <td style="width: 50%;">
-                            <label class="resume-tag">No. Tarea</label>
-                            <label id="UiLblTaskId"></label>
+                        <label class="resume-tag">No. Tarea</label>
+                        <label id="UiLblTaskId"></label>
                     </td>
                     <td style="width: 50%;">
-                            <label class="resume-tag" id="UiLblInvoiceIdHeader">No. Factura</label>
-                            <label id="UiLblInvoiceId"></label>
+                        <label class="resume-tag" id="UiLblInvoiceIdHeader">No. Factura</label>
+                        <label id="UiLblInvoiceId"></label>
                     </td>
                 </tr>
             </table>
-          <table>
-              <tr style="width: 100%;">
-                <td style="width: 75%;">
-                    <label class="resume-tag">Código Cliente</label>
-                    <label id="UiLblCustomerCode"></label>
-                    
-                    <label class="resume-tag">Nombre</label>
-                    <label id="UiLblCustomerName"></label>
-                </td>
-                <td style="width: 25%;">
-                    <label class="resume-tag">Envío</label>
-                    <img id="UiImgPostingStatusIndicator" style="width: 100%; object-fit: cover;" src="img/confirmed.jpg" alt="">
-                </td>
-              </tr>
-              <tr>
-                  <td colspan="2">
-                    <label class="resume-tag">Dirección</label>
-                    <label id="UiLblCustomerAddress">
+            <table>
+                <tr style="width: 100%;">
+                    <td style="width: 75%;">
+                        <label class="resume-tag">Código Cliente</label>
+                        <label id="UiLblCustomerCode"></label>
+
+                        <label class="resume-tag">Nombre</label>
+                        <label id="UiLblCustomerName"></label>
+                    </td>
+                    <td style="width: 25%;">
+                        <label class="resume-tag">Envío</label>
+                        <img id="UiImgPostingStatusIndicator" style="width: 100%; object-fit: cover;" src="img/confirmed.jpg" alt="">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <label class="resume-tag">Dirección</label>
+                        <label id="UiLblCustomerAddress">
                   </td>
               </tr>
               <tr>
                   <td colspan="2">
                       <label for="UiTxtAreaInvoiceComment" class="resume-tag">Comentario:</label>
-                      <textarea name="UiTxtAreaInvoiceComment" id="UiTxtAreaInvoiceComment" rows="10" readonly></textarea>
-                  </td>
-              </tr>
-              
-          </table>
+                        <textarea name="UiTxtAreaInvoiceComment" id="UiTxtAreaInvoiceComment" rows="10" readonly></textarea>
+                    </td>
+                </tr>
+
+            </table>
         </div>
         <div data-role="footer" data-position="fixed" data-theme="b">
             <table style="width: 100%">
-              <tr style="width: 100%">
-                <td style="width: 40%">Total Documento:</td>
-                <td style="width: 60%; text-align: right;">
-                    <label id="UiLblTotalAmountDocument"></label>
-                </td>
-              </tr>
+                <tr style="width: 100%">
+                    <td style="width: 40%">Total Documento:</td>
+                    <td style="width: 60%; text-align: right;">
+                        <label id="UiLblTotalAmountDocument"></label>
+                    </td>
+                </tr>
             </table>
         </div>
     </div>
@@ -3191,7 +2840,7 @@
 </html>
 
 <script type="text/javascript">
-    $(document).ready(function () {
+    $(document).ready(function() {
         document.addEventListener("deviceready", onDeviceReady, false);
         document.addEventListener("online", DeviceIsOnline, false);
         document.addEventListener("offline", DeviceIsOffline, false);
