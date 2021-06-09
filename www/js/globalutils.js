@@ -8923,9 +8923,9 @@ function TaskNavigateTo(gps, clientname) {
     try {
         var pUrl = gps.split(",");
 
-        var pGPS = "waze://?ll=" + pUrl[0] + "," + pUrl[1] + "&navigate=yes";
+        var pGPS = `https://www.waze.com/ul?ll=${pUrl}&navigate=yes`;
 
-        WazeLink.open(pGPS);
+        window.open(encodeURI(pGPS), '_blank', 'location=yes')
     } catch (e) {
         notify(e.message);
     }

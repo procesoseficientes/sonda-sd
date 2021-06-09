@@ -9,6 +9,7 @@
     </author>
     <content src="index.html" />
     <access origin="*" />
+    <allow-navigation href="http://www.waze.com/*" />
     <icon src="www/img/logo/sonda.png" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
