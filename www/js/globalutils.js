@@ -1363,6 +1363,18 @@ function OnConfirmFinishPOS(buttonIndex) {
 
 function startpos_action() {
     try {
+        var utc = new Date().toJSON().slice(0,10).replace(/-/g,'/');
+        var date = new Date(localStorage.getItem("SAT_RES_EXPIRE"));
+        var today = new Date(utc);
+        console.log(today);
+        console.log(date);
+        if (date < today){
+            console.log("coincide")
+        }
+            navigator.notification.confirm(
+               "Advertencia: ¡Fecha de factura caducado!", // message
+                function (buttonIndex) {
+                           if (buttonIndex === 0) {
         navigator.notification.confirm(
             "¿Confirma Iniciar Ruta?", // message
             function(buttonIndex) {
@@ -1472,6 +1484,11 @@ function startpos_action() {
             "Sonda® SD " + SondaVersion, // title
             "No,Si" // buttonLabels
         );
+    }
+}, // callback to invoke with index of button pressed
+'Sonda® ' + SondaVersion, // title
+'OK' // buttonLabels
+);
     } catch (e) {
         notify("startpos_action: " + e.message);
     }
